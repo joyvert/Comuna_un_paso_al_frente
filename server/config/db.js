@@ -7,7 +7,13 @@ export async function testConnection() {
   const client = await pool.connect();
   try {
     await client.query("SELECT 1");
-    await client.query("ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS telefono VARCHAR(40);");
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS votos (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        habitante_id UUID REFERENCES habitantes(id) ON DELETE CASCADE UNIQUE,
+        created_at TIMESTAMP NOT NULL DEFAULT NOW()
+      );
+    `);
   } finally {
     client.release();
   }

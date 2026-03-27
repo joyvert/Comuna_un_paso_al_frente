@@ -383,4 +383,82 @@ router.delete("/jornadas/:jornadaId", requireAuth, requireAdmin, async (req, res
   }
 });
 
+// ==========================================
+// MÓDULO DE VOTACIONES
+// ==========================================
+
+router.get("/votos/habitantes", async (req, res) => {
+  try {
+    const statsRes = await pool.query(`
+      SELECT c.nombre as consejo, COUNT(v.id) as total_votos
+      FROM consejos c
+      LEFT JOIN habitantes h ON h.consejo_id = c.id
+      LEFT JOIN votos v ON v.habitante_id = h.id
+      GROUP BY c.id, c.nombre
+      ORDER BY c.nombre ASC
+    `);
+    const stats = statsRes.rows.map(r => ({ consejo: r.consejo, total: Number(r.total_votos) }));
+
+    let habitantes;
+    if (req.auth.admin) {
+      const result = await pool.query(`
+        SELECT h.id, h.nombre, h.apellido, h.cedula, h.calle, c.nombre as consejo,
+               CASE WHEN v.id IS NOT NULL THEN true ELSE false END as voto
+        FROM habitantes h
+        JOIN consejos c ON c.id = h.consejo_id
+        LEFT JOIN votos v ON v.habitante_id = h.id
+        ORDER BY c.nombre ASC, h.nombre ASC
+      `);
+      habitantes = result.rows;
+    } else {
+      const result = await pool.query(`
+        SELECT h.id, h.nombre, h.apellido, h.cedula, h.calle, c.nombre as consejo,
+               CASE WHEN v.id IS NOT NULL THEN true ELSE false END as voto
+        FROM habitantes h
+        JOIN consejos c ON c.id = h.consejo_id
+        LEFT JOIN votos v ON v.habitante_id = h.id
+        WHERE c.nombre = $1 AND h.calle = $2
+        ORDER BY h.nombre ASC
+      `, [req.auth.consejo, req.auth.calle]);
+      habitantes = result.rows;
+    }
+
+    return res.json({ ok: true, stats, habitantes });
+  } catch (error) {
+    return res.status(500).json({ ok: false, message: error.message });
+  }
+});
+
+router.post("/votos/:habitanteId", async (req, res) => {
+  try {
+    const { habitanteId } = req.params;
+    const { voto } = req.body;
+
+    const row = await getHabitanteConsejoCalle(habitanteId);
+    if (!row) return res.status(404).json({ ok: false, message: "Habitante no encontrado." });
+    
+    if (!req.auth.admin) {
+      if (row.consejo_nombre !== req.auth.consejo || row.calle !== req.auth.calle) {
+        return res.status(403).json({ ok: false, message: "No puedes registrar votos fuera de tu calle." });
+      }
+    }
+
+    if (voto) {
+      await pool.query(
+        "INSERT INTO votos (habitante_id) VALUES ($1) ON CONFLICT DO NOTHING",
+        [habitanteId]
+      );
+    } else {
+      await pool.query(
+        "DELETE FROM votos WHERE habitante_id = $1",
+        [habitanteId]
+      );
+    }
+    
+    return res.json({ ok: true, message: voto ? "Voto registrado" : "Voto eliminado" });
+  } catch (error) {
+    return res.status(500).json({ ok: false, message: error.message });
+  }
+});
+
 export default router;
