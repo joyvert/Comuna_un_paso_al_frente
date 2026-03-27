@@ -14,19 +14,17 @@ export default function Jornadas({ sessionUser, activeConsejo, db, setDb, inputC
   const [calleFilter, setCalleFilter] = useState("Todas");
   const [checks, setChecks] = useState({});
 
-  const formatBs = (value) => {
-    if (value === undefined || value === null) return "";
-    let val = String(value).replace(/[^0-9,]/g, "");
-    const parts = val.split(",");
-    if (parts.length > 2) {
-      val = parts[0] + "," + parts.slice(1).join("");
-    }
-    const chunks = val.split(",");
-    chunks[0] = chunks[0].replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-    if (chunks.length > 1) {
-      chunks[1] = chunks[1].substring(0, 2);
-    }
-    return chunks.join(",");
+  const formatATM = (valStr) => {
+    if (valStr === undefined || valStr === null) return "";
+    const digits = String(valStr).replace(/\D/g, "");
+    if (!digits) return "";
+    const num = parseInt(digits, 10);
+    if (isNaN(num)) return "";
+    const strNum = num.toString().padStart(3, "0");
+    const integerPart = strNum.slice(0, -2);
+    const decimalPart = strNum.slice(-2);
+    const formattedInteger = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    return `${formattedInteger},${decimalPart} Bs`;
   };
 
   const habitantes = useMemo(() => {
@@ -37,6 +35,18 @@ export default function Jornadas({ sessionUser, activeConsejo, db, setDb, inputC
     const set = new Set(habitantes.map(h => h.calle).filter(Boolean));
     return Array.from(set).sort();
   }, [habitantes]);
+
+  const totalMonto = useMemo(() => {
+    return habitantes.reduce((sum, h) => {
+      const c = checks[h.id];
+      if (c && c.checked && c.monto) {
+        const digits = String(c.monto).replace(/\D/g, "");
+        const num = parseInt(digits, 10);
+        if (!isNaN(num)) return sum + (num / 100);
+      }
+      return sum;
+    }, 0);
+  }, [habitantes, checks]);
 
   const filtrados = useMemo(() => {
     let res = habitantes;
@@ -113,7 +123,7 @@ export default function Jornadas({ sessionUser, activeConsejo, db, setDb, inputC
 
         return {
           habitanteId: h.id,
-          monto: Number((c.monto || "0").toString().replace(/\./g, "").replace(/,/g, ".")),
+          monto: Number(String(c.monto || "0").replace(/\D/g, "")) / 100,
           detalle: det
         };
       });
@@ -309,12 +319,12 @@ export default function Jornadas({ sessionUser, activeConsejo, db, setDb, inputC
                       <td className="p-3">
                         <input 
                           type="text" 
-                          inputMode="decimal"
-                          placeholder="0,00" 
-                          className="w-16 md:w-full rounded border border-slate-300 px-2 py-1 text-sm outline-none focus:border-blue-600 disabled:opacity-50 disabled:bg-slate-100" 
+                          inputMode="numeric"
+                          placeholder="0,00 Bs" 
+                          className="w-24 md:w-full rounded border border-slate-300 px-2 py-1 text-sm outline-none focus:border-blue-600 disabled:opacity-50 disabled:bg-slate-100 text-right font-medium" 
                           value={c.monto !== undefined ? c.monto : ""}
                           onChange={(e) => {
-                            const formatted = formatBs(e.target.value);
+                            const formatted = formatATM(e.target.value);
                             handleChangeField(h.id, 'monto', formatted);
                           }}
                           disabled={!c.checked}
@@ -327,11 +337,15 @@ export default function Jornadas({ sessionUser, activeConsejo, db, setDb, inputC
             </table>
           </div>
 
-          <div className="flex justify-end pt-4">
+          <div className="flex flex-col sm:flex-row gap-4 items-center justify-between rounded-xl border border-emerald-200 bg-emerald-50 p-4 mt-4">
+            <div className="text-emerald-900 font-semibold flex items-center gap-2">
+              <span className="text-sm uppercase tracking-wide opacity-80">Monto Total:</span>
+              <span className="text-xl">{formatATM(Math.round(totalMonto * 100).toString()) || "0,00 Bs"}</span>
+            </div>
             <button
               onClick={handleGuardarJornada}
               disabled={loading}
-              className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-6 py-3 font-semibold text-white transition hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-6 py-3 font-semibold text-white transition hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
             >
               <Save size={18} />
               {loading ? "Guardando..." : "Guardar Jornada"}
