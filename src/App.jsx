@@ -56,7 +56,7 @@ const consejos = [
   "José Gregorio Hernández",
 ];
 
-const calles = ["El Plan", "Los Portugueses", "Los Peñas", "La Acequia"];
+const calles = ["Calle principal La Esperanza", "Calle la fe integral", "Los Portugueses", "Los Peñas", "La Acequia"];
 
 function getInitialActiveConsejo() {
   try {

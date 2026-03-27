@@ -14,6 +14,10 @@ export async function testConnection() {
         created_at TIMESTAMP NOT NULL DEFAULT NOW()
       );
     `);
+    
+    // Auto-migración de datos de calles re-nombradas
+    await client.query("UPDATE habitantes SET calle = 'Calle principal La Esperanza' WHERE calle = 'El Plan'");
+    await client.query("UPDATE usuarios SET calle = 'Calle principal La Esperanza' WHERE calle = 'El Plan'");
   } finally {
     client.release();
   }
