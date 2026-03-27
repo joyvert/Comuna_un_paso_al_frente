@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS usuarios (
   apellido VARCHAR(120) NOT NULL,
   vocero VARCHAR(120) NOT NULL,
   calle VARCHAR(120) NOT NULL,
+  telefono VARCHAR(40),
   is_admin BOOLEAN NOT NULL DEFAULT false,
   password_hash TEXT NOT NULL,
   salt TEXT NOT NULL,
