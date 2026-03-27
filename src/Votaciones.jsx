@@ -135,9 +135,9 @@ export default function Votaciones({ sessionUser, inputClass, onMessage }) {
       {loading ? (
         <p className="text-slate-500 py-10 text-center">Cargando datos de votación...</p>
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
+        <div className="overflow-x-auto overflow-y-auto max-h-[600px] rounded-xl border border-slate-200 bg-white relative shadow-sm">
           <table className="w-full text-left text-sm text-slate-600">
-            <thead className="bg-[#0f2847] text-white">
+            <thead className="bg-[#0f2847] text-white sticky top-0 z-10 shadow-md">
               <tr>
                 <th className="p-3 w-20 text-center">Voto</th>
                 <th className="p-3">Habitante (Nombre Completo)</th>
