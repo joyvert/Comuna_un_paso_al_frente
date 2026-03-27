@@ -295,7 +295,7 @@ export default function Jornadas({ sessionUser, activeConsejo, db, setDb, inputC
                         <input 
                           type="number" 
                           placeholder="0.00" 
-                          className="w-full rounded border border-slate-300 px-2 py-1 text-sm outline-none focus:border-blue-600 disabled:opacity-50 disabled:bg-slate-100" 
+                          className="w-16 md:w-full rounded border border-slate-300 px-2 py-1 text-sm outline-none focus:border-blue-600 disabled:opacity-50 disabled:bg-slate-100" 
                           value={c.monto}
                           onChange={(e) => handleChangeField(h.id, 'monto', e.target.value)}
                           disabled={!c.checked}
