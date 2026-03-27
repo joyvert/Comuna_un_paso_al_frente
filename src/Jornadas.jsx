@@ -217,30 +217,36 @@ export default function Jornadas({ sessionUser, activeConsejo, db, setDb, inputC
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-4">
-            <div className="relative w-full max-w-sm">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-              <input
-                type="text"
-                placeholder="Buscar habitante por nombre o cédula..."
-                className={`${inputClass} pl-10`}
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-              />
+          <div className="flex flex-wrap items-end gap-4">
+            <div className="w-full max-w-sm">
+              <label className="mb-1 ml-1 block text-xs font-medium text-slate-500">Buscar por nombre o cédula</label>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                <input
+                  type="text"
+                  placeholder="Ej. Juan o 12345678"
+                  className={`${inputClass} pl-10`}
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                />
+              </div>
             </div>
             
             {sessionUser?.isAdmin && callesDisponibles.length > 0 && (
-              <select 
-                className={`${inputClass} max-w-[200px]`}
-                value={calleFilter}
-                onChange={e => setCalleFilter(e.target.value)}
-              >
-                <option value="Todas">Todas las calles</option>
-                {callesDisponibles.map(c => <option key={c} value={c}>{c}</option>)}
-              </select>
+              <div className="w-full max-w-[200px]">
+                <label className="mb-1 ml-1 block text-xs font-medium text-slate-500">Filtrar por Calle</label>
+                <select 
+                  className={inputClass}
+                  value={calleFilter}
+                  onChange={e => setCalleFilter(e.target.value)}
+                >
+                  <option value="Todas">Todas las calles</option>
+                  {callesDisponibles.map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </div>
             )}
 
-            <span className="text-sm text-slate-500 ml-auto">
+            <span className="text-sm text-slate-500 ml-auto mb-2">
               Total habitantes mostrados: {filtrados.length}
             </span>
           </div>
