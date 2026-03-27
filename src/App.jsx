@@ -718,51 +718,72 @@ function App() {
                 </div>
               )}
               <form onSubmit={handleRegistrar} className="grid gap-6 md:grid-cols-2">
-                <input
-                  className={inputClass}
-                  placeholder="Nombre"
-                  value={habitanteForm.nombre}
-                  onChange={(e) => setHabitanteForm((p) => ({ ...p, nombre: e.target.value }))}
-                />
-                <input
-                  className={inputClass}
-                  placeholder="Apellido"
-                  value={habitanteForm.apellido}
-                  onChange={(e) => setHabitanteForm((p) => ({ ...p, apellido: e.target.value }))}
-                />
-                <input
-                  className={inputClass}
-                  placeholder="Cédula"
-                  value={habitanteForm.cedula}
-                  onChange={(e) => setHabitanteForm((p) => ({ ...p, cedula: e.target.value }))}
-                />
-                <input
-                  className={inputClass}
-                  placeholder="Teléfono"
-                  value={habitanteForm.telefono}
-                  onChange={(e) => setHabitanteForm((p) => ({ ...p, telefono: e.target.value }))}
-                />
-                <input
-                  className={inputClass}
-                  type="date"
-                  value={habitanteForm.nacimiento}
-                  onChange={(e) => setHabitanteForm((p) => ({ ...p, nacimiento: e.target.value }))}
-                />
-                <input
-                  className={`${inputClass} bg-slate-100`}
-                  readOnly
-                  value={calcAge(habitanteForm.nacimiento) === "" ? "Edad" : `${calcAge(habitanteForm.nacimiento)} años`}
-                />
-                <select
-                  className={inputClass}
-                  value={habitanteCalleEfectiva}
-                  disabled={Boolean(sessionUser && !sessionUser.isAdmin)}
-                  onChange={(e) => setHabitanteForm((p) => ({ ...p, calle: e.target.value }))}
-                >
-                  {calles.map((calle) => (
-                    <option key={calle}>{calle}</option>
-                  ))}
-                </select>
+                <div>
+                  <label className="mb-1 ml-1 block text-xs font-medium text-slate-500">Nombre</label>
+                  <input
+                    className={inputClass}
+                    placeholder="Ej. Juan"
+                    value={habitanteForm.nombre}
+                    onChange={(e) => setHabitanteForm((p) => ({ ...p, nombre: e.target.value }))}
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 ml-1 block text-xs font-medium text-slate-500">Apellido</label>
+                  <input
+                    className={inputClass}
+                    placeholder="Ej. Pérez"
+                    value={habitanteForm.apellido}
+                    onChange={(e) => setHabitanteForm((p) => ({ ...p, apellido: e.target.value }))}
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 ml-1 block text-xs font-medium text-slate-500">Cédula</label>
+                  <input
+                    className={inputClass}
+                    placeholder="Ej. 12345678"
+                    value={habitanteForm.cedula}
+                    onChange={(e) => setHabitanteForm((p) => ({ ...p, cedula: e.target.value }))}
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 ml-1 block text-xs font-medium text-slate-500">Teléfono</label>
+                  <input
+                    className={inputClass}
+                    placeholder="Ej. 04121234567"
+                    value={habitanteForm.telefono}
+                    onChange={(e) => setHabitanteForm((p) => ({ ...p, telefono: e.target.value }))}
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 ml-1 block text-xs font-medium text-slate-500">Fecha de Nacimiento</label>
+                  <input
+                    className={inputClass}
+                    type="date"
+                    value={habitanteForm.nacimiento}
+                    onChange={(e) => setHabitanteForm((p) => ({ ...p, nacimiento: e.target.value }))}
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 ml-1 block text-xs font-medium text-slate-500">Edad Estimada</label>
+                  <input
+                    className={`${inputClass} bg-slate-100`}
+                    readOnly
+                    value={calcAge(habitanteForm.nacimiento) === "" ? "Edad" : `${calcAge(habitanteForm.nacimiento)} años`}
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 ml-1 block text-xs font-medium text-slate-500">Calle</label>
+                  <select
+                    className={inputClass}
+                    value={habitanteCalleEfectiva}
+                    disabled={Boolean(sessionUser && !sessionUser.isAdmin)}
+                    onChange={(e) => setHabitanteForm((p) => ({ ...p, calle: e.target.value }))}
+                  >
+                    {calles.map((calle) => (
+                      <option key={calle}>{calle}</option>
+                    ))}
+                  </select>
+                </div>
                 <div className="flex flex-wrap gap-2">
                   <button
                     type="submit"
@@ -796,30 +817,39 @@ function App() {
           {moduleTab === "buscar" && (
             <div className="space-y-5">
               <div className="grid gap-4 md:grid-cols-3">
-                <input
-                  className={inputClass}
-                  type="number"
-                  placeholder="Edad mínima"
-                  value={searchFilters.min}
-                  onChange={(e) => setSearchFilters((p) => ({ ...p, min: e.target.value }))}
-                />
-                <input
-                  className={inputClass}
-                  type="number"
-                  placeholder="Edad máxima"
-                  value={searchFilters.max}
-                  onChange={(e) => setSearchFilters((p) => ({ ...p, max: e.target.value }))}
-                />
-                <select
-                  className={inputClass}
-                  value={searchFilters.calle}
-                  onChange={(e) => setSearchFilters((p) => ({ ...p, calle: e.target.value }))}
-                >
-                  <option>Todas</option>
-                  {calles.map((calle) => (
-                    <option key={calle}>{calle}</option>
-                  ))}
-                </select>
+                <div>
+                  <label className="mb-1 ml-1 block text-xs font-medium text-slate-500">Edad mínima</label>
+                  <input
+                    className={inputClass}
+                    type="number"
+                    placeholder="0"
+                    value={searchFilters.min}
+                    onChange={(e) => setSearchFilters((p) => ({ ...p, min: e.target.value }))}
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 ml-1 block text-xs font-medium text-slate-500">Edad máxima</label>
+                  <input
+                    className={inputClass}
+                    type="number"
+                    placeholder="100"
+                    value={searchFilters.max}
+                    onChange={(e) => setSearchFilters((p) => ({ ...p, max: e.target.value }))}
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 ml-1 block text-xs font-medium text-slate-500">Filtrar por Calle</label>
+                  <select
+                    className={inputClass}
+                    value={searchFilters.calle}
+                    onChange={(e) => setSearchFilters((p) => ({ ...p, calle: e.target.value }))}
+                  >
+                    <option>Todas</option>
+                    {calles.map((calle) => (
+                      <option key={calle}>{calle}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
               <TablaHabitantes
                 rows={habitantesFiltrados}
