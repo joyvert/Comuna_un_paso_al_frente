@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { api } from "./api";
-import { Search, Save, Calendar, CheckSquare, Square, History } from "lucide-react";
+import { Search, Save, Calendar, CheckSquare, Square, History, Trash2 } from "lucide-react";
 
 export default function Jornadas({ sessionUser, activeConsejo, db, setDb, inputClass }) {
   const [tab, setTab] = useState("nueva"); // "nueva" | "historial"
@@ -377,16 +377,36 @@ export default function Jornadas({ sessionUser, activeConsejo, db, setDb, inputC
                 <h4 className="font-semibold text-[#0f2847]">Jornada en {activeConsejo}</h4>
                 <p className="text-sm text-slate-600 mt-1">Registrada el: {new Date(j.created_at).toLocaleString()}</p>
               </div>
-              <div className="flex gap-4 items-center bg-slate-50 rounded-lg p-3 w-full md:w-auto">
-                <div className="text-center">
-                  <span className="block text-2xl font-bold text-[#0f2847]">{j.total_hab}</span>
-                  <span className="text-xs text-slate-500">Habitantes</span>
+              <div className="flex flex-col gap-4 items-center bg-slate-50 rounded-lg p-3 w-full md:w-auto mt-4 md:mt-0">
+                <div className="flex gap-4 items-center">
+                  <div className="text-center">
+                    <span className="block text-2xl font-bold text-[#0f2847]">{j.total_hab}</span>
+                    <span className="text-xs text-slate-500">Habitantes</span>
+                  </div>
+                  <div className="w-[1px] h-10 bg-slate-200"></div>
+                  <div className="text-center">
+                    <span className="block text-xl font-bold text-emerald-600">Bs. {Number(j.total_recaudado).toLocaleString('de-DE', {minimumFractionDigits:2})}</span>
+                    <span className="text-xs text-slate-500">Recaudado</span>
+                  </div>
                 </div>
-                <div className="w-[1px] h-10 bg-slate-200"></div>
-                <div className="text-center">
-                  <span className="block text-xl font-bold text-emerald-600">Bs. {Number(j.total_recaudado).toLocaleString('de-DE', {minimumFractionDigits:2})}</span>
-                  <span className="text-xs text-slate-500">Recaudado</span>
-                </div>
+                {sessionUser?.isAdmin && (
+                  <button 
+                    onClick={async () => {
+                      if (window.confirm("¿Seguro que deseas eliminar esta jornada y todos sus pagos?")) {
+                        try {
+                          await api.deleteJornada(j.id);
+                          setServerMsg("success", "Jornada eliminada.");
+                          fetchHistory();
+                        } catch (e) {
+                          setServerMsg("error", e.message || "Error al eliminar");
+                        }
+                      }
+                    }}
+                    className="w-full text-center py-2 text-sm text-red-600 font-medium hover:bg-red-100 rounded-lg border border-red-200 flex items-center justify-center gap-2 transition"
+                  >
+                    <Trash2 size={16} /> Eliminar Jornada
+                  </button>
+                )}
               </div>
             </div>
           ))}
