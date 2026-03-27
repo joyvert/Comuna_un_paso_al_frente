@@ -51,16 +51,24 @@ export default function Jornadas({ sessionUser, activeConsejo, db, setDb, inputC
   const filtrados = useMemo(() => {
     let res = habitantes;
     if (calleFilter !== "Todas") {
-      res = res.filter(h => h.calle === calleFilter);
+      res = res.filter((h) => h.calle === calleFilter);
     }
-    const term = search.trim().toLowerCase();
-    if (term) {
-      res = res.filter(
-        (h) => h.nombre.toLowerCase().includes(term) || h.cedula.toLowerCase().includes(term)
-      );
+    if (search.trim()) {
+      const normalize = (str) =>
+        (str || "")
+          .toLowerCase()
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "");
+
+      const searchTerms = normalize(search).split(/\s+/).filter(Boolean);
+
+      res = res.filter((h) => {
+        const fullText = normalize(`${h.nombre} ${h.apellido || ""} ${h.cedula}`);
+        return searchTerms.every((term) => fullText.includes(term));
+      });
     }
     return res;
-  }, [habitantes, search, calleFilter]);
+  }, [habitantes, calleFilter, search]);
 
   useEffect(() => {
     // Refresh checks if inhabitants change

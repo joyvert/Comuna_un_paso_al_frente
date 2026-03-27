@@ -58,8 +58,18 @@ export default function Votaciones({ sessionUser, inputClass, onMessage }) {
       list = list.filter((h) => h.calle === calleFilter);
     }
     if (search.trim()) {
-      const lower = search.toLowerCase();
-      list = list.filter((h) => (h.nombre + " " + h.apellido + " " + h.cedula).toLowerCase().includes(lower));
+      const normalize = (str) =>
+        (str || "")
+          .toLowerCase()
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "");
+
+      const searchTerms = normalize(search).split(/\s+/).filter(Boolean);
+
+      list = list.filter((h) => {
+        const fullText = normalize(`${h.nombre} ${h.apellido} ${h.cedula}`);
+        return searchTerms.every((term) => fullText.includes(term));
+      });
     }
     return list;
   }, [data.habitantes, calleFilter, search]);
