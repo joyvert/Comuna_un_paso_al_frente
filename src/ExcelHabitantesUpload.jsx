@@ -11,16 +11,20 @@ export default function ExcelHabitantesUpload({ consejo, calles, onUpload, input
   const [error, setError] = useState("");
   const [importMode, setImportMode] = useState("simple"); // 'simple' o 'censo'
 
-  function resetState() {
+  function clearData() {
     setPreview([]);
     setCensoFamilias([]);
     setError("");
+  }
+
+  function resetContentInputs() {
+    clearData();
     if (fileInput.current) fileInput.current.value = "";
     if (fileInputCenso.current) fileInputCenso.current.value = "";
   }
 
   function handleFileSimple(e) {
-    resetState();
+    clearData();
     const file = e.target.files[0];
     if (!file) return;
     const reader = new FileReader();
@@ -49,7 +53,7 @@ export default function ExcelHabitantesUpload({ consejo, calles, onUpload, input
   }
 
   function handleFileCenso(e) {
-    resetState();
+    clearData();
     const file = e.target.files[0];
     if (!file) return;
     const reader = new FileReader();
@@ -119,7 +123,7 @@ export default function ExcelHabitantesUpload({ consejo, calles, onUpload, input
       } else {
         await onUpload({ mode: "bulk", familias: censoFamilias });
       }
-      resetState();
+      resetContentInputs();
     } catch (err) {
       setError(err?.message || "Error al cargar habitantes.");
     } finally {
@@ -135,13 +139,13 @@ export default function ExcelHabitantesUpload({ consejo, calles, onUpload, input
       
       <div className="flex gap-2 mb-4 border-b border-slate-200 pb-2">
         <button 
-          onClick={() => { setImportMode("simple"); resetState(); }}
+          onClick={() => { setImportMode("simple"); resetContentInputs(); }}
           className={`px-3 py-1 text-sm font-medium rounded-t-lg ${importMode === "simple" ? "bg-slate-100 text-blue-700 border-b-2 border-blue-600" : "text-slate-500 hover:text-slate-700"}`}
         >
           Plantilla Simple
         </button>
         <button 
-          onClick={() => { setImportMode("censo"); resetState(); }}
+          onClick={() => { setImportMode("censo"); resetContentInputs(); }}
           className={`px-3 py-1 text-sm font-medium rounded-t-lg ${importMode === "censo" ? "bg-slate-100 text-purple-700 border-b-2 border-purple-600" : "text-slate-500 hover:text-slate-700"}`}
         >
           Censo Familiar 2026 (Familias)
@@ -189,7 +193,7 @@ export default function ExcelHabitantesUpload({ consejo, calles, onUpload, input
         </div>
       )}
 
-      {error && <div className="text-red-500 bg-red-50 p-2 rounded text-sm text-center border border-red-200 font-medium">{error}</div>}
+      {error && <div className="text-red-500 bg-red-50 p-3 rounded-lg text-sm text-center border border-red-200 font-medium">{error}</div>}
 
       {/* Previews */}
       {preview.length > 0 && importMode === "simple" && (
