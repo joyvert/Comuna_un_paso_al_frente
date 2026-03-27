@@ -24,7 +24,7 @@ export default function Jornadas({ sessionUser, activeConsejo, db, setDb, inputC
     const integerPart = strNum.slice(0, -2);
     const decimalPart = strNum.slice(-2);
     const formattedInteger = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-    return `${formattedInteger},${decimalPart} Bs`;
+    return `${formattedInteger},${decimalPart}`;
   };
 
   const habitantes = useMemo(() => {
@@ -316,19 +316,24 @@ export default function Jornadas({ sessionUser, activeConsejo, db, setDb, inputC
                           </label>
                         )}
                       </td>
-                      <td className="p-3">
-                        <input 
-                          type="text" 
-                          inputMode="numeric"
-                          placeholder="0,00 Bs" 
-                          className="w-24 md:w-full rounded border border-slate-300 px-2 py-1 text-sm outline-none focus:border-blue-600 disabled:opacity-50 disabled:bg-slate-100 text-right font-medium" 
-                          value={c.monto !== undefined ? c.monto : ""}
-                          onChange={(e) => {
-                            const formatted = formatATM(e.target.value);
-                            handleChangeField(h.id, 'monto', formatted);
-                          }}
-                          disabled={!c.checked}
-                        />
+                      <td className="p-3 relative">
+                        <div className="relative inline-block w-24 md:w-full">
+                          <input 
+                            type="text" 
+                            inputMode="numeric"
+                            placeholder="0,00" 
+                            className="w-full rounded border border-slate-300 px-2 py-1 pr-6 text-sm outline-none focus:border-blue-600 disabled:opacity-50 disabled:bg-slate-100 text-right font-medium" 
+                            value={c.monto !== undefined ? c.monto : ""}
+                            onChange={(e) => {
+                              const formatted = formatATM(e.target.value);
+                              handleChangeField(h.id, 'monto', formatted);
+                            }}
+                            disabled={!c.checked}
+                          />
+                          <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs font-semibold text-[#143c6e] pointer-events-none">
+                            Bs
+                          </span>
+                        </div>
                       </td>
                     </tr>
                   )
@@ -340,7 +345,7 @@ export default function Jornadas({ sessionUser, activeConsejo, db, setDb, inputC
           <div className="flex flex-col sm:flex-row gap-4 items-center justify-between rounded-xl border border-emerald-200 bg-emerald-50 p-4 mt-4">
             <div className="text-emerald-900 font-semibold flex items-center gap-2">
               <span className="text-sm uppercase tracking-wide opacity-80">Monto Total:</span>
-              <span className="text-xl">{formatATM(Math.round(totalMonto * 100).toString()) || "0,00 Bs"}</span>
+              <span className="text-xl">{formatATM(Math.round(totalMonto * 100).toString()) || "0,00"} Bs</span>
             </div>
             <button
               onClick={handleGuardarJornada}
