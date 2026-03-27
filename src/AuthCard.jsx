@@ -231,6 +231,7 @@ export default function AuthCard({ onAuthSuccess }) {
   }, [recoveryMeta, recoverA1, recoverA2, recoverPw, recoverPw2]);
 
   function resetRecoveryView() {
+    setGlobalMessage({ type: "info", text: "" });
     setRecoverStep(1);
     setRecoverUserId("");
     setRecoveryMeta(null);
@@ -603,17 +604,17 @@ export default function AuthCard({ onAuthSuccess }) {
                         </p>
                       </div>
                     </div>
-                    <button
-                      type="button"
-                      className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-100"
-                      onClick={() => {
-                        resetRecoveryView();
-                        setMode("login");
-                      }}
-                    >
-                      <ArrowLeft className="h-4 w-4" aria-hidden />
-                      Volver al login
-                    </button>
+                      <button
+                        type="button"
+                        className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-100"
+                        onClick={() => {
+                          setGlobalMessage({ type: "info", text: "" });
+                          setMode("login");
+                        }}
+                      >
+                        <ArrowLeft className="h-4 w-4" aria-hidden />
+                        Volver al login
+                      </button>
                   </div>
 
                   {globalMessage.text ? (
@@ -743,7 +744,10 @@ export default function AuthCard({ onAuthSuccess }) {
                       <button
                         type="button"
                         className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-100"
-                        onClick={() => setMode("register")}
+                        onClick={() => {
+                          setGlobalMessage({ type: "info", text: "" });
+                          setMode("register");
+                        }}
                       >
                         Registrarte
                       </button>
@@ -785,7 +789,10 @@ export default function AuthCard({ onAuthSuccess }) {
                       <button
                         type="button"
                         className="text-[#0f2847] font-medium hover:underline"
-                        onClick={() => setMode("register")}
+                        onClick={() => {
+                          setGlobalMessage({ type: "info", text: "" });
+                          setMode("register");
+                        }}
                       >
                         ¿No tienes cuenta? Regístrate aquí
                       </button>
