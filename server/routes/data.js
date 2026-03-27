@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { pool } from "../config/db.js";
-import { requireAuth } from "../middlewares/authJwt.js";
+import { requireAuth, requireAdmin } from "../middlewares/authJwt.js";
 
 const router = Router();
 
@@ -349,6 +349,31 @@ router.post("/jornadas", async (req, res) => {
       return res.json({ ok: true, message: "Jornada registrada correctamente." });
     } catch (e) {
       await client.query('ROLLBACK');
+      throw e;
+    } finally {
+      client.release();
+    }
+  } catch (error) {
+    return res.status(500).json({ ok: false, message: error.message });
+  }
+});
+
+router.delete("/jornadas/:jornadaId", requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const { jornadaId } = req.params;
+    const client = await pool.connect();
+    try {
+      await client.query("BEGIN");
+      await client.query("DELETE FROM pagos WHERE jornada_id = $1", [jornadaId]);
+      const del = await client.query("DELETE FROM jornadas WHERE id = $1 RETURNING id", [jornadaId]);
+      if (!del.rows.length) {
+        await client.query("ROLLBACK");
+        return res.status(404).json({ ok: false, message: "Jornada no encontrada." });
+      }
+      await client.query("COMMIT");
+      return res.json({ ok: true, message: "Jornada y pagos eliminados." });
+    } catch (e) {
+      await client.query("ROLLBACK");
       throw e;
     } finally {
       client.release();
