@@ -123,6 +123,8 @@ const initialServicios = {
 };
 
 function App() {
+  // Búsqueda de habitantes locales
+  const [habitanteSearch, setHabitanteSearch] = useState("");
   // Estado para edición de pagos
   const [editPago, setEditPago] = useState(null);
   const [editPagoForm, setEditPagoForm] = useState({ habitante: '', cedula: '', detalle: '', monto: '' });
@@ -690,8 +692,8 @@ function App() {
 
           {moduleTab === "habitantes" && (
             <div className="space-y-8">
-              {/* Solo admin: carga masiva Excel después de seleccionar consejo */}
-              {sessionUser?.isAdmin && activeConsejo && (
+              {/* Solo admin: carga masiva Excel después de seleccionar consejo. Oculto para La Esperanza. */}
+              {sessionUser?.isAdmin && activeConsejo && !activeConsejo.toLowerCase().includes("esperanza") && (
                 <ExcelHabitantesUpload
                   consejo={activeConsejo}
                   calles={calles}
@@ -813,10 +815,10 @@ function App() {
                     ))}
                   </select>
                 </div>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex gap-3 items-end h-[68px]">
                   <button
                     type="submit"
-                    className="rounded-xl bg-[#0f2847] px-4 py-2 font-medium text-white hover:bg-[#12345f]"
+                    className="w-full flex-1 rounded-xl bg-[#0f2847] px-4 py-2 font-medium text-white hover:bg-[#12345f] h-[42px] transition-colors shadow-sm"
                   >
                     {editingHabitanteId ? "Actualizar" : "Registrar"}
                   </button>
@@ -828,15 +830,30 @@ function App() {
                         setEditingHabitanteId(null);
                         setHabitanteMsg({ type: "", text: "" });
                       }}
-                      className="rounded-xl border border-slate-300 px-4 py-2 font-medium text-slate-700 hover:bg-slate-100"
+                      className="w-full flex-1 rounded-xl border border-slate-300 px-4 py-2 font-medium text-slate-700 hover:bg-slate-100 h-[42px] transition-colors"
                     >
                       Cancelar
                     </button>
                   )}
                 </div>
               </form>
+              <div className="mb-2 mt-6">
+                <label className="mb-2 ml-1 block text-sm font-semibold text-slate-700">
+                  <Search className="inline-block mr-2 text-slate-400" size={16} />
+                  Buscar en padrón de Habitantes
+                </label>
+                <input
+                  className={inputClass}
+                  placeholder="Escriba nombre, apellido o cédula..."
+                  value={habitanteSearch}
+                  onChange={(e) => setHabitanteSearch(e.target.value)}
+                />
+              </div>
               <TablaHabitantes
-                rows={habitantesActuales}
+                rows={habitantesActuales.filter(h => 
+                  !habitanteSearch || 
+                  `${h.nombre} ${h.apellido} ${h.cedula}`.toLowerCase().includes(habitanteSearch.toLowerCase())
+                )}
                 onEdit={handleEditHabitante}
                 onDelete={handleDeleteHabitante}
               />
