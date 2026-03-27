@@ -1263,7 +1263,7 @@ function HabitanteCard({ habitante }) {
   );
 }
 
-function TablaHabitantes({ rows, onEdit, onDelete }) {
+function TablaHabitantes({ rows, onEdit, onDelete, onManageFamily }) {
   return (
     <div className="overflow-x-auto overflow-y-auto max-h-[600px] border border-slate-200 rounded-xl relative shadow-sm">
       <table className="min-w-full">
@@ -1275,7 +1275,7 @@ function TablaHabitantes({ rows, onEdit, onDelete }) {
             <th className="px-3 py-2">Teléfono</th>
             <th className="px-3 py-2">Edad</th>
             <th className="px-3 py-2">Calle</th>
-            {(onEdit || onDelete) && (
+            {(onEdit || onDelete || onManageFamily) && (
               <th className="px-3 py-2 text-right">Acciones</th>
             )}
           </tr>
