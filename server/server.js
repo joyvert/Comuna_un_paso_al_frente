@@ -16,7 +16,7 @@ if (process.env.TRUST_PROXY === "1") {
 app.use(cors({
   origin: process.env.FRONTEND_URL ? process.env.FRONTEND_URL.split(',') : '*'
 }));
-app.use(express.json());
+app.use(express.json({ limit: "10mb" }));
 
 app.get("/api/health", async (_req, res) => {
   try {

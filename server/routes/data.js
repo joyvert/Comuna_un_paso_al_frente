@@ -154,7 +154,7 @@ router.post("/habitantes", requireAuth, requireAdminOrSameConsejo, async (req, r
 });
 
 // Importación Masiva Censo Familiar
-router.post("/habitantes/bulk", requireAuth, requireAdmin, async (req, res) => {
+router.post("/habitantes/bulk", requireAuth, async (req, res) => {
   const { consejoNombre, familias } = req.body;
   if (!familias || !Array.isArray(familias)) {
     return res.status(400).json({ ok: false, message: "Formato de datos inválido." });
