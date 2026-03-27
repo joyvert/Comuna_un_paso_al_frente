@@ -4,6 +4,7 @@ import ExcelHabitantesUpload from "./ExcelHabitantesUpload";
 import AuthCard from "./AuthCard";
 import Jornadas from "./Jornadas";
 import Votaciones from "./Votaciones";
+import FamiliaManagerModal from "./FamiliaManagerModal";
 import { api } from "./api";
 import AOS from "aos";
 import "aos/dist/aos.css";
@@ -125,6 +126,7 @@ const initialServicios = {
 function App() {
   // Búsqueda de habitantes locales
   const [habitanteSearch, setHabitanteSearch] = useState("");
+  const [familyManagerJefe, setFamilyManagerJefe] = useState(null);
   // Estado para edición de pagos
   const [editPago, setEditPago] = useState(null);
   const [editPagoForm, setEditPagoForm] = useState({ habitante: '', cedula: '', detalle: '', monto: '' });
@@ -324,9 +326,37 @@ function App() {
     ...(sessionUser?.isAdmin ? [{ key: "admin", label: "Administración", icon: UserCog }] : []),
   ];
 
-  const habitantesActuales = db[activeConsejo].habitantes;
-  const pagosGas = [...db[activeConsejo].pagos].filter((p) => p.servicio === "Gas").reverse().slice(0, 8);
-  const pagosProteinas = [...db[activeConsejo].pagos].filter((p) => p.servicio === "Proteínas").reverse().slice(0, 8);
+  const habitantesActualesOriginal = db[activeConsejo]?.habitantes || [];
+  const habitantesActuales = useMemo(() => {
+    const jefes = [];
+    const solteros = [];
+    const depsMap = {};
+
+    habitantesActualesOriginal.forEach(h => {
+      if (h.es_jefe_familia) jefes.push(h);
+      else if (h.jefe_familia_id) {
+        if (!depsMap[h.jefe_familia_id]) depsMap[h.jefe_familia_id] = [];
+        depsMap[h.jefe_familia_id].push(h);
+      } else solteros.push(h);
+    });
+
+    const ordenados = [];
+    jefes.forEach(j => {
+      ordenados.push(j);
+      if (depsMap[j.id]) {
+        ordenados.push(...depsMap[j.id]);
+        delete depsMap[j.id];
+      }
+    });
+
+    ordenados.push(...solteros);
+    Object.values(depsMap).forEach(arr => ordenados.push(...arr));
+
+    return ordenados;
+  }, [habitantesActualesOriginal]);
+
+  const pagosGas = db[activeConsejo] ? [...db[activeConsejo].pagos].filter((p) => p.servicio === "Gas").reverse().slice(0, 8) : [];
+  const pagosProteinas = db[activeConsejo] ? [...db[activeConsejo].pagos].filter((p) => p.servicio === "Proteínas").reverse().slice(0, 8) : [];
 
   const stats = useMemo(() => {
     if (sessionUser?.isAdmin) {
@@ -856,7 +886,35 @@ function App() {
                 )}
                 onEdit={handleEditHabitante}
                 onDelete={handleDeleteHabitante}
+                onManageFamily={sessionUser?.isAdmin ? setFamilyManagerJefe : undefined}
               />
+              {familyManagerJefe && (
+                <FamiliaManagerModal 
+                  jefe={familyManagerJefe}
+                  allHabitantes={habitantesActualesOriginal}
+                  onClose={() => setFamilyManagerJefe(null)}
+                  onSave={async (jefeId, deps) => {
+                    try {
+                      await api.saveGrupoFamiliar(jefeId, deps);
+                      fetchData(); // Recargar todo del servidor
+                      setFamilyManagerJefe(null);
+                      setHabitanteMsg({ type: "success", text: "El grupo familiar se ha guardado exitosamente." });
+                    } catch (e) {
+                      setHabitanteMsg({ type: "error", text: "Error guardando la familia: " + e.message });
+                    }
+                  }}
+                  onDisolve={async (jefeId) => {
+                    try {
+                      await api.disolverGrupoFamiliar(jefeId);
+                      fetchData();
+                      setFamilyManagerJefe(null);
+                      setHabitanteMsg({ type: "success", text: "El grupo familiar se ha disuelto." });
+                    } catch (e) {
+                      setHabitanteMsg({ type: "error", text: "Error disolviendo: " + e.message });
+                    }
+                  }}
+                />
+              )}
             </div>
           )}
 
@@ -1237,9 +1295,19 @@ function TablaHabitantes({ rows, onEdit, onDelete }) {
                 <td className="px-3 py-2">{r.telefono}</td>
                 <td className="px-3 py-2">{r.edad}</td>
                 <td className="px-3 py-2">{r.calle}</td>
-                {(onEdit || onDelete) && (
+                {(onEdit || onDelete || onManageFamily) && (
                   <td className="px-3 py-2 text-right">
                     <div className="flex justify-end gap-2">
+                      {onManageFamily && !r.jefe_familia_id && (
+                        <button
+                          type="button"
+                          onClick={() => onManageFamily(r)}
+                          className={`rounded-lg p-1.5 transition ${r.es_jefe_familia ? 'text-indigo-600 bg-indigo-50 hover:bg-indigo-100' : 'text-slate-500 hover:bg-indigo-50 hover:text-indigo-600'}`}
+                          title={r.es_jefe_familia ? "Modificar Grupo Familiar" : "Convertir en Jefe de Familia"}
+                        >
+                          <Users size={16} />
+                        </button>
+                      )}
                       {onEdit && (
                         <button
                           type="button"
