@@ -12,6 +12,7 @@ import {
   Building2,
   ChartColumnBig,
   CheckSquare,
+  Home,
   CircleDollarSign,
   Droplets,
   LayoutDashboard,
@@ -361,13 +362,13 @@ function App() {
   const stats = useMemo(() => {
     if (sessionUser?.isAdmin) {
       const totalHabitantes = Object.values(db).reduce((a, c) => a + c.habitantes.length, 0);
-      const totalPagos = Object.values(db).reduce((a, c) => a + c.pagos.length, 0);
-      return { totalHabitantes, totalPagos, voceroScope: false };
+      const totalFamilias = Object.values(db).reduce((a, c) => a + c.habitantes.filter(h => h.es_jefe_familia).length, 0);
+      return { totalHabitantes, totalFamilias, voceroScope: false };
     }
     const slice = db[activeConsejo] || { habitantes: [], pagos: [] };
     return {
       totalHabitantes: slice.habitantes.length,
-      totalPagos: slice.pagos.length,
+      totalFamilias: slice.habitantes.filter(h => h.es_jefe_familia).length,
       voceroScope: true,
     };
   }, [db, sessionUser?.isAdmin, activeConsejo]);
@@ -394,7 +395,7 @@ function App() {
           [activeConsejo]: {
             ...prev[activeConsejo],
             habitantes: prev[activeConsejo].habitantes.map((h) =>
-              h.id === actualizado.id ? actualizado : h,
+              h.id === actualizado.id ? { ...h, ...actualizado } : h,
             ),
           },
         }));
@@ -608,7 +609,7 @@ function App() {
                 <Users size={16} /> Habitantes registrados: <strong>{stats.totalHabitantes}</strong>
               </p>
               <p className="flex items-center gap-2">
-                <CircleDollarSign size={16} /> Pagos registrados: <strong>{stats.totalPagos}</strong>
+                <Home size={16} /> Cantidad de familias: <strong>{stats.totalFamilias}</strong>
               </p>
               <p className="flex items-center gap-2">
                 <Building2 size={16} /> Consejos activos:{" "}

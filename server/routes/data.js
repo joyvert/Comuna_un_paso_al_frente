@@ -243,7 +243,7 @@ router.put("/habitantes/:id", async (req, res) => {
     const result = await pool.query(
       `UPDATE habitantes SET nombre = $1, apellido = $2, cedula = $3, telefono = $4, edad = $5, calle = $6, nacimiento = $7
        WHERE id = $8
-       RETURNING id, nombre, apellido, cedula, telefono, edad, calle, nacimiento`,
+       RETURNING *`,
       [nombre, apellido, cedula, telefono || null, edad, calle, nacimiento || null, id],
     );
     if (!result.rows.length) return res.status(404).json({ ok: false, message: "Habitante no encontrado." });
