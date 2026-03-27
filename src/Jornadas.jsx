@@ -14,6 +14,21 @@ export default function Jornadas({ sessionUser, activeConsejo, db, setDb, inputC
   const [calleFilter, setCalleFilter] = useState("Todas");
   const [checks, setChecks] = useState({});
 
+  const formatBs = (value) => {
+    if (value === undefined || value === null) return "";
+    let val = String(value).replace(/[^0-9,]/g, "");
+    const parts = val.split(",");
+    if (parts.length > 2) {
+      val = parts[0] + "," + parts.slice(1).join("");
+    }
+    const chunks = val.split(",");
+    chunks[0] = chunks[0].replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    if (chunks.length > 1) {
+      chunks[1] = chunks[1].substring(0, 2);
+    }
+    return chunks.join(",");
+  };
+
   const habitantes = useMemo(() => {
     return db[activeConsejo]?.habitantes || [];
   }, [db, activeConsejo]);
@@ -98,7 +113,7 @@ export default function Jornadas({ sessionUser, activeConsejo, db, setDb, inputC
 
         return {
           habitanteId: h.id,
-          monto: Number(c.monto || 0),
+          monto: Number((c.monto || "0").toString().replace(/\./g, "").replace(/,/g, ".")),
           detalle: det
         };
       });
@@ -293,13 +308,16 @@ export default function Jornadas({ sessionUser, activeConsejo, db, setDb, inputC
                       </td>
                       <td className="p-3">
                         <input 
-                          type="number" 
-                          placeholder="0.00" 
+                          type="text" 
+                          inputMode="decimal"
+                          placeholder="0,00" 
                           className="w-16 md:w-full rounded border border-slate-300 px-2 py-1 text-sm outline-none focus:border-blue-600 disabled:opacity-50 disabled:bg-slate-100" 
-                          value={c.monto}
-                          onChange={(e) => handleChangeField(h.id, 'monto', e.target.value)}
+                          value={c.monto !== undefined ? c.monto : ""}
+                          onChange={(e) => {
+                            const formatted = formatBs(e.target.value);
+                            handleChangeField(h.id, 'monto', formatted);
+                          }}
                           disabled={!c.checked}
-                          min="0" step="0.01"
                         />
                       </td>
                     </tr>
