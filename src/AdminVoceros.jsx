@@ -243,28 +243,34 @@ export default function AdminVoceros({ consejos, calles, inputClass, onMessage }
               onChange={(e) => setForm((p) => ({ ...p, usuario: e.target.value }))}
             />
           </div>
-          <select
-            className={inputClass}
-            value={form.vocero}
-            onChange={(e) => setForm((p) => ({ ...p, vocero: e.target.value }))}
-          >
-            {consejos.map((c) => (
-              <option key={c} value={c}>
-                Consejo: {c}
-              </option>
-            ))}
-          </select>
-          <select
-            className={inputClass}
-            value={form.calle}
-            onChange={(e) => setForm((p) => ({ ...p, calle: e.target.value }))}
-          >
-            {calles.map((c) => (
-              <option key={c} value={c}>
-                Calle: {c}
-              </option>
-            ))}
-          </select>
+          <div className="flex flex-col">
+            <label className="mb-1 text-xs font-semibold text-slate-700">Consejo Comunal</label>
+            <select
+              className={inputClass}
+              value={form.vocero}
+              onChange={(e) => setForm((p) => ({ ...p, vocero: e.target.value }))}
+            >
+              {consejos.map((c) => (
+                <option key={c} value={c}>
+                  Consejo: {c}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="flex flex-col">
+            <label className="mb-1 text-xs font-semibold text-slate-700">Calle</label>
+            <select
+              className={inputClass}
+              value={form.calle}
+              onChange={(e) => setForm((p) => ({ ...p, calle: e.target.value }))}
+            >
+              {calles.map((c) => (
+                <option key={c} value={c}>
+                  Calle: {c}
+                </option>
+              ))}
+            </select>
+          </div>
           <div className="flex flex-col">
             <label className="mb-1 text-xs font-semibold text-slate-700">Contraseña inicial</label>
             <input
