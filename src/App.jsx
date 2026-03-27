@@ -499,7 +499,7 @@ function App() {
         <nav className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 md:px-8">
           <div className="flex items-center gap-2 text-white">
             <LayoutDashboard size={20} />
-            <span className="font-semibold">Comuna Pro</span>
+            <span className="font-semibold">Comuna un paso al frente</span>
         </div>
           <div className="flex items-center gap-2">
             <div className="hidden gap-2 md:flex">

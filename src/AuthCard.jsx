@@ -568,7 +568,7 @@ export default function AuthCard({ onAuthSuccess }) {
                 <ShieldCheck className="h-5 w-5" aria-hidden />
               </div>
               <div>
-                <p className="text-sm font-semibold text-slate-800">Comuna Pro</p>
+                <p className="text-sm font-semibold text-slate-800">Comuna un paso al frente</p>
                 <p className="text-xs text-slate-500">Acceso seguro para el equipo</p>
               </div>
             </div>
