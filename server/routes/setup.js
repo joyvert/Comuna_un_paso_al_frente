@@ -20,5 +20,14 @@ router.post("/init-db", async (_req, res) => {
   }
 });
 
-export default router;
+router.get("/wipe-familias", async (req, res) => {
+  if (req.query.key !== "joyvert2026") return res.status(403).send("No Auth");
+  try {
+    await pool.query("UPDATE habitantes SET es_jefe_familia = false, jefe_familia_id = NULL");
+    return res.json({ ok: true, message: "Familias reseteadas con éxito en BD Producción." });
+  } catch (error) {
+    return res.status(500).json({ ok: false, error: error.message });
+  }
+});
 
+export default router;

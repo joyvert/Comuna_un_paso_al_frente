@@ -282,6 +282,72 @@ router.delete("/habitantes/:id", async (req, res) => {
   }
 });
 
+router.put("/habitantes/:id/familia", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { dependientesIds } = req.body;
+
+    const row = await getHabitanteConsejoCalle(id);
+    if (!row) return res.status(404).json({ ok: false, message: "Habitante ancla no encontrado." });
+
+    if (!req.auth.admin) {
+      if (row.consejo_nombre !== req.auth.consejo || row.calle !== req.auth.calle) {
+         return res.status(403).json({ ok: false, message: "No posees jurisdicción sobre esta calle." });
+      }
+    }
+
+    const client = await pool.connect();
+    try {
+      await client.query("BEGIN");
+      
+      // Asegurar que es Jefe de familia y no tiene jefe por encima de él
+      await client.query("UPDATE habitantes SET es_jefe_familia = true, jefe_familia_id = NULL WHERE id = $1", [id]);
+      
+      // Desenlazar todo aquel que actualmente lo tenía de jefe (para resetear el estado y evitar huérfanos retirados)
+      await client.query("UPDATE habitantes SET jefe_familia_id = NULL WHERE jefe_familia_id = $1", [id]);
+      
+      // Re-enlazar únicamente a los nuevos ids (y quitarles su estatus de jefe de familia si lo tuviesen)
+      if (dependientesIds && Array.isArray(dependientesIds) && dependientesIds.length > 0) {
+        await client.query(
+          "UPDATE habitantes SET es_jefe_familia = false, jefe_familia_id = $1 WHERE id = ANY($2::int[])", 
+          [id, dependientesIds]
+        );
+      }
+      
+      await client.query("COMMIT");
+      return res.json({ ok: true, message: "Grupo Familiar configurado exitosamente." });
+    } catch (err) {
+      await client.query("ROLLBACK");
+      throw err;
+    } finally {
+      client.release();
+    }
+  } catch (error) {
+    return res.status(500).json({ ok: false, message: error.message });
+  }
+});
+
+router.delete("/habitantes/:id/familia", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const client = await pool.connect();
+    try {
+      await client.query("BEGIN");
+      await client.query("UPDATE habitantes SET jefe_familia_id = NULL WHERE jefe_familia_id = $1", [id]);
+      await client.query("UPDATE habitantes SET es_jefe_familia = false WHERE id = $1", [id]);
+      await client.query("COMMIT");
+      return res.json({ ok: true, message: "Grupo Familiar disuelto exitosamente." });
+    } catch (err) {
+      await client.query("ROLLBACK");
+      throw err;
+    } finally {
+      client.release();
+    }
+  } catch (error) {
+    return res.status(500).json({ ok: false, message: error.message });
+  }
+});
+
 router.get("/pagos/:consejoNombre", async (req, res) => {
   try {
     const { consejoNombre } = req.params;

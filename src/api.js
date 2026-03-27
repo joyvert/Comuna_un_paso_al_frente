@@ -72,6 +72,9 @@ export const api = {
     request(`/data/habitantes/${encodeURIComponent(id)}`, { method: "PUT", body: JSON.stringify(payload) }),
   deleteHabitante: (id) => request(`/data/habitantes/${encodeURIComponent(id)}`, { method: "DELETE" }),
 
+  saveGrupoFamiliar: (id, dependientesIds) => request(`/data/habitantes/${encodeURIComponent(id)}/familia`, { method: "PUT", body: JSON.stringify({ dependientesIds }) }),
+  disolverGrupoFamiliar: (id) => request(`/data/habitantes/${encodeURIComponent(id)}/familia`, { method: "DELETE" }),
+
   getPagos: (consejoNombre) => request(`/data/pagos/${encodeURIComponent(consejoNombre)}`),
   createPago: (payload) => request("/data/pagos", { method: "POST", body: JSON.stringify(payload) }),
   deletePago: (id) => request(`/data/pagos/${encodeURIComponent(id)}`, { method: "DELETE" }),
