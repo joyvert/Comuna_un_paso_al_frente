@@ -1207,9 +1207,9 @@ function HabitanteCard({ habitante }) {
 
 function TablaHabitantes({ rows, onEdit, onDelete }) {
   return (
-    <div className="overflow-x-auto">
-      <table className="min-w-full overflow-hidden rounded-xl">
-        <thead className="bg-slate-200 text-left text-sm">
+    <div className="overflow-x-auto overflow-y-auto max-h-[600px] border border-slate-200 rounded-xl relative shadow-sm">
+      <table className="min-w-full">
+        <thead className="bg-slate-200 text-left text-sm sticky top-0 z-10 shadow-sm">
           <tr>
             <th className="px-3 py-2">Nombre</th>
             <th className="px-3 py-2">Apellido</th>
