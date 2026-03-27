@@ -67,6 +67,7 @@ export const api = {
 
   getHabitantes: (consejoNombre) => request(`/data/habitantes/${encodeURIComponent(consejoNombre)}`),
   createHabitante: (payload) => request("/data/habitantes", { method: "POST", body: JSON.stringify(payload) }),
+  createHabitantesBulk: (payload) => request("/data/habitantes/bulk", { method: "POST", body: JSON.stringify(payload) }),
   updateHabitante: (id, payload) =>
     request(`/data/habitantes/${encodeURIComponent(id)}`, { method: "PUT", body: JSON.stringify(payload) }),
   deleteHabitante: (id) => request(`/data/habitantes/${encodeURIComponent(id)}`, { method: "DELETE" }),
