@@ -79,4 +79,7 @@ export const api = {
   getJornadas: (consejoNombre) => request(`/data/jornadas/${encodeURIComponent(consejoNombre)}`),
   createJornada: (payload) => request("/data/jornadas", { method: "POST", body: JSON.stringify(payload) }),
   deleteJornada: (id) => request(`/data/jornadas/${encodeURIComponent(id)}`, { method: "DELETE" }),
+
+  getVotaciones: () => request("/data/votos/habitantes"),
+  toggleVoto: (habitanteId, voto) => request(`/data/votos/${encodeURIComponent(habitanteId)}`, { method: "POST", body: JSON.stringify({ voto }) }),
 };

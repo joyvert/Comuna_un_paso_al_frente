@@ -3,6 +3,7 @@ import AdminVoceros from "./AdminVoceros";
 import ExcelHabitantesUpload from "./ExcelHabitantesUpload";
 import AuthCard from "./AuthCard";
 import Jornadas from "./Jornadas";
+import Votaciones from "./Votaciones";
 import { api } from "./api";
 import AOS from "aos";
 import "aos/dist/aos.css";
@@ -24,6 +25,7 @@ import {
   UserCog,
   Users,
   UtensilsCrossed,
+  Vote,
 } from "lucide-react";
 
 /** Formatea dígitos como monto tipo 1.234,56 (últimos 2 = decimales) */
@@ -316,6 +318,7 @@ function App() {
     { key: "habitantes", label: "Habitantes", icon: Users },
     { key: "buscar", label: "Buscar Habitantes", icon: Search },
     { key: "servicios", label: "Servicios", icon: CheckSquare },
+    { key: "votaciones", label: "Votaciones", icon: Vote },
     ...(sessionUser?.isAdmin ? [{ key: "admin", label: "Administración", icon: UserCog }] : []),
   ];
 
@@ -656,6 +659,16 @@ function App() {
                 db={db}
                 setDb={setDb}
                 inputClass={inputClass}
+              />
+            </div>
+          )}
+
+          {moduleTab === "votaciones" && (
+            <div className="mb-8">
+              <Votaciones 
+                sessionUser={sessionUser}
+                inputClass={inputClass}
+                onMessage={setHabitanteMsg}
               />
             </div>
           )}
