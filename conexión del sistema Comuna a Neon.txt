@@ -1,0 +1,7 @@
+conexión del sistema a Neon:
+
+postgresql://neondb_owner:npg_ZSNI1tF9VLYU@ep-dark-thunder-amnqk2wq-pooler.c-5.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
+
+conexión a Render
+
+https://comuna-backend-982q.onrender.com

@@ -149,7 +149,7 @@ export default function Votaciones({ sessionUser, inputClass, onMessage }) {
             <tbody className="divide-y divide-slate-100">
               {filtrados.length === 0 ? (
                 <tr>
-                  <td colSpan={sessionUser?.isAdmin ? 5 : 4} className="p-6 text-center text-slate-400">
+                  <td colSpan={sessionUser?.isAdmin ? 6 : 5} className="p-6 text-center text-slate-400">
                     No se encontraron resultados para la búsqueda actual.
                   </td>
                 </tr>

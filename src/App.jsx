@@ -696,26 +696,42 @@ function App() {
                   consejo={activeConsejo}
                   calles={calles}
                   inputClass={inputClass}
-                  onUpload={async (habitantes) => {
-                    // Llama a la API para cada habitante, puedes optimizar con endpoint masivo si lo creas
-                    let ok = 0, fail = 0;
-                    for (const h of habitantes) {
+                  onUpload={async (payload) => {
+                    if (payload.mode === "bulk") {
                       try {
-                        await api.createHabitante({
+                        const res = await api.createHabitantesBulk({ consejoNombre: activeConsejo, familias: payload.familias }, sessionUser.token);
+                        if (res.ok) {
+                          setHabitanteMsg({ type: "success", text: `¡Censo procesado! ${res.total} personas insertadas en ${activeConsejo}.` });
+                          getHabitantes();
+                        } else {
+                          setHabitanteMsg({ type: "error", text: res.message || "Error procesando el censo." });
+                        }
+                      } catch (err) {
+                        setHabitanteMsg({ type: "error", text: "Error en el servidor al enviar el censo masivo." });
+                      }
+                      return;
+                    }
+
+                    // Lógica para modo Simple (Array)
+                    let ok = 0, fail = 0;
+                    for (const h of payload) {
+                      try {
+                        const res = await api.createHabitante({
                           consejoNombre: activeConsejo,
                           ...h,
                           edad: h.nacimiento ? calcAge(h.nacimiento) : undefined,
-                        });
-                        ok++;
+                        }, sessionUser.token);
+                        if (res.ok) ok++;
+                        else fail++;
                       } catch (e) {
                         fail++;
                       }
                     }
+                    getHabitantes();
                     setHabitanteMsg({
-                      type: fail ? "error" : "success",
-                      text: `Carga finalizada: ${ok} registrados${fail ? ", " + fail + " fallidos" : ""}.`,
+                      type: fail === 0 ? "success" : "error",
+                      text: `Carga simple finalizada: ${ok} registrados, ${fail} errores (DNI duplicados o falla de red).`,
                     });
-                    await cargarDatosConsejo(activeConsejo);
                   }}
                 />
               )}
@@ -1193,7 +1209,12 @@ function TablaHabitantes({ rows, onEdit, onDelete }) {
           {rows.length > 0 ? (
             rows.map((r, i) => (
               <tr key={r.id} className={`${i % 2 === 0 ? "bg-white" : "bg-slate-50"} hover:bg-blue-50`}>
-                <td className="px-3 py-2">{r.nombre}</td>
+                <td className="px-3 py-2">
+                  <div className="flex items-center gap-1.5">
+                    {r.es_jefe_familia && <span title="Jefe de Familia">🏠</span>}
+                    {r.nombre}
+                  </div>
+                </td>
                 <td className="px-3 py-2">{r.apellido}</td>
                 <td className="px-3 py-2">{r.cedula}</td>
                 <td className="px-3 py-2">{r.telefono}</td>
