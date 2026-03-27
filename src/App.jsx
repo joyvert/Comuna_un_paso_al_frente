@@ -1283,9 +1283,10 @@ function TablaHabitantes({ rows, onEdit, onDelete, onManageFamily }) {
         <tbody>
           {rows.length > 0 ? (
             rows.map((r, i) => (
-              <tr key={r.id} className={`${i % 2 === 0 ? "bg-white" : "bg-slate-50"} hover:bg-blue-50`}>
-                <td className="px-3 py-2">
+              <tr key={r.id} className={`${r.jefe_familia_id ? "bg-slate-50/70" : (i % 2 === 0 ? "bg-white" : "bg-slate-50")} hover:bg-blue-50`}>
+                <td className={`px-3 py-2 ${r.jefe_familia_id ? 'pl-8' : ''}`}>
                   <div className="flex items-center gap-1.5">
+                    {r.jefe_familia_id && <span className="text-slate-300 font-bold" title="Dependiente de un núcleo familiar">↳</span>}
                     {r.es_jefe_familia && <span title="Jefe de Familia">🏠</span>}
                     {r.nombre}
                   </div>
