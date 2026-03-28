@@ -4,6 +4,7 @@ import { api } from "./api";
 
 export default function Votaciones({ sessionUser, inputClass, onMessage, calles = [] }) {
   const [data, setData] = useState({ stats: [], habitantes: [], historial: [] });
+  const [tab, setTab] = useState("votacion"); // "votacion" | "historial"
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [calleFilter, setCalleFilter] = useState("Todas");
@@ -143,7 +144,24 @@ export default function Votaciones({ sessionUser, inputClass, onMessage, calles 
 
   return (
     <div className="space-y-6">
-      <div className="rounded-2xl bg-white p-6 shadow-sm border border-slate-100 flex flex-col md:flex-row gap-6 justify-between items-start md:items-center">
+      <div className="flex gap-4 border-b border-slate-200 pb-2">
+        <button
+          onClick={() => setTab("votacion")}
+          className={`px-4 py-2 font-medium transition-colors ${tab === "votacion" ? "border-b-2 border-emerald-600 text-emerald-700" : "text-slate-500 hover:text-slate-800"}`}
+        >
+          Panel de Votación
+        </button>
+        <button
+          onClick={() => setTab("historial")}
+          className={`px-4 py-2 font-medium transition-colors ${tab === "historial" ? "border-b-2 border-emerald-600 text-emerald-700" : "text-slate-500 hover:text-slate-800"}`}
+        >
+          Historial de Elecciones
+        </button>
+      </div>
+
+      {tab === "votacion" && (
+        <div className="space-y-6">
+          <div className="rounded-2xl bg-white p-6 shadow-sm border border-slate-100 flex flex-col md:flex-row gap-6 justify-between items-start md:items-center">
         <div className="flex-1 w-full">
           <h2 className="mb-4 text-xl font-bold text-[#0f2847]">Estadísticas de Votación</h2>
           <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
@@ -282,37 +300,43 @@ export default function Votaciones({ sessionUser, inputClass, onMessage, calles 
           </table>
         </div>
       )}
+      </div>
+      )}
 
       {/* Tabla Historial */}
-      {data.historial.length > 0 && (
-        <div className="rounded-2xl bg-white p-6 shadow-sm border border-slate-100 mt-8">
+      {tab === "historial" && (
+        <div className="rounded-2xl bg-white p-6 shadow-sm border border-slate-100">
           <h2 className="mb-4 text-xl font-bold text-[#0f2847] flex items-center gap-2">
-             <History size={20} /> Historial de Cierres de Votación
+             <History size={20} /> Historial de Elecciones
           </h2>
-          <div className="overflow-x-auto rounded-xl border border-slate-200">
-            <table className="min-w-full text-left text-sm text-slate-600">
-               <thead className="bg-slate-100 text-slate-700">
-                  <tr>
-                    <th className="px-4 py-3">Fecha del Registro</th>
-                    <th className="px-4 py-3">Evento / Título</th>
-                    <th className="px-4 py-3">Consejo Comunal</th>
-                    <th className="px-4 py-3">Calle</th>
-                    <th className="px-4 py-3 text-right">Cantidad de Votos</th>
-                  </tr>
-               </thead>
-               <tbody className="divide-y divide-slate-100">
-                 {data.historial.map((h, i) => (
-                    <tr key={h.id || i} className="hover:bg-slate-50">
-                       <td className="px-4 py-3 whitespace-nowrap">{new Date(h.created_at).toLocaleString()}</td>
-                       <td className="px-4 py-3 font-medium text-slate-900">{h.titulo}</td>
-                       <td className="px-4 py-3">{h.consejo}</td>
-                       <td className="px-4 py-3">{h.calle}</td>
-                       <td className="px-4 py-3 text-right font-bold text-[#0f2847]">{h.cantidad_votos}</td>
+          {data.historial.length === 0 ? (
+            <p className="text-center text-slate-500 py-10 bg-slate-50 rounded-xl border border-slate-100">No hay registros guardados de elecciones pasadas.</p>
+          ) : (
+            <div className="overflow-x-auto rounded-xl border border-slate-200">
+              <table className="min-w-full text-left text-sm text-slate-600">
+                 <thead className="bg-slate-100 text-slate-700">
+                    <tr>
+                      <th className="px-4 py-3">Fecha del Registro</th>
+                      <th className="px-4 py-3">Evento / Título</th>
+                      <th className="px-4 py-3">Consejo Comunal</th>
+                      <th className="px-4 py-3">Calle</th>
+                      <th className="px-4 py-3 text-right">Cantidad de Votos</th>
                     </tr>
-                 ))}
-               </tbody>
-            </table>
-          </div>
+                 </thead>
+                 <tbody className="divide-y divide-slate-100">
+                   {data.historial.map((h, i) => (
+                      <tr key={h.id || i} className="hover:bg-slate-50">
+                         <td className="px-4 py-3 whitespace-nowrap">{new Date(h.created_at).toLocaleString()}</td>
+                         <td className="px-4 py-3 font-medium text-slate-900">{h.titulo}</td>
+                         <td className="px-4 py-3">{h.consejo}</td>
+                         <td className="px-4 py-3">{h.calle}</td>
+                         <td className="px-4 py-3 text-right font-bold text-[#0f2847]">{h.cantidad_votos}</td>
+                      </tr>
+                   ))}
+                 </tbody>
+              </table>
+            </div>
+          )}
         </div>
       )}
 
