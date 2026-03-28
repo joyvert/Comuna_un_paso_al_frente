@@ -15,6 +15,21 @@ export default function Votaciones({ sessionUser, inputClass, onMessage, calles 
 
   useEffect(() => {
     loadData();
+    
+    // Polling silencioso cada 12 segundos para actualizar las estadísticas en tiempo real
+    const timer = setInterval(async () => {
+      try {
+        const res = await api.getVotaciones();
+        setData(prev => {
+          // Solo actualizamos estadísticas para no interrumpir si el usuario está interactuando con la tabla
+          return { ...prev, stats: res.stats || [] };
+        });
+      } catch (e) {
+        // Fallos silenciosos en el polling
+      }
+    }, 12000);
+    
+    return () => clearInterval(timer);
   }, []);
 
   async function loadData() {
