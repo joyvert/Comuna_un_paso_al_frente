@@ -5,18 +5,30 @@ import { pool } from "../config/db.js";
 
 const router = Router();
 
+import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
 router.post("/init-db", async (_req, res) => {
   try {
-    const schemaPath = resolve(process.cwd(), "server", "sql", "schema.sql");
+    const schemaPath = join(__dirname, "..", "sql", "schema.sql");
     const sql = await readFile(schemaPath, "utf8");
     await pool.query(sql);
     res.json({ ok: true, message: "Base de datos inicializada correctamente." });
   } catch (error) {
-    res.status(500).json({
-      ok: false,
-      message: "No se pudo inicializar la base de datos.",
-      error: error.message,
-    });
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.get("/init-db", async (_req, res) => {
+  try {
+    const schemaPath = join(__dirname, "..", "sql", "schema.sql");
+    const sql = await readFile(schemaPath, "utf8");
+    await pool.query(sql);
+    res.send("<h1>Éxito: Base de datos inicializada correctamente.</h1><p>Ya puedes volver al sistema.</p>");
+  } catch (error) {
+    res.status(500).send("<h1>Error al inicializar</h1><p>" + error.message + "</p>");
   }
 });
 
