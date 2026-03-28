@@ -205,8 +205,9 @@ export default function Votaciones({ sessionUser, inputClass, onMessage, calles 
           </div>
         )}
 
-        <span className="text-sm text-slate-500 ml-auto mb-2 font-medium">
-          Habitantes listados: {filtrados.length}
+        <span className="text-sm text-slate-500 ml-auto mb-2 font-medium flex gap-4">
+          <span>Habitantes listados: {filtrados.length}</span>
+          <span className="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100">Han votado: {filtrados.filter(h => h.voto).length}</span>
         </span>
       </div>
 
