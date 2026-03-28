@@ -196,10 +196,18 @@ function App() {
       api.getHabitantes(consejoNombre),
       api.getPagos(consejoNombre),
     ]);
+
+    // Normalizar capitalización de las calles para evitar fallos de renderizado o filtros
+    const normalizedHabitantes = (hab.habitantes || []).map((h) => {
+      const call = (h.calle || "").trim();
+      const matched = calles.find((c) => c.toLowerCase() === call.toLowerCase());
+      return { ...h, calle: matched || call };
+    });
+
     setDb((prev) => ({
       ...prev,
       [consejoNombre]: {
-        habitantes: hab.habitantes || [],
+        habitantes: normalizedHabitantes,
         pagos: (pag.pagos || []).map((p) => ({
           ...p,
           monto: Number(p.monto),

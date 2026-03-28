@@ -89,7 +89,7 @@ router.get("/habitantes/:consejoNombre", async (req, res) => {
         `SELECT h.id, h.nombre, h.apellido, h.cedula, h.telefono, h.edad, h.calle, h.nacimiento, h.es_jefe_familia, h.jefe_familia_id
          FROM habitantes h
          JOIN consejos c ON c.id = h.consejo_id
-         WHERE c.nombre = $1 AND h.calle = $2
+         WHERE c.nombre = $1 AND lower(btrim(regexp_replace(h.calle, '\\s+', ' ', 'g'))) = lower(btrim(regexp_replace($2, '\\s+', ' ', 'g')))
          ORDER BY h.created_at DESC`,
         [cn, req.auth.calle],
       );
