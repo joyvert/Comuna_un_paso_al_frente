@@ -132,11 +132,16 @@ export default function Votaciones({ sessionUser, inputClass, onMessage, calles 
         <div className="flex-1 w-full">
           <h2 className="mb-4 text-xl font-bold text-[#0f2847]">Estadísticas de Votación</h2>
           <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
-            <div className="rounded-xl bg-blue-50 p-4 border border-blue-100 flex flex-col items-center justify-center">
-              <span className="text-sm font-medium text-blue-800 text-center leading-tight mb-1">Total Global</span>
-              <span className="text-3xl font-bold text-blue-900">{totalVotosGlobal}</span>
-            </div>
-            {data.stats.map(s => (
+            {sessionUser?.isAdmin && (
+              <div className="rounded-xl bg-blue-50 p-4 border border-blue-100 flex flex-col items-center justify-center">
+                <span className="text-sm font-medium text-blue-800 text-center leading-tight mb-1">Total Global</span>
+                <span className="text-3xl font-bold text-blue-900">{totalVotosGlobal}</span>
+              </div>
+            )}
+            
+            {data.stats
+              .filter(s => sessionUser?.isAdmin || s.consejo === sessionUser?.vocero)
+              .map(s => (
               <div 
                 key={s.consejo} 
                 onClick={() => sessionUser?.isAdmin && setSelectedStats(s)}
