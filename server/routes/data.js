@@ -615,40 +615,6 @@ router.get("/votos/habitantes", async (req, res) => {
   }
 });
 
-router.post("/votos/:habitanteId", async (req, res) => {
-  try {
-    const { habitanteId } = req.params;
-    const { voto } = req.body;
-
-    const row = await getHabitanteConsejoCalle(habitanteId);
-    if (!row) return res.status(404).json({ ok: false, message: "Habitante no encontrado." });
-    
-    if (!req.auth.admin) {
-      const dbCalle = (row.calle || "").trim().toLowerCase();
-      const authCalle = (req.auth.calle || "").trim().toLowerCase();
-      if (row.consejo_nombre !== req.auth.consejo || dbCalle !== authCalle) {
-        return res.status(403).json({ ok: false, message: "No puedes registrar votos fuera de tu calle." });
-      }
-    }
-
-    if (voto) {
-      await pool.query(
-        "INSERT INTO votos (habitante_id) VALUES ($1) ON CONFLICT DO NOTHING",
-        [habitanteId]
-      );
-    } else {
-      await pool.query(
-        "DELETE FROM votos WHERE habitante_id = $1",
-        [habitanteId]
-      );
-    }
-    
-    return res.json({ ok: true, message: voto ? "Voto registrado" : "Voto eliminado" });
-  } catch (error) {
-    return res.status(500).json({ ok: false, message: error.message });
-  }
-});
-
 router.get("/votos/historial", async (req, res) => {
   try {
     let result;
@@ -728,6 +694,40 @@ router.post("/votos/historial", async (req, res) => {
     }
   } catch(err) {
     return res.status(500).json({ ok: false, message: err.message });
+  }
+});
+
+router.post("/votos/:habitanteId", async (req, res) => {
+  try {
+    const { habitanteId } = req.params;
+    const { voto } = req.body;
+
+    const row = await getHabitanteConsejoCalle(habitanteId);
+    if (!row) return res.status(404).json({ ok: false, message: "Habitante no encontrado." });
+    
+    if (!req.auth.admin) {
+      const dbCalle = (row.calle || "").trim().toLowerCase();
+      const authCalle = (req.auth.calle || "").trim().toLowerCase();
+      if (row.consejo_nombre !== req.auth.consejo || dbCalle !== authCalle) {
+        return res.status(403).json({ ok: false, message: "No puedes registrar votos fuera de tu calle." });
+      }
+    }
+
+    if (voto) {
+      await pool.query(
+        "INSERT INTO votos (habitante_id) VALUES ($1) ON CONFLICT DO NOTHING",
+        [habitanteId]
+      );
+    } else {
+      await pool.query(
+        "DELETE FROM votos WHERE habitante_id = $1",
+        [habitanteId]
+      );
+    }
+    
+    return res.json({ ok: true, message: voto ? "Voto registrado" : "Voto eliminado" });
+  } catch (error) {
+    return res.status(500).json({ ok: false, message: error.message });
   }
 });
 
