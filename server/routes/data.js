@@ -624,7 +624,9 @@ router.post("/votos/:habitanteId", async (req, res) => {
     if (!row) return res.status(404).json({ ok: false, message: "Habitante no encontrado." });
     
     if (!req.auth.admin) {
-      if (row.consejo_nombre !== req.auth.consejo || row.calle !== req.auth.calle) {
+      const dbCalle = (row.calle || "").trim().toLowerCase();
+      const authCalle = (req.auth.calle || "").trim().toLowerCase();
+      if (row.consejo_nombre !== req.auth.consejo || dbCalle !== authCalle) {
         return res.status(403).json({ ok: false, message: "No puedes registrar votos fuera de tu calle." });
       }
     }
