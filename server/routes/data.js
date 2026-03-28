@@ -550,14 +550,40 @@ router.delete("/jornadas/:jornadaId", requireAuth, requireAdmin, async (req, res
 router.get("/votos/habitantes", async (req, res) => {
   try {
     const statsRes = await pool.query(`
-      SELECT c.nombre as consejo, COUNT(v.id) as total_votos
+      SELECT c.nombre as consejo, 
+             lower(btrim(regexp_replace(h.calle, '\\s+', ' ', 'g'))) as calle_norm,
+             h.calle as raw_calle,
+             COUNT(v.id) as total_votos
       FROM consejos c
       LEFT JOIN habitantes h ON h.consejo_id = c.id
       LEFT JOIN votos v ON v.habitante_id = h.id
-      GROUP BY c.id, c.nombre
+      GROUP BY c.id, c.nombre, h.calle
       ORDER BY c.nombre ASC
     `);
-    const stats = statsRes.rows.map(r => ({ consejo: r.consejo, total: Number(r.total_votos) }));
+    
+    // Agrupar por consejo y calle normalizada
+    const statsMap = {};
+    for (const r of statsRes.rows) {
+      if (!statsMap[r.consejo]) statsMap[r.consejo] = { consejo: r.consejo, total: 0, callesMap: {} };
+      if (!r.raw_calle) continue;
+      
+      const cn = r.calle_norm || "";
+      if (!statsMap[r.consejo].callesMap[cn]) {
+        statsMap[r.consejo].callesMap[cn] = { 
+          nombre: (r.raw_calle || "Sin calle").trim(), 
+          total: 0 
+        };
+      }
+      const cnt = Number(r.total_votos) || 0;
+      statsMap[r.consejo].callesMap[cn].total += cnt;
+      statsMap[r.consejo].total += cnt;
+    }
+    
+    const stats = Object.values(statsMap).map(s => ({
+      consejo: s.consejo,
+      total: s.total,
+      calles: Object.values(s.callesMap).filter(c => c.total > 0).sort((a,b) => a.nombre.localeCompare(b.nombre))
+    }));
 
     let habitantes;
     if (req.auth.admin) {
@@ -618,6 +644,88 @@ router.post("/votos/:habitanteId", async (req, res) => {
     return res.json({ ok: true, message: voto ? "Voto registrado" : "Voto eliminado" });
   } catch (error) {
     return res.status(500).json({ ok: false, message: error.message });
+  }
+});
+
+router.get("/votos/historial", async (req, res) => {
+  try {
+    let result;
+    if (req.auth.admin) {
+      result = await pool.query(`
+        SELECT h.id, c.nombre as consejo, h.titulo, h.calle, h.cantidad_votos, h.created_at
+        FROM historial_votos_calle h
+        JOIN consejos c ON c.id = h.consejo_id
+        ORDER BY h.created_at DESC
+      `);
+    } else {
+      result = await pool.query(`
+        SELECT h.id, c.nombre as consejo, h.titulo, h.calle, h.cantidad_votos, h.created_at
+        FROM historial_votos_calle h
+        JOIN consejos c ON c.id = h.consejo_id
+        WHERE c.nombre = $1
+        ORDER BY h.created_at DESC
+      `, [req.auth.consejo]);
+    }
+    return res.json({ ok: true, historial: result.rows });
+  } catch (err) {
+    return res.status(500).json({ ok: false, message: err.message });
+  }
+});
+
+router.post("/votos/historial", async (req, res) => {
+  try {
+    const { titulo, consejoNombre, calle } = req.body;
+    if (!titulo || !titulo.trim()) return res.status(400).json({ ok: false, message: "El título es obligatorio." });
+
+    const check = assertConsejoVocero(req.auth, encodeURIComponent(consejoNombre));
+    if (!check.ok) return res.status(check.status).json({ ok: false, message: check.message });
+    
+    if (!req.auth.admin && calle !== req.auth.calle) {
+       return res.status(403).json({ ok: false, message: "Solo puedes guardar el historial de tu propia calle." });
+    }
+
+    const cn = decodeURIComponent(consejoNombre);
+    const client = await pool.connect();
+    
+    try {
+      await client.query("BEGIN");
+      
+      const consejo = await client.query("SELECT id FROM consejos WHERE nombre = $1", [cn]);
+      if (!consejo.rows.length) throw new Error("Consejo no encontrado.");
+      const consejoId = consejo.rows[0].id;
+      
+      const countRes = await client.query(`
+         SELECT COUNT(v.id) as num
+         FROM votos v
+         JOIN habitantes h ON h.id = v.habitante_id
+         WHERE h.consejo_id = $1 AND lower(btrim(regexp_replace(h.calle, '\\s+', ' ', 'g'))) = lower(btrim(regexp_replace($2, '\\s+', ' ', 'g')))
+      `, [consejoId, calle]);
+      
+      const vn = Number(countRes.rows[0].num) || 0;
+      
+      await client.query(`
+        INSERT INTO historial_votos_calle (consejo_id, titulo, calle, cantidad_votos)
+        VALUES ($1, $2, $3, $4)
+      `, [consejoId, titulo.trim(), calle.trim(), vn]);
+      
+      await client.query(`
+        DELETE FROM votos 
+        WHERE habitante_id IN (
+          SELECT id FROM habitantes 
+          WHERE consejo_id = $1 AND lower(btrim(regexp_replace(calle, '\\s+', ' ', 'g'))) = lower(btrim(regexp_replace($2, '\\s+', ' ', 'g')))
+        )
+      `, [consejoId, calle]);
+
+      await client.query("COMMIT");
+      return res.json({ ok: true, message: "Historial guardado y vista limpiada con éxito.", cantidad: vn });
+    } catch(e) {
+      await client.query("ROLLBACK");
+      throw e;
+    } finally {
+      client.release();
+    }
+  } catch(err) {
+    return res.status(500).json({ ok: false, message: err.message });
   }
 });
 

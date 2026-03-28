@@ -86,4 +86,6 @@ export const api = {
 
   getVotaciones: () => request("/data/votos/habitantes"),
   toggleVoto: (habitanteId, voto) => request(`/data/votos/${encodeURIComponent(habitanteId)}`, { method: "POST", body: JSON.stringify({ voto }) }),
+  getVotacionesHistorial: () => request("/data/votos/historial"),
+  saveVotacionesHistorial: (payload) => request("/data/votos/historial", { method: "POST", body: JSON.stringify(payload) }),
 };

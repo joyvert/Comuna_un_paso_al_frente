@@ -74,3 +74,12 @@ CREATE TABLE IF NOT EXISTS votos (
   habitante_id UUID REFERENCES habitantes(id) ON DELETE CASCADE UNIQUE,
   created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
+
+CREATE TABLE IF NOT EXISTS historial_votos_calle (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  consejo_id UUID REFERENCES consejos(id) ON DELETE CASCADE,
+  titulo VARCHAR(120) NOT NULL,
+  calle VARCHAR(120) NOT NULL,
+  cantidad_votos INTEGER NOT NULL DEFAULT 0,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
