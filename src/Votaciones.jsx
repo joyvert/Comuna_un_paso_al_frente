@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { Search } from "lucide-react";
 import { api } from "./api";
 
-export default function Votaciones({ sessionUser, inputClass, onMessage }) {
+export default function Votaciones({ sessionUser, inputClass, onMessage, calles = [] }) {
   const [data, setData] = useState({ stats: [], habitantes: [] });
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -16,7 +16,12 @@ export default function Votaciones({ sessionUser, inputClass, onMessage }) {
     setLoading(true);
     try {
       const res = await api.getVotaciones();
-      setData({ stats: res.stats || [], habitantes: res.habitantes || [] });
+      const normalizedHabitantes = (res.habitantes || []).map((h) => {
+        const call = (h.calle || "").trim();
+        const matched = calles.find((c) => c.toLowerCase() === call.toLowerCase());
+        return { ...h, calle: matched || call };
+      });
+      setData({ stats: res.stats || [], habitantes: normalizedHabitantes });
     } catch (err) {
       onMessage?.({ type: "error", text: "Error cargando votaciones: " + err.message });
     } finally {

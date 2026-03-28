@@ -577,7 +577,7 @@ router.get("/votos/habitantes", async (req, res) => {
         FROM habitantes h
         JOIN consejos c ON c.id = h.consejo_id
         LEFT JOIN votos v ON v.habitante_id = h.id
-        WHERE c.nombre = $1 AND h.calle = $2
+        WHERE c.nombre = $1 AND lower(btrim(regexp_replace(h.calle, '\\s+', ' ', 'g'))) = lower(btrim(regexp_replace($2, '\\s+', ' ', 'g')))
         ORDER BY h.nombre ASC
       `, [req.auth.consejo, req.auth.calle]);
       habitantes = result.rows;

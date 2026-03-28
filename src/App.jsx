@@ -592,6 +592,7 @@ function App() {
                 sessionUser={sessionUser}
                 inputClass={inputClass}
                 onMessage={setHabitanteMsg}
+                calles={calles}
               />
             </div>
           )}
