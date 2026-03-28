@@ -122,6 +122,9 @@ function App() {
   const [slide, setSlide] = useState(0);
   const [activeConsejo, setActiveConsejo] = useState(getInitialActiveConsejo);
   const [moduleTab, setModuleTab] = useState("habitantes");
+  const [habitanteForm, setHabitanteForm] = useState(initialForm);
+  const [editingHabitanteId, setEditingHabitanteId] = useState(null);
+  const [habitanteMsg, setHabitanteMsg] = useState({ type: "", text: "" });
   const [searchFilters, setSearchFilters] = useState({ min: "", max: "", calle: "Todas" });
   const [db, setDb] = useState(() =>
     consejos.reduce((acc, consejo) => {
