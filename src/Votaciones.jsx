@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { Search, Save, History, X } from "lucide-react";
+import { Search, Save, History, X, Trash2 } from "lucide-react";
 import { api } from "./api";
 
 export default function Votaciones({ sessionUser, inputClass, onMessage, calles = [] }) {
@@ -110,6 +110,19 @@ export default function Votaciones({ sessionUser, inputClass, onMessage, calles 
       onMessage?.({ type: "error", text: "Error al guardar: " + err.message });
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleDeleteHistorial = async (id) => {
+    if (!window.confirm("¿Segurísimo que quieres eliminar este historial de votación?")) return;
+    try {
+      setLoading(true);
+      const res = await api.deleteVotacionesHistorial(id);
+      onMessage?.({ type: "success", text: res.message });
+      await loadData();
+    } catch (err) {
+      onMessage?.({ type: "error", text: "Error al eliminar: " + err.message });
+      setLoading(false);
     }
   };
 
@@ -321,6 +334,7 @@ export default function Votaciones({ sessionUser, inputClass, onMessage, calles 
                       <th className="px-4 py-3">Consejo Comunal</th>
                       <th className="px-4 py-3">Calle</th>
                       <th className="px-4 py-3 text-right">Cantidad de Votos</th>
+                      <th className="px-4 py-3 w-16 text-center">Acciones</th>
                     </tr>
                  </thead>
                  <tbody className="divide-y divide-slate-100">
@@ -331,6 +345,16 @@ export default function Votaciones({ sessionUser, inputClass, onMessage, calles 
                          <td className="px-4 py-3">{h.consejo}</td>
                          <td className="px-4 py-3">{h.calle}</td>
                          <td className="px-4 py-3 text-right font-bold text-[#0f2847]">{h.cantidad_votos}</td>
+                         <td className="px-4 py-3 text-center">
+                            <button
+                              type="button"
+                              title="Eliminar registro"
+                              onClick={() => handleDeleteHistorial(h.id)}
+                              className="text-slate-400 hover:text-red-500 transition-colors p-1"
+                            >
+                              <Trash2 size={18} />
+                            </button>
+                         </td>
                       </tr>
                    ))}
                  </tbody>

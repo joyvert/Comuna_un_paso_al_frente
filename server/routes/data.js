@@ -697,6 +697,32 @@ router.post("/votos/historial", async (req, res) => {
   }
 });
 
+router.delete("/votos/historial/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    let result;
+    if (req.auth.admin) {
+      result = await pool.query("DELETE FROM historial_votos_calle WHERE id = $1 RETURNING id", [id]);
+    } else {
+      result = await pool.query(`
+        DELETE FROM historial_votos_calle 
+        WHERE id = $1 
+        AND consejo_id = (SELECT id FROM consejos WHERE nombre = $2)
+        AND lower(btrim(regexp_replace(calle, '\\s+', ' ', 'g'))) = lower(btrim(regexp_replace($3, '\\s+', ' ', 'g')))
+        RETURNING id
+      `, [id, req.auth.consejo, req.auth.calle]);
+    }
+
+    if (result.rowCount === 0) {
+      return res.status(403).json({ ok: false, message: "No se encontró el registro o no tienes permiso para eliminarlo." });
+    }
+    
+    return res.json({ ok: true, message: "Registro eliminado exitosamente." });
+  } catch (err) {
+    return res.status(500).json({ ok: false, message: err.message });
+  }
+});
+
 router.post("/votos/:habitanteId", async (req, res) => {
   try {
     const { habitanteId } = req.params;
