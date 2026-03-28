@@ -61,16 +61,13 @@ async function hashPasswordWithSalt(password, salt) {
 function passwordStrength(password) {
   const pw = String(password || "");
   const rules = [
-    { label: "Mínimo 10 caracteres", ok: pw.length >= 10 },
-    { label: "Mayúscula", ok: /[A-Z]/.test(pw) },
-    { label: "Minúscula", ok: /[a-z]/.test(pw) },
+    { label: "Mínimo 8 caracteres", ok: pw.length >= 8 },
     { label: "Número", ok: /\d/.test(pw) },
-    { label: "Símbolo", ok: /[^A-Za-z0-9]/.test(pw) },
   ];
   const score = rules.reduce((acc, r) => acc + (r.ok ? 1 : 0), 0);
   const percent = (score / rules.length) * 100;
   const strength =
-    score <= 1 ? "Débil" : score <= 3 ? "Media" : score <= 4 ? "Buena" : "Fuerte";
+    score === 0 ? "Débil" : score === 1 ? "Media" : "Fuerte";
 
   return { rules, score, percent, strength };
 }
@@ -664,7 +661,7 @@ export default function AuthCard({ onAuthSuccess }) {
                       <PasswordField
                         icon={Lock}
                         label="Nueva contraseña"
-                        placeholder="Mínimo 10 caracteres, mayúscula, número y símbolo"
+                        placeholder="Mínimo 8 caracteres y 1 número"
                         value={recoverPw}
                         onChange={(e) => setRecoverPw(e.target.value)}
                         visible={showRecoverPw}

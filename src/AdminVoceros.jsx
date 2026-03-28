@@ -42,11 +42,8 @@ async function hashPasswordWithSalt(password, salt) {
 function passwordStrength(password) {
   const pw = String(password || "");
   const rules = [
-    { label: "Mínimo 10 caracteres", ok: pw.length >= 10 },
-    { label: "Mayúscula", ok: /[A-Z]/.test(pw) },
-    { label: "Minúscula", ok: /[a-z]/.test(pw) },
+    { label: "Mínimo 8 caracteres", ok: pw.length >= 8 },
     { label: "Número", ok: /\d/.test(pw) },
-    { label: "Símbolo", ok: /[^A-Za-z0-9]/.test(pw) },
   ];
   return rules.every((r) => r.ok);
 }
@@ -276,7 +273,7 @@ export default function AdminVoceros({ consejos, calles, inputClass, onMessage }
             <input
               className={inputClass}
               type="password"
-              placeholder="Contraseña inicial"
+              placeholder="Mínimo 8 caracteres y 1 número"
               value={form.password}
               onChange={(e) => setForm((p) => ({ ...p, password: e.target.value }))}
             />
@@ -488,7 +485,7 @@ export default function AdminVoceros({ consejos, calles, inputClass, onMessage }
               <RefreshCw className="h-4 w-4" /> Nueva contraseña para {resetUser.user_id}
             </h5>
             <p className="mb-4 text-xs text-slate-500">
-              Mínimo 10 caracteres, mayúscula, minúscula, número y símbolo.
+              Mínimo 8 caracteres y 1 número.
             </p>
             <form onSubmit={saveReset} className="space-y-3">
               <input
