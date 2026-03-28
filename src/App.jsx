@@ -299,8 +299,14 @@ function App() {
   const handleRegistrar = async (e) => {
     e.preventDefault();
     setHabitanteMsg({ type: "", text: "" });
-    const edad = calcAge(habitanteForm.nacimiento);
-    if (!edad || !habitanteForm.nombre || !habitanteForm.apellido || !habitanteForm.cedula) return;
+    
+    // Si no hay fecha de nacimiento, conservar la edad original importada o 0
+    const habitanteOriginal = editingHabitanteId ? habitantesActuales.find(h => h.id === editingHabitanteId) : null;
+    const edadFallback = habitanteOriginal ? (habitanteOriginal.edad || 0) : 0;
+    const edad = habitanteForm.nacimiento ? calcAge(habitanteForm.nacimiento) : edadFallback;
+
+    if (!habitanteForm.nombre || !habitanteForm.apellido || !habitanteForm.cedula) return;
+    
     try {
       if (editingHabitanteId) {
         const resp = await api.updateHabitante(editingHabitanteId, {
