@@ -245,7 +245,14 @@ export default function AdminVoceros({ consejos, calles, inputClass, onMessage }
             <select
               className={inputClass}
               value={form.vocero}
-              onChange={(e) => setForm((p) => ({ ...p, vocero: e.target.value }))}
+              onChange={(e) => {
+                const newVal = e.target.value;
+                setForm((p) => ({ 
+                  ...p, 
+                  vocero: newVal,
+                  calle: newVal === "La Esperanza" && !calles.includes(p.calle) ? calles[0] : (newVal !== "La Esperanza" ? "" : p.calle)
+                }));
+              }}
             >
               {consejos.map((c) => (
                 <option key={c} value={c}>
@@ -256,17 +263,26 @@ export default function AdminVoceros({ consejos, calles, inputClass, onMessage }
           </div>
           <div className="flex flex-col">
             <label className="mb-1 text-xs font-semibold text-slate-700">Calle</label>
-            <select
-              className={inputClass}
-              value={form.calle}
-              onChange={(e) => setForm((p) => ({ ...p, calle: e.target.value }))}
-            >
-              {calles.map((c) => (
-                <option key={c} value={c}>
-                  Calle: {c}
-                </option>
-              ))}
-            </select>
+            {form.vocero === "La Esperanza" ? (
+              <select
+                className={inputClass}
+                value={form.calle}
+                onChange={(e) => setForm((p) => ({ ...p, calle: e.target.value }))}
+              >
+                {calles.map((c) => (
+                  <option key={c} value={c}>
+                    Calle: {c}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <input
+                className={inputClass}
+                placeholder="Escribe el nombre de la calle"
+                value={form.calle}
+                onChange={(e) => setForm((p) => ({ ...p, calle: e.target.value }))}
+              />
+            )}
           </div>
           <div className="flex flex-col">
             <label className="mb-1 text-xs font-semibold text-slate-700">Contraseña inicial</label>
@@ -442,7 +458,14 @@ export default function AdminVoceros({ consejos, calles, inputClass, onMessage }
                 <select
                   className={inputClass}
                   value={editForm.vocero}
-                  onChange={(e) => setEditForm((p) => ({ ...p, vocero: e.target.value }))}
+                  onChange={(e) => {
+                    const newVal = e.target.value;
+                    setEditForm((p) => ({ 
+                      ...p, 
+                      vocero: newVal,
+                      calle: newVal === "La Esperanza" && !calles.includes(p.calle) ? calles[0] : (newVal !== "La Esperanza" ? "" : p.calle)
+                    }));
+                  }}
                 >
                   {consejos.map((c) => (
                     <option key={c} value={c}>
@@ -453,17 +476,26 @@ export default function AdminVoceros({ consejos, calles, inputClass, onMessage }
               </div>
               <div className="flex flex-col">
                 <label className="mb-1 text-xs font-semibold text-slate-700">Calle</label>
-                <select
-                  className={inputClass}
-                  value={editForm.calle}
-                  onChange={(e) => setEditForm((p) => ({ ...p, calle: e.target.value }))}
-                >
-                  {calles.map((c) => (
-                    <option key={c} value={c}>
-                      {c}
-                    </option>
-                  ))}
-                </select>
+                {editForm.vocero === "La Esperanza" ? (
+                  <select
+                    className={inputClass}
+                    value={editForm.calle}
+                    onChange={(e) => setEditForm((p) => ({ ...p, calle: e.target.value }))}
+                  >
+                    {calles.map((c) => (
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <input
+                    className={inputClass}
+                    placeholder="Escribe el nombre de la calle"
+                    value={editForm.calle}
+                    onChange={(e) => setEditForm((p) => ({ ...p, calle: e.target.value }))}
+                  />
+                )}
               </div>
               <div className="flex gap-2 pt-2">
                 <button type="submit" className="rounded-xl bg-[#0f2847] px-4 py-2 text-sm text-white">
