@@ -792,7 +792,7 @@ function App() {
                   onSave={async (jefeId, deps) => {
                     try {
                       await api.saveGrupoFamiliar(jefeId, deps);
-                      fetchData(); // Recargar todo del servidor
+                      await cargarDatosConsejo(activeConsejo); // Recargar todo del servidor
                       setFamilyManagerJefe(null);
                       setHabitanteMsg({ type: "success", text: "El grupo familiar se ha guardado exitosamente." });
                     } catch (e) {
@@ -802,7 +802,7 @@ function App() {
                   onDisolve={async (jefeId) => {
                     try {
                       await api.disolverGrupoFamiliar(jefeId);
-                      fetchData();
+                      await cargarDatosConsejo(activeConsejo);
                       setFamilyManagerJefe(null);
                       setHabitanteMsg({ type: "success", text: "El grupo familiar se ha disuelto." });
                     } catch (e) {
