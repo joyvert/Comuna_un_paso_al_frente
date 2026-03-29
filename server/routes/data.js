@@ -309,7 +309,7 @@ router.put("/habitantes/:id/familia", async (req, res) => {
       // Re-enlazar únicamente a los nuevos ids (y quitarles su estatus de jefe de familia si lo tuviesen)
       if (dependientesIds && Array.isArray(dependientesIds) && dependientesIds.length > 0) {
         await client.query(
-          "UPDATE habitantes SET es_jefe_familia = false, jefe_familia_id = $1 WHERE id = ANY($2::int[])", 
+          "UPDATE habitantes SET es_jefe_familia = false, jefe_familia_id = $1 WHERE id = ANY($2::uuid[])", 
           [id, dependientesIds]
         );
       }
