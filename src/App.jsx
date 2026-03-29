@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, Fragment } from "react";
 import AdminVoceros from "./AdminVoceros";
 import ExcelHabitantesUpload from "./ExcelHabitantesUpload";
 import AuthCard from "./AuthCard";
@@ -12,6 +12,8 @@ import {
   Building2,
   ChartColumnBig,
   CheckSquare,
+  ChevronDown,
+  ChevronRight,
   Home,
   CircleDollarSign,
   Droplets,
@@ -779,6 +781,8 @@ function App() {
                 onEdit={handleEditHabitante}
                 onDelete={handleDeleteHabitante}
                 onManageFamily={sessionUser?.isAdmin ? setFamilyManagerJefe : undefined}
+                isSearching={!!habitanteSearch}
+                allRows={habitantesActuales}
               />
               {familyManagerJefe && (
                 <FamiliaManagerModal 
@@ -851,6 +855,8 @@ function App() {
                 rows={habitantesFiltrados}
                 onEdit={handleEditHabitante}
                 onDelete={handleDeleteHabitante}
+                isSearching={true}
+                allRows={habitantesActuales}
               />
             </div>
           )}
@@ -864,7 +870,67 @@ function App() {
 
 
 
-function TablaHabitantes({ rows, onEdit, onDelete, onManageFamily }) {
+function TablaHabitantes({ rows, onEdit, onDelete, onManageFamily, isSearching, allRows }) {
+  const [expanded, setExpanded] = useState({});
+
+  const toggleExpand = (id) => {
+    setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  // Mapear hijos globalmente para evitar fallos si el filtro principal los recorta
+  const childrenMap = useMemo(() => {
+    const map = {};
+    (allRows || []).forEach((r) => {
+      if (r.jefe_familia_id) {
+        if (!map[r.jefe_familia_id]) map[r.jefe_familia_id] = [];
+        map[r.jefe_familia_id].push(r);
+      }
+    });
+    return map;
+  }, [allRows]);
+
+  // Si no está buscando, filtramos para que las "Roots" sean solo jefes/solteros
+  const displayRows = isSearching ? rows : rows.filter((r) => !r.jefe_familia_id);
+
+  const renderActions = (r) => (
+    <div className="flex justify-end gap-2">
+      {onManageFamily && !r.jefe_familia_id && (
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); onManageFamily(r); }}
+          className={`rounded-lg p-1.5 transition ${
+            r.es_jefe_familia
+              ? "text-indigo-600 bg-indigo-50 hover:bg-indigo-100"
+              : "text-slate-500 hover:bg-indigo-50 hover:text-indigo-600"
+          }`}
+          title={r.es_jefe_familia ? "Modificar Grupo Familiar" : "Convertir en Jefe de Familia"}
+        >
+          <Users size={16} />
+        </button>
+      )}
+      {onEdit && (
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); onEdit(r); }}
+          className="rounded-lg p-1.5 text-slate-600 transition hover:bg-blue-100 hover:text-blue-700"
+          title="Editar"
+        >
+          <Pencil size={16} />
+        </button>
+      )}
+      {onDelete && (
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); onDelete(r); }}
+          className="rounded-lg p-1.5 text-slate-600 transition hover:bg-red-100 hover:text-red-700"
+          title="Eliminar"
+        >
+          <Trash2 size={16} />
+        </button>
+      )}
+    </div>
+  );
+
   return (
     <div className="overflow-x-auto overflow-y-auto max-h-[600px] border border-slate-200 rounded-xl relative shadow-sm">
       <table className="min-w-full">
@@ -882,62 +948,83 @@ function TablaHabitantes({ rows, onEdit, onDelete, onManageFamily }) {
           </tr>
         </thead>
         <tbody>
-          {rows.length > 0 ? (
-            rows.map((r, i) => (
-              <tr key={r.id} className={`${r.jefe_familia_id ? "bg-slate-50/70" : (i % 2 === 0 ? "bg-white" : "bg-slate-50")} hover:bg-blue-50`}>
-                <td className={`px-3 py-2 ${r.jefe_familia_id ? 'pl-8' : ''}`}>
-                  <div className="flex items-center gap-1.5">
-                    {r.jefe_familia_id && <span className="text-slate-300 font-bold" title="Dependiente de un núcleo familiar">↳</span>}
-                    {r.es_jefe_familia && <span title="Jefe de Familia">🏠</span>}
-                    {r.nombre}
-                  </div>
-                </td>
-                <td className="px-3 py-2">{r.apellido}</td>
-                <td className="px-3 py-2">{r.cedula}</td>
-                <td className="px-3 py-2">{r.telefono}</td>
-                <td className="px-3 py-2">{r.edad}</td>
-                <td className="px-3 py-2">{r.calle}</td>
-                {(onEdit || onDelete || onManageFamily) && (
-                  <td className="px-3 py-2 text-right">
-                    <div className="flex justify-end gap-2">
-                      {onManageFamily && !r.jefe_familia_id && (
-                        <button
-                          type="button"
-                          onClick={() => onManageFamily(r)}
-                          className={`rounded-lg p-1.5 transition ${r.es_jefe_familia ? 'text-indigo-600 bg-indigo-50 hover:bg-indigo-100' : 'text-slate-500 hover:bg-indigo-50 hover:text-indigo-600'}`}
-                          title={r.es_jefe_familia ? "Modificar Grupo Familiar" : "Convertir en Jefe de Familia"}
-                        >
-                          <Users size={16} />
-                        </button>
+          {displayRows.length > 0 ? (
+            displayRows.map((r, i) => {
+              const children = childrenMap[r.id] || [];
+              const hasChildren = children.length > 0;
+              const isExpanded = expanded[r.id];
+              const isDependentFromSearch = isSearching && r.jefe_familia_id;
+
+              return (
+                <Fragment key={r.id}>
+                  {/* Fila Principal */}
+                  <tr
+                    onClick={() => {
+                      if (!isSearching && (r.es_jefe_familia || hasChildren)) toggleExpand(r.id);
+                    }}
+                    className={`
+                      ${isDependentFromSearch ? "bg-slate-50/70" : i % 2 === 0 ? "bg-white" : "bg-slate-50"}
+                      hover:bg-blue-50 transition-colors
+                      ${!isSearching && (r.es_jefe_familia || hasChildren) ? "cursor-pointer" : ""}
+                    `}
+                  >
+                    <td className={`px-3 py-2 ${isDependentFromSearch ? "pl-8" : ""}`}>
+                      <div className="flex items-center gap-1.5">
+                        {!isSearching && (r.es_jefe_familia || hasChildren) && (
+                           <span className="text-slate-400">
+                             {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                           </span>
+                        )}
+                        {isDependentFromSearch && (
+                          <span className="text-slate-300 font-bold" title="Dependiente">↳</span>
+                        )}
+                        {r.es_jefe_familia && (
+                          <Home size={16} className="text-[#0f2847] flex-shrink-0 mb-0.5" title="Jefe de Familia" />
+                        )}
+                        <span className={!isSearching && r.es_jefe_familia ? "font-bold text-[#0f2847]" : "font-medium text-slate-700"}>
+                          {r.nombre}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-3 py-2 font-medium text-slate-700">{r.apellido}</td>
+                    <td className="px-3 py-2">{r.cedula}</td>
+                    <td className="px-3 py-2">{r.telefono}</td>
+                    <td className="px-3 py-2">{r.edad}</td>
+                    <td className="px-3 py-2">{r.calle}</td>
+                    {(onEdit || onDelete || onManageFamily) && (
+                      <td className="px-3 py-2 text-right">
+                        {renderActions(r)}
+                      </td>
+                    )}
+                  </tr>
+
+                  {/* Filas Hijos (Solo si no estamos buscando modo lista y está expandido) */}
+                  {!isSearching && isExpanded && children.map((child) => (
+                    <tr key={child.id} className="bg-slate-50/90 hover:bg-slate-100 transition-colors border-l-4 border-l-blue-200">
+                      <td className="px-3 py-2 pl-12 text-sm text-slate-600">
+                        <div className="flex items-center gap-2">
+                           <span className="text-slate-300 font-bold">↳</span>
+                           {child.nombre}
+                        </div>
+                      </td>
+                      <td className="px-3 py-2 text-sm text-slate-600">{child.apellido}</td>
+                      <td className="px-3 py-2 text-sm text-slate-600">{child.cedula}</td>
+                      <td className="px-3 py-2 text-sm text-slate-600">{child.telefono}</td>
+                      <td className="px-3 py-2 text-sm text-slate-600">{child.edad}</td>
+                      <td className="px-3 py-2 text-sm text-slate-600">{child.calle}</td>
+                      {(onEdit || onDelete || onManageFamily) && (
+                        <td className="px-3 py-2 text-right">
+                          {renderActions(child)}
+                        </td>
                       )}
-                      {onEdit && (
-                        <button
-                          type="button"
-                          onClick={() => onEdit(r)}
-                          className="rounded-lg p-1.5 text-slate-600 transition hover:bg-blue-100 hover:text-blue-700"
-                          title="Editar"
-                        >
-                          <Pencil size={16} />
-                        </button>
-                      )}
-                      {onDelete && (
-                        <button
-                          type="button"
-                          onClick={() => onDelete(r)}
-                          className="rounded-lg p-1.5 text-slate-600 transition hover:bg-red-100 hover:text-red-700"
-                          title="Eliminar"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      )}
-                    </div>
-                  </td>
-                )}
-              </tr>
-            ))
+                    </tr>
+                  ))}
+                </Fragment>
+              );
+            })
           ) : (
             <tr>
-              <td className="px-3 py-4 text-sm text-slate-500" colSpan={(onEdit || onDelete) ? 7 : 6}>
+              <td className="px-3 py-4 text-center text-sm text-slate-500" colSpan={(onEdit || onDelete || onManageFamily) ? 7 : 6}>
                 Sin registros para mostrar.
               </td>
             </tr>
@@ -947,7 +1034,5 @@ function TablaHabitantes({ rows, onEdit, onDelete, onManageFamily }) {
     </div>
   );
 }
-
-
 
 export default App;
