@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { Search, Save, History, X, Trash2 } from "lucide-react";
+import { Search, Save, History, X, Trash2, Play, Lock } from "lucide-react";
 import { api } from "./api";
 
 export default function Votaciones({ sessionUser, inputClass, onMessage, calles = [] }) {
@@ -10,9 +10,12 @@ export default function Votaciones({ sessionUser, inputClass, onMessage, calles 
   const [calleFilter, setCalleFilter] = useState("Todas");
   
   const [showSaveModal, setShowSaveModal] = useState(false);
-  const [saveTitulo, setSaveTitulo] = useState("");
   const [saving, setSaving] = useState(false);
   const [selectedStats, setSelectedStats] = useState(null);
+
+  const [activeElectionTitle, setActiveElectionTitle] = useState(() => localStorage.getItem("comuna_active_election") || "");
+  const [showStartModal, setShowStartModal] = useState(false);
+  const [startTitulo, setStartTitulo] = useState("");
 
   useEffect(() => {
     loadData();
@@ -89,22 +92,36 @@ export default function Votaciones({ sessionUser, inputClass, onMessage, calles 
     }
   };
 
-  const handleSaveHistorial = async (e) => {
+  const handleStartElection = (e) => {
     e.preventDefault();
-    if (!saveTitulo.trim()) {
-      onMessage?.({ type: "error", text: "El título es obligatorio." });
+    const tituloTrim = startTitulo.trim();
+    if (!tituloTrim) {
+      onMessage?.({ type: "error", text: "El título es obligatorio para aperturar la votación." });
       return;
     }
+    setActiveElectionTitle(tituloTrim);
+    localStorage.setItem("comuna_active_election", tituloTrim);
+    setShowStartModal(false);
+  };
+
+  const handleSaveHistorial = async (e) => {
+    e.preventDefault();
+    if (!activeElectionTitle) return;
+    
     setSaving(true);
     try {
       const res = await api.saveVotacionesHistorial({
-        titulo: saveTitulo,
+        titulo: activeElectionTitle,
         consejoNombre: sessionUser.vocero,
         calle: sessionUser.calle
       });
       onMessage?.({ type: "success", text: res.message });
       setShowSaveModal(false);
-      setSaveTitulo("");
+      
+      // Cerradura local
+      setActiveElectionTitle("");
+      localStorage.removeItem("comuna_active_election");
+      
       await loadData();
     } catch (err) {
       onMessage?.({ type: "error", text: "Error al guardar: " + err.message });
@@ -201,12 +218,12 @@ export default function Votaciones({ sessionUser, inputClass, onMessage, calles 
           </div>
         </div>
         
-        {!sessionUser?.isAdmin && sessionUser?.calle && (
+        {!sessionUser?.isAdmin && sessionUser?.calle && activeElectionTitle && (
            <div className="shrink-0 flex flex-col gap-2 bg-[#0f2847]/5 p-4 rounded-xl border border-[#0f2847]/10 w-full md:w-auto">
              <span className="text-sm font-semibold text-[#0f2847] flex items-center gap-2">
                <History size={16}/> Cierre de Votación
              </span>
-             <p className="text-xs text-slate-500 max-w-xs mb-1">Guarda el número de votantes actuales de tu calle y limpia la lista para un nuevo registro.</p>
+             <p className="text-xs text-slate-500 max-w-xs mb-1">Guarda el número de votantes actuales de tu calle y limpia la lista.</p>
              <button
                type="button"
                onClick={() => setShowSaveModal(true)}
@@ -251,7 +268,12 @@ export default function Votaciones({ sessionUser, inputClass, onMessage, calles 
           </div>
         )}
 
-        <span className="text-sm text-slate-500 ml-auto mb-2 font-medium flex gap-4">
+        <span className="text-sm text-slate-500 ml-auto mb-2 font-medium flex gap-4 items-center">
+          {activeElectionTitle && (
+             <span className="bg-blue-50 text-blue-800 px-3 py-1 rounded-md border border-blue-100 flex items-center gap-2 font-bold shadow-sm">
+               <Lock size={14} className="text-blue-600" /> Jornada: {activeElectionTitle}
+             </span>
+          )}
           <span>Habitantes listados: {filtrados.length}</span>
           <span className="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100">Han votado: {filtrados.filter(h => h.voto).length}</span>
         </span>
@@ -260,57 +282,74 @@ export default function Votaciones({ sessionUser, inputClass, onMessage, calles 
       {loading ? (
         <p className="text-slate-500 py-10 text-center">Cargando datos de votación...</p>
       ) : (
-        <div className="overflow-x-auto overflow-y-auto max-h-[600px] rounded-xl border border-slate-200 bg-white relative shadow-sm">
-          <table className="w-full text-left text-sm text-slate-600">
-            <thead className="bg-[#0f2847] text-white sticky top-0 z-10 shadow-md">
-              <tr>
-                <th className="p-3 w-20 text-center">Voto</th>
-                <th className="p-3">Habitante (Nombre Completo)</th>
-                <th className="p-3">Cédula</th>
-                <th className="p-3">Calle de Residencia</th>
-                {sessionUser?.isAdmin && <th className="p-3 border-l border-white/20">Consejo Comunal</th>}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {filtrados.length === 0 ? (
+        <div className="relative">
+          <div className={`overflow-x-auto overflow-y-auto max-h-[600px] rounded-xl border border-slate-200 bg-white relative shadow-sm transition-all duration-300 ${!activeElectionTitle ? "opacity-30 pointer-events-none select-none blur-[1px]" : ""}`}>
+            <table className="w-full text-left text-sm text-slate-600">
+              <thead className="bg-[#0f2847] text-white sticky top-0 z-10 shadow-md">
                 <tr>
-                  <td colSpan={sessionUser?.isAdmin ? 5 : 4} className="p-6 text-center text-slate-400">
-                    No se encontraron resultados para la búsqueda actual.
-                  </td>
+                  <th className="p-3 w-20 text-center">Voto</th>
+                  <th className="p-3">Habitante (Nombre Completo)</th>
+                  <th className="p-3">Cédula</th>
+                  <th className="p-3">Calle de Residencia</th>
+                  {sessionUser?.isAdmin && <th className="p-3 border-l border-white/20">Consejo Comunal</th>}
                 </tr>
-              ) : (
-                filtrados.map((h) => (
-                  <tr key={h.id} className={`transition-colors ${h.voto ? "bg-emerald-50/40 hover:bg-emerald-50/70" : "hover:bg-slate-50/80"}`}>
-                    <td className="p-3 text-center">
-                      <button
-                        onClick={() => handleToggleVoto(h)}
-                        type="button"
-                        className={`w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all ${
-                          h.voto
-                            ? "bg-emerald-500 border-emerald-500 text-white shadow-emerald-500/30 shadow-md"
-                            : "bg-white border-slate-300 text-transparent hover:border-emerald-400 hover:bg-emerald-50"
-                        }`}
-                      >
-                        <svg className="w-4 h-4 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                        </svg>
-                      </button>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {filtrados.length === 0 ? (
+                  <tr>
+                    <td colSpan={sessionUser?.isAdmin ? 5 : 4} className="p-6 text-center text-slate-400">
+                      No se encontraron resultados para la búsqueda actual.
                     </td>
-                    <td className={`p-3 font-medium ${h.voto ? "text-emerald-900" : "text-slate-800"}`}>
-                      {h.nombre} {h.apellido}
-                    </td>
-                    <td className="p-3 text-slate-500">{h.cedula}</td>
-                    <td className="p-3 text-slate-500">{h.calle}</td>
-                    {sessionUser?.isAdmin && (
-                      <td className="p-3 border-l border-slate-100 text-xs text-slate-500 bg-slate-50/50 uppercase tracking-widest font-medium">
-                        {h.consejo}
-                      </td>
-                    )}
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                ) : (
+                  filtrados.map((h) => (
+                    <tr key={h.id} className={`transition-colors ${h.voto ? "bg-emerald-50/40 hover:bg-emerald-50/70" : "hover:bg-slate-50/80"}`}>
+                      <td className="p-3 text-center">
+                        <button
+                          onClick={() => handleToggleVoto(h)}
+                          type="button"
+                          className={`w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all ${
+                            h.voto
+                              ? "bg-emerald-500 border-emerald-500 text-white shadow-emerald-500/30 shadow-md"
+                              : "bg-white border-slate-300 text-transparent hover:border-emerald-400 hover:bg-emerald-50"
+                          }`}
+                        >
+                          <svg className="w-4 h-4 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                          </svg>
+                        </button>
+                      </td>
+                      <td className={`p-3 font-medium ${h.voto ? "text-emerald-900" : "text-slate-800"}`}>
+                        {h.nombre} {h.apellido}
+                      </td>
+                      <td className="p-3 text-slate-500">{h.cedula}</td>
+                      <td className="p-3 text-slate-500">{h.calle}</td>
+                      {sessionUser?.isAdmin && (
+                        <td className="p-3 border-l border-slate-100 text-xs text-slate-500 bg-slate-50/50 uppercase tracking-widest font-medium">
+                          {h.consejo}
+                        </td>
+                      )}
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+          
+          {/* Overlay de Apertura */}
+          {!activeElectionTitle && (
+            <div className="absolute inset-0 z-20 flex flex-col items-center justify-center pointer-events-auto">
+               <button 
+                  onClick={() => { setStartTitulo(""); setShowStartModal(true); }}
+                  className="bg-[#0f2847] hover:bg-[#15345c] text-white px-8 py-4 rounded-3xl shadow-2xl font-bold text-lg flex items-center gap-3 transition-transform hover:scale-105 border border-white/10"
+               >
+                  <Play size={24} className="text-blue-400" /> Iniciar Votaciones
+               </button>
+               <p className="mt-4 text-sm font-semibold text-slate-700 bg-white/90 px-5 py-2.5 rounded-full shadow-md border border-slate-200 flex items-center gap-2">
+                  <Lock size={16} className="text-slate-400" /> La tabla está bloqueada hasta aperturar jornada
+               </p>
+            </div>
+          )}
         </div>
       )}
       </div>
@@ -397,42 +436,78 @@ export default function Votaciones({ sessionUser, inputClass, onMessage, calles 
         </div>
       )}
 
-      {/* Modal Guardar Historial */}
-      {showSaveModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-sm">
-           <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl relative">
-              <h3 className="text-xl font-bold text-[#0f2847] mb-2 flex items-center gap-2">
-                <Save size={20} /> Guardar Votación
+      {/* Modal Iniciar Votaciones */}
+      {showStartModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm">
+           <div className="w-full max-w-sm rounded-3xl bg-white p-7 shadow-2xl relative animate-in zoom-in-95 duration-200">
+              <div className="bg-[#0f2847]/10 w-16 h-16 rounded-full flex items-center justify-center mb-4 mx-auto">
+                <Play size={28} className="text-[#0f2847] ml-1" />
+              </div>
+              <h3 className="text-2xl font-bold text-[#0f2847] mb-2 text-center">
+                Aperturar Votaciones
               </h3>
-              <p className="text-sm text-slate-600 mb-6">
-                Se registrará un reporte con <strong>todos los votos tildados actualmente</strong> en tu calle. 
-                Luego, <strong>todos los checks se borrarán automáticamente</strong> para la siguiente elección.
+              <p className="text-sm text-slate-600 mb-6 text-center">
+                Asigna un título a esta jornada electoral para poder habilitar la tabla y comenzar a recibir a los votantes.
               </p>
-              <form onSubmit={handleSaveHistorial}>
-                 <div className="mb-4">
-                   <label className="block text-xs font-bold text-slate-700 mb-1">Título de la Votación / Evento</label>
+              <form onSubmit={handleStartElection}>
+                 <div className="mb-6">
+                   <label className="block text-xs font-bold text-slate-700 mb-2 uppercase tracking-wide">Título de la Elección</label>
                    <input 
-                     className={inputClass}
-                     placeholder="Ej: Elecciones 2026, Consulta Popular..."
-                     value={saveTitulo}
-                     onChange={e => setSaveTitulo(e.target.value)}
+                     className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#0f2847] focus:outline-none transition-all"
+                     placeholder="Ej: Elecciones Presidenciales 2026..."
+                     value={startTitulo}
+                     onChange={e => setStartTitulo(e.target.value)}
                      autoFocus
                    />
                  </div>
-                 <div className="flex gap-3 justify-end mt-6">
+                 <div className="flex flex-col gap-3">
+                    <button 
+                      type="submit" 
+                      disabled={!startTitulo.trim()}
+                      className="w-full py-3 font-bold text-white bg-[#0f2847] hover:bg-[#15345c] rounded-xl transition shadow-lg disabled:opacity-50 flex justify-center items-center gap-2"
+                    >
+                      Desbloquear Tabla
+                    </button>
                     <button 
                       type="button" 
-                      onClick={() => setShowSaveModal(false)}
-                      className="px-4 py-2 font-medium text-slate-600 hover:bg-slate-100 rounded-xl transition"
+                      onClick={() => setShowStartModal(false)}
+                      className="w-full py-3 font-medium text-slate-500 hover:bg-slate-100 hover:text-slate-700 rounded-xl transition"
                     >
                       Cancelar
                     </button>
+                 </div>
+              </form>
+           </div>
+        </div>
+      )}
+
+      {/* Modal Guardar Historial */}
+      {showSaveModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm">
+           <div className="w-full max-w-sm rounded-3xl bg-white p-7 shadow-2xl relative animate-in zoom-in-95 duration-200">
+              <h3 className="text-2xl font-bold text-[#0f2847] mb-2 flex items-center justify-center gap-2 text-center">
+                Cerrar Votación
+              </h3>
+              <p className="text-sm text-slate-600 mb-6 text-center">
+                Se registrará un reporte histórico con el título <strong>"{activeElectionTitle}"</strong> contabilizando <strong className="text-[#0f2847] text-base">{filtrados.filter(h => h.voto).length} votos</strong>. 
+                <br/><br/>
+                Luego, la tabla se borrará automáticamente cerrando la jornada.
+              </p>
+              <form onSubmit={handleSaveHistorial}>
+                 <div className="flex flex-col gap-3">
                     <button 
                       type="submit" 
-                      disabled={saving || !saveTitulo.trim()}
-                      className="px-4 py-2 font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl transition disabled:opacity-50"
+                      disabled={saving}
+                      className="w-full py-3 font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl transition-all shadow-lg shadow-emerald-600/20 disabled:opacity-50 flex items-center justify-center gap-2"
                     >
-                      {saving ? "Guardando..." : "Confirmar y Reiniciar"}
+                      {saving ? "Registrando..." : "Confirmar y Finalizar"}
+                    </button>
+                    <button 
+                      type="button" 
+                      onClick={() => setShowSaveModal(false)}
+                      className="w-full py-3 font-medium text-slate-500 hover:bg-slate-100 hover:text-slate-700 rounded-xl transition"
+                    >
+                      Regresar a la Tabla
                     </button>
                  </div>
               </form>
