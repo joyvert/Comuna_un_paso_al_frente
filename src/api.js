@@ -84,6 +84,8 @@ export const api = {
   createJornada: (payload) => request("/data/jornadas", { method: "POST", body: JSON.stringify(payload) }),
   deleteJornada: (id) => request(`/data/jornadas/${encodeURIComponent(id)}`, { method: "DELETE" }),
 
+  getElectionConfig: () => request("/data/votos/config"),
+  setElectionConfig: (title) => request("/data/votos/config", { method: "PUT", body: JSON.stringify({ title }) }),
   getVotaciones: () => request("/data/votos/habitantes"),
   toggleVoto: (habitanteId, voto) => request(`/data/votos/${encodeURIComponent(habitanteId)}`, { method: "POST", body: JSON.stringify({ voto }) }),
   getVotacionesHistorial: () => request("/data/votos/historial"),

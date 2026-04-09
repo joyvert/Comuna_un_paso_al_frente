@@ -13,9 +13,11 @@ export default function Votaciones({ sessionUser, inputClass, onMessage, calles 
   const [saving, setSaving] = useState(false);
   const [selectedStats, setSelectedStats] = useState(null);
 
+  const [globalElectionTitle, setGlobalElectionTitle] = useState(null);
   const [activeElectionTitle, setActiveElectionTitle] = useState(() => localStorage.getItem("comuna_active_election") || "");
   const [showStartModal, setShowStartModal] = useState(false);
   const [startTitulo, setStartTitulo] = useState("");
+  const [adminSettingTitle, setAdminSettingTitle] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -23,7 +25,11 @@ export default function Votaciones({ sessionUser, inputClass, onMessage, calles 
     // Polling silencioso cada 12 segundos para actualizar las estadísticas en tiempo real
     const timer = setInterval(async () => {
       try {
-        const res = await api.getVotaciones();
+        const [res, config] = await Promise.all([
+          api.getVotaciones(),
+          api.getElectionConfig()
+        ]);
+        setGlobalElectionTitle(config.active_election_title);
         setData(prev => {
           // Solo actualizamos estadísticas para no interrumpir si el usuario está interactuando con la tabla
           return { ...prev, stats: res.stats || [] };
@@ -39,10 +45,12 @@ export default function Votaciones({ sessionUser, inputClass, onMessage, calles 
   async function loadData() {
     setLoading(true);
     try {
-      const [res, histRes] = await Promise.all([
+      const [res, histRes, configRes] = await Promise.all([
         api.getVotaciones(),
-        api.getVotacionesHistorial()
+        api.getVotacionesHistorial(),
+        api.getElectionConfig()
       ]);
+      setGlobalElectionTitle(configRes.active_election_title);
       const normalizedHabitantes = (res.habitantes || []).map((h) => {
         const call = (h.calle || "").trim();
         const matched = calles.find((c) => c.toLowerCase() === call.toLowerCase());
@@ -92,16 +100,48 @@ export default function Votaciones({ sessionUser, inputClass, onMessage, calles 
     }
   };
 
-  const handleStartElection = (e) => {
+  const handleStartElection = async (e) => {
     e.preventDefault();
-    const tituloTrim = startTitulo.trim();
-    if (!tituloTrim) {
-      onMessage?.({ type: "error", text: "El título es obligatorio para aperturar la votación." });
-      return;
+    if (sessionUser?.isAdmin) {
+      const tituloTrim = startTitulo.trim();
+      if (!tituloTrim) {
+        onMessage?.({ type: "error", text: "El título es obligatorio para aperturar la votación." });
+        return;
+      }
+      setAdminSettingTitle(true);
+      try {
+        await api.setElectionConfig(tituloTrim);
+        setGlobalElectionTitle(tituloTrim);
+        setActiveElectionTitle(tituloTrim);
+        localStorage.setItem("comuna_active_election", tituloTrim);
+        setShowStartModal(false);
+        onMessage?.({ type: "success", text: "Jornada global aperturada con éxito." });
+      } catch (err) {
+        onMessage?.({ type: "error", text: "Error: " + err.message });
+      } finally {
+        setAdminSettingTitle(false);
+      }
+    } else {
+      // Vocero accepting the global election
+      if (!globalElectionTitle) return;
+      setActiveElectionTitle(globalElectionTitle);
+      localStorage.setItem("comuna_active_election", globalElectionTitle);
+      setShowStartModal(false);
     }
-    setActiveElectionTitle(tituloTrim);
-    localStorage.setItem("comuna_active_election", tituloTrim);
-    setShowStartModal(false);
+  };
+
+  const handleCloseGlobalElection = async () => {
+    if (!window.confirm("¿Segurísimo que deseas cerrar la elección a nivel global? Esto impedirá que se abran nuevas mesas.")) return;
+    try {
+      await api.setElectionConfig("");
+      setGlobalElectionTitle(null);
+      // Wait, we probably want to clear Admin's active session too just in case
+      setActiveElectionTitle("");
+      localStorage.removeItem("comuna_active_election");
+      onMessage?.({ type: "success", text: "Jornada electoral global ha sido cerrada." });
+    } catch (err) {
+      onMessage?.({ type: "error", text: "Error: " + err.message });
+    }
   };
 
   const handleSaveHistorial = async (e) => {
@@ -191,6 +231,39 @@ export default function Votaciones({ sessionUser, inputClass, onMessage, calles 
 
       {tab === "votacion" && (
         <div className="space-y-6">
+          {sessionUser?.isAdmin && (
+            <div className={`p-4 rounded-xl shadow-sm border flex items-center justify-between ${globalElectionTitle ? 'bg-emerald-50 border-emerald-200' : 'bg-slate-50 border-slate-200'}`}>
+              <div>
+                <h3 className={`font-bold ${globalElectionTitle ? 'text-emerald-800' : 'text-slate-700'}`}>
+                  Panel de Control Global Electoral
+                </h3>
+                <p className="text-sm mt-1 text-slate-600">
+                  {globalElectionTitle 
+                    ? <span>Estado: <strong className="text-emerald-700">Elección Activa</strong> ({globalElectionTitle})</span>
+                    : <span>Estado: <strong>Cerrado</strong>. Los voceros no pueden iniciar mesas.</span>
+                  }
+                </p>
+              </div>
+              <div>
+                {globalElectionTitle ? (
+                  <button 
+                    onClick={handleCloseGlobalElection}
+                    className="bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 font-bold px-4 py-2 rounded-lg transition"
+                  >
+                    Cerrar Jornada Global
+                  </button>
+                ) : (
+                  <button 
+                    onClick={() => { setStartTitulo(""); setShowStartModal(true); }}
+                    className="bg-[#0f2847] text-white hover:bg-[#15345c] font-bold px-4 py-2 rounded-lg transition"
+                  >
+                    Aperturar Jornada Global
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
           <div className="rounded-2xl bg-white p-6 shadow-sm border border-slate-100 flex flex-col md:flex-row gap-6 justify-between items-start md:items-center">
         <div className="flex-1 w-full">
           <h2 className="mb-4 text-xl font-bold text-[#0f2847]">Estadísticas de Votación</h2>
@@ -337,17 +410,39 @@ export default function Votaciones({ sessionUser, inputClass, onMessage, calles 
           </div>
           
           {/* Overlay de Apertura */}
-          {!activeElectionTitle && (
-            <div className="absolute inset-0 z-20 flex flex-col items-center justify-center pointer-events-auto">
-               <button 
-                  onClick={() => { setStartTitulo(""); setShowStartModal(true); }}
-                  className="bg-[#0f2847] hover:bg-[#15345c] text-white px-8 py-4 rounded-3xl shadow-2xl font-bold text-lg flex items-center gap-3 transition-transform hover:scale-105 border border-white/10"
-               >
-                  <Play size={24} className="text-blue-400" /> Iniciar Votaciones
-               </button>
-               <p className="mt-4 text-sm font-semibold text-slate-700 bg-white/90 px-5 py-2.5 rounded-full shadow-md border border-slate-200 flex items-center gap-2">
-                  <Lock size={16} className="text-slate-400" /> La tabla está bloqueada hasta aperturar jornada
-               </p>
+          {(!activeElectionTitle || activeElectionTitle !== globalElectionTitle) && (
+            <div className="absolute inset-0 z-20 flex flex-col items-center justify-center pointer-events-auto bg-white/40 backdrop-blur-[2px] rounded-xl">
+               {!globalElectionTitle ? (
+                 <div className="text-center p-8 bg-white/90 rounded-3xl shadow-xl border border-slate-200 max-w-sm">
+                   <div className="bg-slate-100 w-16 h-16 rounded-full flex items-center justify-center mb-4 mx-auto">
+                     <Lock size={28} className="text-slate-400" />
+                   </div>
+                   <h3 className="text-xl font-bold text-slate-800 mb-2">Jornada Cerrada</h3>
+                   <p className="text-sm text-slate-500">
+                     El administrador del sistema aún no ha aperturado formalmente la jornada electoral. Sus funciones de mesa permanecen bloqueadas.
+                   </p>
+                 </div>
+               ) : (
+                 <div className="text-center p-8 bg-white/90 rounded-3xl shadow-2xl border border-[#0f2847]/20 max-w-sm transform animate-in slide-in-from-bottom-4 duration-500">
+                   <div className="bg-[#0f2847]/10 w-16 h-16 rounded-full flex items-center justify-center mb-4 mx-auto">
+                     <Play size={28} className="text-[#0f2847] ml-1" />
+                   </div>
+                   <h3 className="text-2xl font-bold text-[#0f2847] mb-2">Jornada Asignada</h3>
+                   <p className="text-base text-slate-700 font-semibold mb-6 px-4 py-2 bg-blue-50 text-blue-800 rounded-lg border border-blue-100 uppercase tracking-widest">
+                     {globalElectionTitle}
+                   </p>
+                   {sessionUser?.isAdmin ? (
+                     <p className="text-sm text-slate-500 mb-4">Utiliza el panel de arriba para cerrar la jornada global.</p>
+                   ) : (
+                     <button 
+                        onClick={handleStartElection}
+                        className="w-full bg-[#0f2847] hover:bg-[#15345c] text-white px-6 py-3.5 rounded-xl font-bold text-base flex justify-center items-center gap-2 transition-transform hover:scale-105 shadow-md"
+                     >
+                        <Lock size={18} className="text-blue-200" /> Desbloquear Mi Tabla
+                     </button>
+                   )}
+                 </div>
+               )}
             </div>
           )}
         </div>
@@ -436,18 +531,18 @@ export default function Votaciones({ sessionUser, inputClass, onMessage, calles 
         </div>
       )}
 
-      {/* Modal Iniciar Votaciones */}
-      {showStartModal && (
+      {/* Modal Iniciar Votaciones (Solo Admin) */}
+      {showStartModal && sessionUser?.isAdmin && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm">
            <div className="w-full max-w-sm rounded-3xl bg-white p-7 shadow-2xl relative animate-in zoom-in-95 duration-200">
               <div className="bg-[#0f2847]/10 w-16 h-16 rounded-full flex items-center justify-center mb-4 mx-auto">
                 <Play size={28} className="text-[#0f2847] ml-1" />
               </div>
               <h3 className="text-2xl font-bold text-[#0f2847] mb-2 text-center">
-                Aperturar Votaciones
+                Aperturar Global
               </h3>
               <p className="text-sm text-slate-600 mb-6 text-center">
-                Asigna un título a esta jornada electoral para poder habilitar la tabla y comenzar a recibir a los votantes.
+                Asigna el título maestro. Esto obligará a todos los voceros a usar este nombre y desbloqueará el sistema para que reciban votantes.
               </p>
               <form onSubmit={handleStartElection}>
                  <div className="mb-6">
@@ -463,10 +558,10 @@ export default function Votaciones({ sessionUser, inputClass, onMessage, calles 
                  <div className="flex flex-col gap-3">
                     <button 
                       type="submit" 
-                      disabled={!startTitulo.trim()}
+                      disabled={!startTitulo.trim() || adminSettingTitle}
                       className="w-full py-3 font-bold text-white bg-[#0f2847] hover:bg-[#15345c] rounded-xl transition shadow-lg disabled:opacity-50 flex justify-center items-center gap-2"
                     >
-                      Desbloquear Tabla
+                      {adminSettingTitle ? "Aperturando..." : "Activar para toda la Comuna"}
                     </button>
                     <button 
                       type="button" 

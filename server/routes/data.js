@@ -615,6 +615,36 @@ router.get("/votos/habitantes", async (req, res) => {
   }
 });
 
+router.get("/votos/config", async (req, res) => {
+  try {
+    const result = await pool.query("SELECT value FROM global_config WHERE key = 'active_election_title'");
+    const title = result.rows.length ? result.rows[0].value : null;
+    return res.json({ ok: true, active_election_title: title });
+  } catch (error) {
+    return res.status(500).json({ ok: false, message: error.message });
+  }
+});
+
+router.put("/votos/config", async (req, res) => {
+  try {
+    if (!req.auth.admin) return res.status(403).json({ ok: false, message: "No autorizado." });
+    const { title } = req.body;
+    
+    if (title === null || title === "") {
+      await pool.query("DELETE FROM global_config WHERE key = 'active_election_title'");
+    } else {
+      await pool.query(`
+        INSERT INTO global_config (key, value) VALUES ('active_election_title', $1)
+        ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value
+      `, [title]);
+    }
+    
+    return res.json({ ok: true, active_election_title: title });
+  } catch (error) {
+    return res.status(500).json({ ok: false, message: error.message });
+  }
+});
+
 router.get("/votos/historial", async (req, res) => {
   try {
     let result;
