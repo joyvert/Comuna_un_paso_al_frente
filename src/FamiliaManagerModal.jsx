@@ -16,7 +16,6 @@ export default function FamiliaManagerModal({ jefe, allHabitantes, onClose, onSa
     }
   }, [jefe, allHabitantes]);
 
-  // Filtrar posibles dependientes (todos menos el propio jefe)
   const availableDependants = useMemo(() => {
     return allHabitantes
       .filter((h) => h.id !== jefe.id)
@@ -26,8 +25,13 @@ export default function FamiliaManagerModal({ jefe, allHabitantes, onClose, onSa
               .toLowerCase()
               .includes(search.toLowerCase())
           : true
-      );
+      )
+      .sort((a,b) => a.nombre.localeCompare(b.nombre));
   }, [allHabitantes, jefe, search]);
+
+  const selectedDependantsData = useMemo(() => {
+    return allHabitantes.filter(h => selectedIds.includes(h.id));
+  }, [allHabitantes, selectedIds]);
 
   const toggleSelection = (habitanteId) => {
     setSelectedIds((prev) =>
@@ -145,9 +149,29 @@ export default function FamiliaManagerModal({ jefe, allHabitantes, onClose, onSa
             </table>
           </div>
 
-          <div className="flex gap-2 items-center bg-blue-50 text-blue-800 p-3 rounded-xl border border-blue-100 font-medium text-sm">
-             <AlertCircle size={16} />
-             <span>Has seleccionado a {selectedIds.length} dependientes para esta familia.</span>
+          <div className="flex flex-col gap-3 bg-blue-50/40 p-4 rounded-xl border border-blue-100">
+             <div className="flex items-center gap-2 text-blue-800 font-bold text-sm">
+                <Users size={16} /> 
+                <span>Resumen de Integrantes Seleccionados ({selectedIds.length})</span>
+             </div>
+             {selectedIds.length === 0 ? (
+                <p className="text-xs text-slate-500 italic">No hay familiares añadidos todavía. Búscalos e inclúyelos usando la tabla superior.</p>
+             ) : (
+                <div className="flex flex-wrap gap-2 max-h-[100px] overflow-y-auto pr-2 pb-1">
+                   {selectedDependantsData.map(h => (
+                      <div key={h.id} className="bg-white border border-blue-200 text-slate-700 text-xs px-3 py-1.5 rounded-full shadow-sm flex items-center gap-2 group hover:border-red-200 transition-colors">
+                         <span className="font-semibold">{h.nombre} {h.apellido}</span>
+                         <button 
+                           onClick={() => toggleSelection(h.id)} 
+                           className="text-slate-400 group-hover:text-red-500 transition-colors ml-1 p-0.5 rounded-full hover:bg-red-50"
+                           title="Quitar"
+                         >
+                           <X size={14} />
+                         </button>
+                      </div>
+                   ))}
+                </div>
+             )}
           </div>
 
         </div>
