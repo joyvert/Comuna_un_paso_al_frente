@@ -617,6 +617,7 @@ router.get("/votos/habitantes", async (req, res) => {
 
 router.get("/votos/config", async (req, res) => {
   try {
+    await pool.query("CREATE TABLE IF NOT EXISTS global_config (key VARCHAR(50) PRIMARY KEY, value TEXT)");
     const result = await pool.query("SELECT value FROM global_config WHERE key = 'active_election_title'");
     const title = result.rows.length ? result.rows[0].value : null;
     return res.json({ ok: true, active_election_title: title });
@@ -629,6 +630,8 @@ router.put("/votos/config", async (req, res) => {
   try {
     if (!req.auth.admin) return res.status(403).json({ ok: false, message: "No autorizado." });
     const { title } = req.body;
+    
+    await pool.query("CREATE TABLE IF NOT EXISTS global_config (key VARCHAR(50) PRIMARY KEY, value TEXT)");
     
     if (title === null || title === "") {
       await pool.query("DELETE FROM global_config WHERE key = 'active_election_title'");
