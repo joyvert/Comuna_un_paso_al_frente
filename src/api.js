@@ -21,7 +21,7 @@ const secondaryApp = initializeApp(firebaseConfig, "Secondary");
 const secondaryAuth = getAuth(secondaryApp);
 
 const DOMAIN = "@comunapasofrente.com";
-const getEmail = (userId) => `${userId}${DOMAIN}`;
+const getEmail = (userId) => userId.includes('@') ? userId : `${userId}${DOMAIN}`;
 
 function getSession() {
   try { return JSON.parse(sessionStorage.getItem("comuna_session_v1") || "{}"); } 
