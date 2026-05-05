@@ -1,4 +1,0 @@
-
-
-
-ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS telefono VARCHAR(40);
