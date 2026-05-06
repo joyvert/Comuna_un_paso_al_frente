@@ -308,8 +308,9 @@ export default function AuthCard({ onAuthSuccess }) {
 
       try {
         const login = await api.login({ userId, passwordHash: hash });
-        sessionUserId = login?.user?.user_id || userId;
-        userData = login?.user;
+        sessionUserId = login?.userId || login?.user?.user_id || userId;
+        // api.login ahora devuelve datos en la raíz, no en .user
+        userData = login?.user || login;
         accessToken = login?.accessToken ?? null;
       } catch (err) {
         if (isRateLimitOrLockout(err)) {
@@ -326,7 +327,7 @@ export default function AuthCard({ onAuthSuccess }) {
       if (!accessToken || !userData) {
         setGlobalMessage({
           type: "error",
-          text: "El servidor no devolvió sesión. Revisa JWT_SECRET en la API y vuelve a intentar.",
+          text: "Error de sesión. Intenta de nuevo o contacta al administrador.",
         });
         return;
       }

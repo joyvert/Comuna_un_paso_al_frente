@@ -153,9 +153,14 @@ export const api = {
       
       let q;
       if (isAdmin) {
-        q = query(ref, orderBy("nombre"));
-      } else {
+        // Admin ve todos los habitantes del consejo seleccionado
+        q = query(ref, where("consejo", "==", consejoNombre), orderBy("nombre"));
+      } else if (userCalle) {
+        // Vocero ve solo los de su calle
         q = query(ref, where("consejo", "==", consejoNombre), where("calle", "==", userCalle), orderBy("nombre"));
+      } else {
+        // Fallback: filtrar solo por consejo
+        q = query(ref, where("consejo", "==", consejoNombre), orderBy("nombre"));
       }
       
       const snap = await getDocs(q);
