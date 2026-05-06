@@ -343,7 +343,7 @@ export default function AuthCard({ onAuthSuccess }) {
         apellido: userData.apellido,
         vocero: userData.vocero,
         calle: userData.calle,
-        isAdmin: Boolean(userData.is_admin),
+        isAdmin: Boolean(userData.isAdmin || userData.is_admin),
       };
       sessionStorage.setItem(STORAGE_SESSION_KEY, JSON.stringify(session));
       setGlobalMessage({ type: "success", text: "¡Inicio de sesión exitoso!" });
