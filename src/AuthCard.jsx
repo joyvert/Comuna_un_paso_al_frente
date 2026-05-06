@@ -76,8 +76,8 @@ function TextField({ icon: Icon, label, placeholder, value, onChange, type = "te
   return (
     <label className="block">
       <span className="mb-1 block text-xs font-medium text-slate-600">{label}</span>
-      <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 shadow-sm">
-        {Icon ? <Icon className="h-4 w-4 text-[#0f2847]" aria-hidden /> : null}
+      <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2 shadow-sm">
+        {Icon ? <Icon className="h-4 w-4 text-cyan-600" aria-hidden /> : null}
         <input
           className="w-full bg-transparent outline-none text-sm text-slate-800 placeholder:text-slate-400"
           placeholder={placeholder}
@@ -94,8 +94,8 @@ function PasswordField({ icon: Icon, label, placeholder, value, onChange, visibl
   return (
     <label className="block">
       <span className="mb-1 block text-xs font-medium text-slate-600">{label}</span>
-      <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 shadow-sm">
-        {Icon ? <Icon className="h-4 w-4 text-[#0f2847]" aria-hidden /> : null}
+      <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2 shadow-sm">
+        {Icon ? <Icon className="h-4 w-4 text-cyan-600" aria-hidden /> : null}
         <input
           className="w-full bg-transparent outline-none text-sm text-slate-800 placeholder:text-slate-400"
           placeholder={placeholder}
@@ -121,7 +121,7 @@ function SelectField({ label, value, onChange, options }) {
     <label className="block">
       <span className="mb-1 block text-xs font-medium text-slate-600">{label}</span>
       <select
-        className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 shadow-sm text-sm text-slate-800 outline-none focus:ring-2 focus:ring-[#143c6e]/15"
+        className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2 shadow-sm text-sm text-slate-800 outline-none focus:ring-2 focus:ring-[#143c6e]/15"
         value={value}
         onChange={onChange}
       >
@@ -557,12 +557,12 @@ export default function AuthCard({ onAuthSuccess }) {
   const isSuccess = globalMessage.type === "success";
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0f2847] via-blue-100 to-white px-4">
+    <div className="min-h-screen flex items-center justify-center bg-slate-900 px-4 relative overflow-hidden">
       <div className="relative w-full max-w-2xl">
-        <div className="rounded-3xl bg-white p-6 md:p-10 shadow-lg">
+        <div className="rounded-3xl bg-white/95 backdrop-blur-xl p-6 md:p-10 shadow-2xl border border-white/20">
           <div className="mb-5 flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#0f2847]/10 text-[#0f2847] shadow-sm">
+              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-900/10 text-cyan-600 shadow-sm">
                 <ShieldCheck className="h-5 w-5" aria-hidden />
               </div>
               <div>
@@ -576,10 +576,10 @@ export default function AuthCard({ onAuthSuccess }) {
             </div>
           </div>
 
-          <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white [perspective:1200px]">
+          <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-slate-50/80 [perspective:1200px]">
             {/* Overlay para sensación de flip */}
             <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300">
-              <div className="absolute -right-20 -top-20 h-40 w-40 rounded-full bg-[#0f2847]/10 blur-2xl" />
+              <div className="absolute -right-20 -top-20 h-40 w-40 rounded-full bg-slate-900/10 blur-2xl" />
             </div>
 
             <div
@@ -594,7 +594,7 @@ export default function AuthCard({ onAuthSuccess }) {
                         <KeyRound className="h-5 w-5" aria-hidden />
                       </div>
                       <div>
-                        <h2 className="text-2xl font-bold text-[#0f2847]">Recuperar contraseña</h2>
+                        <h2 className="text-2xl font-bold text-cyan-600">Recuperar contraseña</h2>
                         <p className="mt-1 text-sm text-slate-600">
                           {recoverStep === 1
                             ? "Indica tu correo o cédula para cargar tus preguntas de seguridad."
@@ -640,7 +640,7 @@ export default function AuthCard({ onAuthSuccess }) {
                       <button
                         type="submit"
                         disabled={loading}
-                        className="w-full rounded-xl bg-[#0f2847] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#123c63] disabled:cursor-not-allowed disabled:bg-slate-300"
+                        className="w-full rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300"
                       >
                         {loading ? "Buscando…" : "Continuar"}
                       </button>
@@ -681,11 +681,11 @@ export default function AuthCard({ onAuthSuccess }) {
                       <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 shadow-sm">
                         <div className="flex items-center justify-between gap-3">
                           <p className="text-xs font-semibold text-slate-600">Fuerza de contraseña</p>
-                          <p className="text-xs font-semibold text-[#0f2847]">{strengthRecover.strength}</p>
+                          <p className="text-xs font-semibold text-cyan-600">{strengthRecover.strength}</p>
                         </div>
                         <div className="mt-2 h-2.5 rounded-full bg-slate-200">
                           <div
-                            className="h-2.5 rounded-full bg-[#0f2847]"
+                            className="h-2.5 rounded-full bg-slate-900"
                             style={{ width: `${strengthRecover.percent}%` }}
                             aria-hidden
                           />
@@ -709,7 +709,7 @@ export default function AuthCard({ onAuthSuccess }) {
                       <button
                         type="submit"
                         disabled={loading || !canSubmitRecovery}
-                        className="w-full rounded-xl bg-[#0f2847] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#123c63] disabled:cursor-not-allowed disabled:bg-slate-300"
+                        className="w-full rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300"
                       >
                         {loading ? "Guardando…" : "Restablecer contraseña"}
                       </button>
@@ -735,7 +735,7 @@ export default function AuthCard({ onAuthSuccess }) {
                 >
                   <div className="flex items-start justify-between gap-4">
                     <div>
-                      <h2 className="text-2xl font-bold text-[#0f2847]">Inicio de Sesión</h2>
+                      <h2 className="text-2xl font-bold text-cyan-600">Inicio de Sesión</h2>
                       <p className="mt-1 text-sm text-slate-600">Accede con tu correo o cédula.</p>
                     </div>
                     {allowRegisterUi ? (
@@ -780,13 +780,13 @@ export default function AuthCard({ onAuthSuccess }) {
                   />
 
                   <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
-                    <button type="button" className="text-[#0f2847] font-medium hover:underline" onClick={openRecovery}>
+                    <button type="button" className="text-cyan-600 font-medium hover:underline" onClick={openRecovery}>
                       Olvidé mi contraseña
                     </button>
                     {allowRegisterUi ? (
                       <button
                         type="button"
-                        className="text-[#0f2847] font-medium hover:underline"
+                        className="text-cyan-600 font-medium hover:underline"
                         onClick={() => {
                           setGlobalMessage({ type: "info", text: "" });
                           setMode("register");
@@ -800,7 +800,7 @@ export default function AuthCard({ onAuthSuccess }) {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="mt-2 w-full rounded-xl bg-[#0f2847] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#123c63] disabled:cursor-not-allowed disabled:bg-slate-300"
+                    className="mt-2 w-full rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300"
                   >
                     {loading ? "Validando…" : "Iniciar Sesión"}
                   </button>
@@ -830,7 +830,7 @@ export default function AuthCard({ onAuthSuccess }) {
                 >
                   <div className="flex items-start justify-between gap-4">
                     <div>
-                      <h2 className="text-2xl font-bold text-[#0f2847]">Registro</h2>
+                      <h2 className="text-2xl font-bold text-cyan-600">Registro</h2>
                       <p className="mt-1 text-sm text-slate-600">
                         {regStatus.firstUserPending
                           ? "Eres el primer usuario: esta cuenta será administrador del sistema."
@@ -908,11 +908,11 @@ export default function AuthCard({ onAuthSuccess }) {
                   <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 shadow-sm">
                     <div className="flex items-center justify-between gap-3">
                       <p className="text-xs font-semibold text-slate-600">Fuerza de contraseña</p>
-                      <p className="text-xs font-semibold text-[#0f2847]">{strength.strength}</p>
+                      <p className="text-xs font-semibold text-cyan-600">{strength.strength}</p>
                     </div>
                     <div className="mt-2 h-2.5 rounded-full bg-slate-200">
                       <div
-                        className="h-2.5 rounded-full bg-[#0f2847]"
+                        className="h-2.5 rounded-full bg-slate-900"
                         style={{ width: `${strength.percent}%` }}
                         aria-hidden
                       />
@@ -939,8 +939,8 @@ export default function AuthCard({ onAuthSuccess }) {
                   </div>
 
                   {/* Seguridad */}
-                  <div className="rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-sm">
-                    <h3 className="text-sm font-semibold text-[#0f2847]">
+                  <div className="rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-4 shadow-sm">
+                    <h3 className="text-sm font-semibold text-cyan-600">
                       Preguntas de Seguridad (para recuperación de cuenta)
                     </h3>
                     <div className="mt-3 grid gap-4 sm:grid-cols-2">
@@ -978,7 +978,7 @@ export default function AuthCard({ onAuthSuccess }) {
                   <button
                     type="submit"
                     disabled={loading || !canRegister}
-                    className="w-full rounded-xl bg-[#0f2847] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#123c63] disabled:cursor-not-allowed disabled:bg-slate-300"
+                    className="w-full rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300"
                   >
                     {loading ? "Creando cuenta…" : "Crear Cuenta"}
                   </button>
@@ -986,7 +986,7 @@ export default function AuthCard({ onAuthSuccess }) {
                   <div className="flex justify-center text-xs">
                     <button
                       type="button"
-                      className="text-[#0f2847] font-medium hover:underline"
+                      className="text-cyan-600 font-medium hover:underline"
                       onClick={() => setMode("login")}
                     >
                       Ya tengo cuenta, Iniciar Sesión

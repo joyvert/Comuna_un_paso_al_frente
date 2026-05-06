@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, Fragment } from "react";
+import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, Legend, ResponsiveContainer } from "recharts";
 import AdminVoceros from "./AdminVoceros";
 import ExcelHabitantesUpload from "./ExcelHabitantesUpload";
 import AuthCard from "./AuthCard";
@@ -30,6 +31,8 @@ import {
   Users,
   UtensilsCrossed,
   Vote,
+  HeartPulse,
+  AlertCircle,
 } from "lucide-react";
 
 /** Formatea dígitos como monto tipo 1.234,56 (últimos 2 = decimales) */
@@ -112,6 +115,10 @@ const initialForm = {
   telefono: "",
   nacimiento: "",
   calle: calles[0],
+  jefe_familia_id: null,
+  es_jefe_familia: true,
+  requiere_ayuda: false,
+  condicion_especial: "Ninguna",
 };
 
 
@@ -123,7 +130,7 @@ function App() {
 
   const [slide, setSlide] = useState(0);
   const [activeConsejo, setActiveConsejo] = useState(getInitialActiveConsejo);
-  const [moduleTab, setModuleTab] = useState("habitantes");
+  const [moduleTab, setModuleTab] = useState("resumen");
   const [habitanteForm, setHabitanteForm] = useState(initialForm);
   const [editingHabitanteId, setEditingHabitanteId] = useState(null);
   const [habitanteMsg, setHabitanteMsg] = useState({ type: "", text: "" });
@@ -414,461 +421,539 @@ function App() {
 
 
   const navItem = "rounded-xl px-4 py-2 text-sm font-medium text-slate-100 transition hover:bg-white/15";
-  const inputClass =
-    "w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-slate-800 outline-none transition focus:border-blue-700";
+  const inputClass = "w-full rounded-xl border border-slate-300 bg-slate-50/50 px-4 py-2.5 text-sm text-slate-800 outline-none transition-all focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20";
 
   if (!isAuthenticated) {
     return <AuthCard onAuthSuccess={handleAuthSuccess} />;
   }
 
   return (
-    <div className="min-h-screen w-full bg-slate-50 text-slate-900">
-      <header className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-[#0f2847]/90 backdrop-blur">
-        <nav className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 md:px-8">
-          <div className="flex items-center gap-2 text-white">
-            <LayoutDashboard size={20} />
-            <span className="font-semibold">Comuna un paso al frente</span>
-        </div>
-          <div className="flex items-center gap-2">
-            <div className="hidden gap-2 md:flex">
-              <a href="#inicio" className={navItem}>
-                Inicio
-              </a>
-              <a href="#info" className={navItem}>
-                Misión y Visión
-              </a>
-              <a href="#dashboard" className={navItem}>
-                Dashboard
-              </a>
-        </div>
-        <button
-              type="button"
-              onClick={handleLogout}
-              className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-sm font-medium text-white transition hover:bg-white/20"
-        >
-              <LogOut className="h-4 w-4" aria-hidden />
-              Salir
-        </button>
+    <div className="flex h-screen overflow-hidden bg-slate-50 text-slate-900 font-sans">
+      {/* SIDEBAR */}
+      <aside className="w-72 bg-slate-900 text-slate-300 flex flex-col transition-all duration-300 shadow-2xl z-20 shrink-0">
+        <div className="p-6 border-b border-slate-800">
+          <div className="flex items-center gap-3 text-white mb-6">
+            <div className="p-2 bg-cyan-500/20 rounded-lg text-cyan-400">
+              <LayoutDashboard size={24} />
+            </div>
+            <span className="font-bold text-lg leading-tight tracking-wide">Comuna Un Paso<br/>Al Frente</span>
           </div>
-        </nav>
-      </header>
-
-      <section id="inicio" className="relative h-screen pt-16">
-        {heroSlides.map((item, idx) => (
-          <div
-            key={item.title}
-            className={`absolute inset-0 bg-cover bg-center transition-opacity duration-1000 ${
-              idx === slide ? "opacity-100" : "opacity-0"
+          
+          <button 
+            type="button"
+            onClick={() => setModuleTab("resumen")}
+            className={`w-full text-left p-4 rounded-xl border transition-all ${
+              moduleTab === "resumen" 
+                ? "bg-cyan-500/20 border-cyan-500/50 shadow-md" 
+                : "bg-slate-800/50 border-slate-700/50 hover:bg-slate-800"
             }`}
-            style={{
-              backgroundImage: `linear-gradient(rgba(15, 40, 71, 0.7), rgba(15, 40, 71, 0.65)), url(${item.image})`,
-            }}
-          />
-        ))}
-        <div className="relative z-10 mx-auto flex h-full max-w-7xl items-center px-6">
-          <div className="max-w-2xl text-white">
-            <h1 className="text-4xl font-bold leading-tight md:text-6xl">{heroSlides[slide].title}</h1>
-            <p className="mt-5 text-base text-slate-100 md:text-xl">{heroSlides[slide].text}</p>
-          </div>
-        </div>
-      </section>
-
-      <section id="info" className="mx-auto max-w-7xl px-4 py-20 md:px-8">
-        <div className="grid gap-6 md:grid-cols-3">
-          <article data-aos="fade-up" className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h3 className="mb-2 text-xl font-semibold text-[#0f2847]">Misión</h3>
-            <p>Fortalecer la organización comunitaria con una gestión digital transparente y eficiente.</p>
-          </article>
-          <article
-            data-aos="fade-up"
-            data-aos-delay="120"
-            className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
           >
-            <h3 className="mb-2 text-xl font-semibold text-[#0f2847]">Visión</h3>
-            <p>Consolidar una comuna moderna, conectada y orientada a resultados medibles.</p>
-          </article>
-          <article
-            data-aos="fade-up"
-            data-aos-delay="240"
-            className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
-          >
-            <h3 className="mb-2 text-xl font-semibold text-[#0f2847]">Estadísticas</h3>
-            {stats.voceroScope && (
-              <p className="mb-2 text-xs text-slate-500">Solo tu calle en el consejo actual.</p>
+            <p className="text-xs text-slate-400 mb-1">Panel de Control</p>
+            <p className="font-semibold text-white truncate">{activeConsejo}</p>
+            {!sessionUser?.isAdmin && sessionUser?.calle && (
+              <p className="text-sm text-cyan-400 mt-1 flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
+                Calle {sessionUser.calle}
+              </p>
             )}
-            <div className="space-y-2 text-sm">
-              <p className="flex items-center gap-2">
-                <Users size={16} /> Habitantes registrados: <strong>{stats.totalHabitantes}</strong>
-              </p>
-              <p className="flex items-center gap-2">
-                <Home size={16} /> Cantidad de familias: <strong>{stats.totalFamilias}</strong>
-              </p>
-              <p className="flex items-center gap-2">
-                <Building2 size={16} /> Consejos activos:{" "}
-                <strong>{stats.voceroScope ? 1 : consejos.length}</strong>
-              </p>
-            </div>
-          </article>
+          </button>
         </div>
-      </section>
 
-      <main id="dashboard" className="mx-auto max-w-7xl space-y-6 px-4 pb-16 md:px-8">
-        <section className="rounded-2xl bg-[#0f2847] p-5 text-white shadow-lg">
-          <h2 className="mb-4 flex items-center gap-2 text-xl font-semibold">
-            <ChartColumnBig size={20} />{" "}
-            {sessionUser?.isAdmin ? "Selector de Consejos" : "Tu consejo comunal"}
-          </h2>
-          {sessionUser?.isAdmin ? (
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-              {consejos.map((consejo) => (
-                <button
-                  key={consejo}
-                  type="button"
-                  onClick={() => setActiveConsejo(consejo)}
-                  className={`rounded-xl border px-3 py-3 text-left text-sm transition ${
-                    activeConsejo === consejo ? "border-white bg-white/20" : "border-white/20 bg-white/5 hover:bg-white/10"
-                  }`}
-                >
-                  {consejo}
-                </button>
-              ))}
-            </div>
-          ) : (
-            <p className="rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm">
-              Gestionas únicamente el consejo <strong>{sessionUser?.vocero || activeConsejo}</strong> y la calle{" "}
-              <strong>{sessionUser?.calle}</strong>. Los datos mostrados son solo de habitantes de tu calle.
-            </p>
-          )}
-        </section>
+        <nav className="flex-1 overflow-y-auto p-4 space-y-2">
+          {panelTabs.map((tab) => {
+            if (tab.key === "admin" && !sessionUser?.isAdmin) return null;
+            const TabIcon = tab.icon;
+            const isActive = moduleTab === tab.key;
+            return (
+              <button
+                key={tab.key}
+                type="button"
+                onClick={() => setModuleTab(tab.key)}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
+                  isActive 
+                    ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 shadow-sm" 
+                    : "text-slate-400 hover:bg-slate-800 hover:text-slate-200"
+                }`}
+              >
+                <TabIcon size={18} className={isActive ? "text-cyan-400" : "text-slate-500"} /> 
+                {tab.label}
+              </button>
+            );
+          })}
+        </nav>
 
-        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-md md:p-10">
-          <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
-            <h3 className="flex items-center gap-2 text-lg font-semibold text-[#0f2847]">
-              <LayoutDashboard size={18} /> Panel de Control — {activeConsejo}
-              {!sessionUser?.isAdmin && sessionUser?.calle && (
-                <span className="text-sm font-normal text-slate-500">(calle {sessionUser.calle})</span>
-              )}
-            </h3>
-            {sessionUser && (
-              <div className="rounded-xl bg-slate-50 px-4 py-2 text-right text-sm text-slate-700">
-                <span className="font-medium">Vocero:</span>{" "}
+        <div className="p-4 border-t border-slate-800">
+          {sessionUser && (
+            <div className="mb-4 px-2">
+              <p className="text-xs font-medium text-slate-500 mb-1">Conectado como</p>
+              <p className="text-sm text-white truncate">
                 {[sessionUser.nombre, sessionUser.apellido].filter(Boolean).join(" ")}
-                {sessionUser.vocero && ` / ${sessionUser.vocero}`}
-                {sessionUser.calle && ` · Calle: ${sessionUser.calle}`}
+              </p>
+              {sessionUser.isAdmin && <span className="inline-block mt-1 px-2 py-0.5 bg-indigo-500/20 text-indigo-400 text-[10px] uppercase tracking-wider rounded font-bold">Admin</span>}
+            </div>
+          )}
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors border border-transparent hover:border-red-500/20"
+          >
+            <LogOut size={16} /> Salir del sistema
+          </button>
+        </div>
+      </aside>
+
+      {/* MAIN CONTENT AREA */}
+      <main className="flex-1 flex flex-col h-screen overflow-hidden relative">
+        {/* Top Header / Selector de Consejo solo para Admin */}
+        <header className="bg-white border-b border-slate-200 px-8 py-5 flex items-center justify-between z-10 shadow-sm shrink-0">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-800">
+              {moduleTab === "resumen" ? "Resumen" : (panelTabs.find(t => t.key === moduleTab)?.label || "Panel")}
+            </h1>
+            <p className="text-sm text-slate-500 mt-1">Gestionando información del consejo comunal</p>
+          </div>
+
+          {sessionUser?.isAdmin && (
+            <div className="flex items-center gap-3 bg-slate-50 p-1.5 rounded-xl border border-slate-200 shadow-sm">
+              <label className="text-sm font-semibold text-slate-600 pl-2">Consejo:</label>
+              <select 
+                value={activeConsejo}
+                onChange={(e) => setActiveConsejo(e.target.value)}
+                className="bg-white border-none text-slate-800 text-sm rounded-lg focus:ring-0 block p-2 cursor-pointer outline-none font-medium"
+              >
+                {consejos.map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+            </div>
+          )}
+        </header>
+
+        {/* Scrollable Content */}
+        <div className="flex-1 overflow-y-auto p-6 md:p-8 bg-slate-50/50">
+          <div className="w-full space-y-6">
+            
+                        {moduleTab === "resumen" && (
+              <div className="space-y-6">
+                <div className="grid gap-6 md:grid-cols-3">
+                  <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex items-center gap-4">
+                    <div className="p-4 bg-blue-50 text-blue-600 rounded-xl">
+                      <Users size={24} />
+                    </div>
+                    <div>
+                      <p className="text-sm text-slate-500 font-medium">Total Habitantes</p>
+                      <h4 className="text-2xl font-bold text-slate-800">{stats.totalHabitantes}</h4>
+                    </div>
+                  </div>
+                  <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex items-center gap-4">
+                    <div className="p-4 bg-indigo-50 text-indigo-600 rounded-xl">
+                      <Home size={24} />
+                    </div>
+                    <div>
+                      <p className="text-sm text-slate-500 font-medium">Total Familias</p>
+                      <h4 className="text-2xl font-bold text-slate-800">{stats.totalFamilias}</h4>
+                    </div>
+                  </div>
+                  <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex items-center gap-4">
+                    <div className="p-4 bg-red-50 text-red-600 rounded-xl">
+                      <HeartPulse size={24} />
+                    </div>
+                    <div>
+                      <p className="text-sm text-slate-500 font-medium">Casos Sociales</p>
+                      <h4 className="text-2xl font-bold text-slate-800">{habitantesActuales.filter(h => h.requiere_ayuda).length}</h4>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid gap-6 md:grid-cols-2">
+                  <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                    <h3 className="text-lg font-semibold text-slate-800 mb-4">Distribución por Edades</h3>
+                    <div className="h-64 w-full">
+                      <ResponsiveContainer>
+                        <PieChart>
+                          <Pie
+                            data={[
+                              { name: 'Niños (0-12)', value: habitantesActuales.filter(h => h.edad <= 12).length },
+                              { name: 'Adolescentes (13-17)', value: habitantesActuales.filter(h => h.edad > 12 && h.edad <= 17).length },
+                              { name: 'Adultos (18-59)', value: habitantesActuales.filter(h => h.edad > 17 && h.edad <= 59).length },
+                              { name: 'Tercera Edad (60+)', value: habitantesActuales.filter(h => h.edad >= 60).length },
+                            ].filter(d => d.value > 0)}
+                            cx="50%"
+                            cy="50%"
+                            outerRadius={80}
+                            fill="#8884d8"
+                            dataKey="value"
+                            label={({name, percent}) => `${name} (${(percent * 100).toFixed(0)}%)`}
+                          >
+                            <Cell fill="#06b6d4" />
+                            <Cell fill="#3b82f6" />
+                            <Cell fill="#0f2847" />
+                            <Cell fill="#64748b" />
+                          </Pie>
+                          <RechartsTooltip />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+
+                  <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                    <h3 className="text-lg font-semibold text-slate-800 mb-4">Habitantes por Calle</h3>
+                    <div className="h-64 w-full">
+                      <ResponsiveContainer>
+                        <BarChart data={
+                          calles.map(calle => ({
+                            name: calle,
+                            Habitantes: habitantesActuales.filter(h => h.calle === calle).length
+                          })).filter(d => d.Habitantes > 0)
+                        }>
+                          <XAxis dataKey="name" fontSize={10} tick={{fill: '#64748b'}} />
+                          <YAxis fontSize={12} tick={{fill: '#64748b'}} />
+                          <RechartsTooltip cursor={{fill: '#f1f5f9'}} />
+                          <Bar dataKey="Habitantes" fill="#06b6d4" radius={[4, 4, 0, 0]} />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
-          </div>
-          <div className="mb-8 flex flex-wrap gap-4">
-            {panelTabs.map((tab) => {
-              const TabIcon = tab.icon;
-              return (
-                <button
-                  key={tab.key}
-                  type="button"
-                  onClick={() => setModuleTab(tab.key)}
-                  className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium ${
-                    moduleTab === tab.key ? "bg-[#0f2847] text-white" : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                  }`}
-                >
-                  <TabIcon size={16} /> {tab.label}
-                </button>
-              );
-            })}
-          </div>
-
-          {moduleTab === "servicios" && (
-            <div className="mb-8">
-              <Jornadas 
-                sessionUser={sessionUser}
-                activeConsejo={activeConsejo}
-                db={db}
-                setDb={setDb}
-                inputClass={inputClass}
-              />
-            </div>
-          )}
-
-          {moduleTab === "votaciones" && (
-            <div className="mb-8">
-              <Votaciones 
-                sessionUser={sessionUser}
-                inputClass={inputClass}
-                onMessage={setHabitanteMsg}
-                calles={calles}
-              />
-            </div>
-          )}
-
-          {moduleTab === "admin" && sessionUser?.isAdmin && (
-            <div className="mb-8 space-y-3">
-              {adminMsg.text && (
-                <div
-                  className={`rounded-xl px-4 py-2 text-sm ${
-                    adminMsg.type === "error" ? "bg-red-50 text-red-700" : "bg-emerald-50 text-emerald-700"
-                  }`}
-                >
-                  {adminMsg.text}
-                </div>
-              )}
-              <AdminVoceros consejos={consejos} calles={calles} inputClass={inputClass} onMessage={setAdminMsg} />
-            </div>
-          )}
-
-          {moduleTab === "habitantes" && (
-            <div className="space-y-8">
-              {/* Solo admin: carga masiva Excel después de seleccionar consejo. */}
-              {sessionUser?.isAdmin && activeConsejo && (
-                <ExcelHabitantesUpload
-                  consejo={activeConsejo}
-                  calles={calles}
+            {moduleTab === "servicios" && (
+              <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                <Jornadas 
+                  sessionUser={sessionUser}
+                  activeConsejo={activeConsejo}
+                  db={db}
+                  setDb={setDb}
                   inputClass={inputClass}
-                  onUpload={async (payload) => {
-                    if (payload.mode === "bulk") {
-                      try {
-                        const res = await api.createHabitantesBulk({ consejoNombre: activeConsejo, familias: payload.familias }, sessionUser.token);
-                        if (res.ok) {
-                          setHabitanteMsg({ type: "success", text: `¡Censo procesado! ${res.total} personas insertadas en ${activeConsejo}.` });
-                          cargarDatosConsejo(activeConsejo);
-                        } else {
-                          setHabitanteMsg({ type: "error", text: res.message || "Error procesando el censo." });
-                        }
-                      } catch (err) {
-                        setHabitanteMsg({ type: "error", text: `Error: ${err.message || "desconocido al enviar censo masivo."}` });
-                      }
-                      return;
-                    }
-
-                    // Lógica para modo Simple (Array)
-                    let ok = 0, fail = 0;
-                    for (const h of payload) {
-                      try {
-                        const res = await api.createHabitante({
-                          consejoNombre: activeConsejo,
-                          ...h,
-                          edad: h.nacimiento ? calcAge(h.nacimiento) : undefined,
-                        }, sessionUser.token);
-                        if (res.ok) ok++;
-                        else fail++;
-                      } catch (e) {
-                        fail++;
-                      }
-                    }
-                    cargarDatosConsejo(activeConsejo);
-                    setHabitanteMsg({
-                      type: fail === 0 ? "success" : "error",
-                      text: `Carga simple finalizada: ${ok} registrados, ${fail} errores (DNI duplicados o falla de red).`,
-                    });
-                  }}
-                />
-              )}
-              {habitanteMsg.text && (
-                <div
-                  className={`rounded-xl px-4 py-2 text-sm ${
-                    habitanteMsg.type === "error"
-                      ? "bg-red-50 text-red-700"
-                      : "bg-emerald-50 text-emerald-700"
-                  }`}
-                >
-                  {habitanteMsg.text}
-                </div>
-              )}
-              <form onSubmit={handleRegistrar} className="grid gap-6 md:grid-cols-2">
-                <div>
-                  <label className="mb-1 ml-1 block text-xs font-medium text-slate-500">Nombre</label>
-                  <input
-                    className={inputClass}
-                    placeholder="Ej. Juan"
-                    value={habitanteForm.nombre}
-                    onChange={(e) => setHabitanteForm((p) => ({ ...p, nombre: e.target.value }))}
-                  />
-                </div>
-                <div>
-                  <label className="mb-1 ml-1 block text-xs font-medium text-slate-500">Apellido</label>
-                  <input
-                    className={inputClass}
-                    placeholder="Ej. Pérez"
-                    value={habitanteForm.apellido}
-                    onChange={(e) => setHabitanteForm((p) => ({ ...p, apellido: e.target.value }))}
-                  />
-                </div>
-                <div>
-                  <label className="mb-1 ml-1 block text-xs font-medium text-slate-500">Cédula</label>
-                  <input
-                    className={inputClass}
-                    placeholder="Ej. 12345678"
-                    value={habitanteForm.cedula}
-                    onChange={(e) => setHabitanteForm((p) => ({ ...p, cedula: e.target.value }))}
-                  />
-                </div>
-                <div>
-                  <label className="mb-1 ml-1 block text-xs font-medium text-slate-500">Teléfono</label>
-                  <input
-                    className={inputClass}
-                    placeholder="Ej. 04121234567"
-                    value={habitanteForm.telefono}
-                    onChange={(e) => setHabitanteForm((p) => ({ ...p, telefono: e.target.value }))}
-                  />
-                </div>
-                <div>
-                  <label className="mb-1 ml-1 block text-xs font-medium text-slate-500">Fecha de Nacimiento</label>
-                  <input
-                    className={inputClass}
-                    type="date"
-                    value={habitanteForm.nacimiento}
-                    onChange={(e) => setHabitanteForm((p) => ({ ...p, nacimiento: e.target.value }))}
-                  />
-                </div>
-                <div>
-                  <label className="mb-1 ml-1 block text-xs font-medium text-slate-500">Edad Estimada</label>
-                  <input
-                    className={`${inputClass} bg-slate-100`}
-                    readOnly
-                    value={calcAge(habitanteForm.nacimiento) === "" ? "Edad" : `${calcAge(habitanteForm.nacimiento)} años`}
-                  />
-                </div>
-                <div>
-                  <label className="mb-1 ml-1 block text-xs font-medium text-slate-500">Calle</label>
-                  <select
-                    className={inputClass}
-                    value={habitanteCalleEfectiva}
-                    disabled={Boolean(sessionUser && !sessionUser.isAdmin)}
-                    onChange={(e) => setHabitanteForm((p) => ({ ...p, calle: e.target.value }))}
-                  >
-                    {calles.map((calle) => (
-                      <option key={calle}>{calle}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="flex gap-3 items-end h-[68px]">
-                  <button
-                    type="submit"
-                    className="w-full flex-1 rounded-xl bg-[#0f2847] px-4 py-2 font-medium text-white hover:bg-[#12345f] h-[42px] transition-colors shadow-sm"
-                  >
-                    {editingHabitanteId ? "Actualizar" : "Registrar"}
-                  </button>
-                  {editingHabitanteId && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setHabitanteForm(initialForm);
-                        setEditingHabitanteId(null);
-                        setHabitanteMsg({ type: "", text: "" });
-                      }}
-                      className="w-full flex-1 rounded-xl border border-slate-300 px-4 py-2 font-medium text-slate-700 hover:bg-slate-100 h-[42px] transition-colors"
-                    >
-                      Cancelar
-                    </button>
-                  )}
-                </div>
-              </form>
-              <div className="mb-2 mt-6">
-                <label className="mb-2 ml-1 block text-sm font-semibold text-slate-700">
-                  <Search className="inline-block mr-2 text-slate-400" size={16} />
-                  Buscar en padrón de Habitantes
-                </label>
-                <input
-                  className={inputClass}
-                  placeholder="Escriba nombre, apellido o cédula..."
-                  value={habitanteSearch}
-                  onChange={(e) => setHabitanteSearch(e.target.value)}
                 />
               </div>
-              <TablaHabitantes
-                rows={habitantesActuales.filter(h => 
-                  !habitanteSearch || 
-                  `${h.nombre} ${h.apellido} ${h.cedula}`.toLowerCase().includes(habitanteSearch.toLowerCase())
+            )}
+
+            {moduleTab === "votaciones" && (
+              <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                <Votaciones 
+                  sessionUser={sessionUser}
+                  inputClass={inputClass}
+                  onMessage={setHabitanteMsg}
+                  calles={calles}
+                />
+              </div>
+            )}
+
+            {moduleTab === "admin" && sessionUser?.isAdmin && (
+              <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-3">
+                {adminMsg.text && (
+                  <div className={`rounded-xl px-4 py-3 text-sm font-medium ${adminMsg.type === "error" ? "bg-red-50 text-red-700 border border-red-100" : "bg-emerald-50 text-emerald-700 border border-emerald-100"}`}>
+                    {adminMsg.text}
+                  </div>
                 )}
-                onEdit={handleEditHabitante}
-                onDelete={handleDeleteHabitante}
-                onManageFamily={sessionUser?.isAdmin ? setFamilyManagerJefe : undefined}
-                isSearching={!!habitanteSearch}
-                allRows={habitantesActuales}
-              />
-              {familyManagerJefe && (
-                <FamiliaManagerModal 
-                  jefe={familyManagerJefe}
-                  allHabitantes={habitantesActualesOriginal}
-                  onClose={() => setFamilyManagerJefe(null)}
-                  onSave={async (jefeId, deps) => {
-                    try {
-                      await api.saveGrupoFamiliar(jefeId, deps);
-                      await cargarDatosConsejo(activeConsejo); // Recargar todo del servidor
-                      setFamilyManagerJefe(null);
-                      setHabitanteMsg({ type: "success", text: "El grupo familiar se ha guardado exitosamente." });
-                    } catch (e) {
-                      setHabitanteMsg({ type: "error", text: "Error guardando la familia: " + e.message });
-                    }
-                  }}
-                  onDisolve={async (jefeId) => {
-                    try {
-                      await api.disolverGrupoFamiliar(jefeId);
-                      await cargarDatosConsejo(activeConsejo);
-                      setFamilyManagerJefe(null);
-                      setHabitanteMsg({ type: "success", text: "El grupo familiar se ha disuelto." });
-                    } catch (e) {
-                      setHabitanteMsg({ type: "error", text: "Error disolviendo: " + e.message });
-                    }
-                  }}
-                />
-              )}
-            </div>
-          )}
-
-          {moduleTab === "buscar" && (
-            <div className="space-y-5">
-              <div className="grid gap-4 md:grid-cols-3">
-                <div>
-                  <label className="mb-1 ml-1 block text-xs font-medium text-slate-500">Edad mínima</label>
-                  <input
-                    className={inputClass}
-                    type="number"
-                    placeholder="0"
-                    value={searchFilters.min}
-                    onChange={(e) => setSearchFilters((p) => ({ ...p, min: e.target.value }))}
-                  />
-                </div>
-                <div>
-                  <label className="mb-1 ml-1 block text-xs font-medium text-slate-500">Edad máxima</label>
-                  <input
-                    className={inputClass}
-                    type="number"
-                    placeholder="100"
-                    value={searchFilters.max}
-                    onChange={(e) => setSearchFilters((p) => ({ ...p, max: e.target.value }))}
-                  />
-                </div>
-                <div>
-                  <label className="mb-1 ml-1 block text-xs font-medium text-slate-500">Filtrar por Calle</label>
-                  <select
-                    className={inputClass}
-                    value={searchFilters.calle}
-                    onChange={(e) => setSearchFilters((p) => ({ ...p, calle: e.target.value }))}
-                  >
-                    <option>Todas</option>
-                    {calles.map((calle) => (
-                      <option key={calle}>{calle}</option>
-                    ))}
-                  </select>
-                </div>
+                <AdminVoceros consejos={consejos} calles={calles} inputClass={inputClass} onMessage={setAdminMsg} />
               </div>
-              <TablaHabitantes
-                rows={habitantesFiltrados}
-                onEdit={handleEditHabitante}
-                onDelete={handleDeleteHabitante}
-                isSearching={true}
-                allRows={habitantesActuales}
-              />
-            </div>
-          )}
+            )}
 
+            {moduleTab === "habitantes" && (
+              <div className="space-y-6">
+                {/* Solo admin: carga masiva Excel después de seleccionar consejo. */}
+                {sessionUser?.isAdmin && activeConsejo && (
+                  <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                    <ExcelHabitantesUpload
+                      consejo={activeConsejo}
+                      calles={calles}
+                      inputClass={inputClass}
+                      onUpload={async (payload) => {
+                        if (payload.mode === "bulk") {
+                          try {
+                            const res = await api.createHabitantesBulk({ consejoNombre: activeConsejo, familias: payload.familias });
+                            if (res.ok) {
+                              setHabitanteMsg({ type: "success", text: `¡Censo procesado! ${res.total} personas insertadas en ${activeConsejo}.` });
+                              cargarDatosConsejo(activeConsejo);
+                            } else {
+                              setHabitanteMsg({ type: "error", text: res.message || "Error procesando el censo." });
+                            }
+                          } catch (err) {
+                            setHabitanteMsg({ type: "error", text: `Error: ${err.message || "desconocido al enviar censo masivo."}` });
+                          }
+                          return;
+                        }
 
-        </section>
+                        // Lógica para modo Simple (Array)
+                        let ok = 0, fail = 0;
+                        for (const h of payload) {
+                          try {
+                            const res = await api.createHabitante({
+                              consejoNombre: activeConsejo,
+                              ...h,
+                              edad: h.nacimiento ? calcAge(h.nacimiento) : undefined,
+                            });
+                            if (res.ok) ok++;
+                            else fail++;
+                          } catch (e) {
+                            fail++;
+                          }
+                        }
+                        cargarDatosConsejo(activeConsejo);
+                        setHabitanteMsg({
+                          type: fail === 0 ? "success" : "error",
+                          text: `Carga simple finalizada: ${ok} registrados, ${fail} errores.`,
+                        });
+                      }}
+                    />
+                  </div>
+                )}
+
+                <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                  {habitanteMsg.text && (
+                    <div className={`mb-6 rounded-xl px-4 py-3 text-sm font-medium ${habitanteMsg.type === "error" ? "bg-red-50 text-red-700 border border-red-100" : "bg-emerald-50 text-emerald-700 border border-emerald-100"}`}>
+                      {habitanteMsg.text}
+                    </div>
+                  )}
+
+                  <h3 className="text-lg font-semibold text-slate-800 mb-4 border-b border-slate-100 pb-2">
+                    {editingHabitanteId ? "Actualizar Habitante" : "Registrar Nuevo Habitante"}
+                  </h3>
+                  
+                  <form onSubmit={handleRegistrar} className="grid gap-5 md:grid-cols-2">
+                    <div>
+                      <label className="mb-1.5 ml-1 block text-xs font-semibold text-slate-500 uppercase tracking-wider">Nombre</label>
+                      <input
+                        className={inputClass}
+                        placeholder="Ej. Juan"
+                        value={habitanteForm.nombre}
+                        onChange={(e) => setHabitanteForm((p) => ({ ...p, nombre: e.target.value }))}
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1.5 ml-1 block text-xs font-semibold text-slate-500 uppercase tracking-wider">Apellido</label>
+                      <input
+                        className={inputClass}
+                        placeholder="Ej. Pérez"
+                        value={habitanteForm.apellido}
+                        onChange={(e) => setHabitanteForm((p) => ({ ...p, apellido: e.target.value }))}
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1.5 ml-1 block text-xs font-semibold text-slate-500 uppercase tracking-wider">Cédula</label>
+                      <input
+                        className={inputClass}
+                        placeholder="Ej. 12345678"
+                        value={habitanteForm.cedula}
+                        onChange={(e) => setHabitanteForm((p) => ({ ...p, cedula: e.target.value }))}
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1.5 ml-1 block text-xs font-semibold text-slate-500 uppercase tracking-wider">Teléfono</label>
+                      <input
+                        className={inputClass}
+                        placeholder="Ej. 04121234567"
+                        value={habitanteForm.telefono}
+                        onChange={(e) => setHabitanteForm((p) => ({ ...p, telefono: e.target.value }))}
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1.5 ml-1 block text-xs font-semibold text-slate-500 uppercase tracking-wider">Nacimiento</label>
+                      <input
+                        className={inputClass}
+                        type="date"
+                        value={habitanteForm.nacimiento}
+                        onChange={(e) => setHabitanteForm((p) => ({ ...p, nacimiento: e.target.value }))}
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1.5 ml-1 block text-xs font-semibold text-slate-500 uppercase tracking-wider">Edad Estimada</label>
+                      <input
+                        className={`${inputClass} bg-slate-100/50 text-slate-500 border-dashed`}
+                        readOnly
+                        value={calcAge(habitanteForm.nacimiento) === "" ? "Edad" : `${calcAge(habitanteForm.nacimiento)} años`}
+                      />
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="mb-1.5 ml-1 block text-xs font-semibold text-slate-500 uppercase tracking-wider">Calle</label>
+                      <select
+                        className={inputClass}
+                        value={habitanteCalleEfectiva}
+                        disabled={Boolean(sessionUser && !sessionUser.isAdmin)}
+                        onChange={(e) => setHabitanteForm((p) => ({ ...p, calle: e.target.value }))}
+                      >
+                        {calles.map((calle) => (
+                          <option key={calle}>{calle}</option>
+                        ))}
+                      </select>
+                    </div>
+                    
+                    <div className="md:col-span-2 mt-2 bg-slate-50/50 p-4 rounded-xl border border-slate-100">
+                      <div className="flex items-center gap-3 mb-2">
+                        <input
+                          type="checkbox"
+                          id="requiereAyuda"
+                          className="w-5 h-5 text-cyan-600 bg-white border-slate-300 rounded focus:ring-cyan-500 focus:ring-2 cursor-pointer"
+                          checked={habitanteForm.requiere_ayuda || false}
+                          onChange={(e) => setHabitanteForm((p) => ({ ...p, requiere_ayuda: e.target.checked, condicion_especial: e.target.checked ? "Embarazo" : "Ninguna" }))}
+                        />
+                        <label htmlFor="requiereAyuda" className="text-sm font-bold text-slate-700 cursor-pointer flex items-center gap-2">
+                          <HeartPulse size={18} className="text-red-500" />
+                          ¿Requiere atención prioritaria o es un Caso Social?
+                        </label>
+                      </div>
+
+                      {habitanteForm.requiere_ayuda && (
+                        <div className="mt-3 pl-8">
+                          <label className="mb-1.5 block text-xs font-semibold text-slate-500 uppercase tracking-wider">Especificar Condición Especial</label>
+                          <select
+                            className={inputClass}
+                            value={habitanteForm.condicion_especial || "Otro"}
+                            onChange={(e) => setHabitanteForm((p) => ({ ...p, condicion_especial: e.target.value }))}
+                          >
+                            {condicionesEspeciales.filter(c => c !== "Ninguna").map((cond) => (
+                              <option key={cond} value={cond}>{cond}</option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
+                    </div>
+                    <div className="md:col-span-2 flex gap-3 pt-2">
+                      <button
+                        type="submit"
+                        className="flex-1 rounded-xl bg-slate-900 px-4 py-3 font-medium text-white hover:bg-slate-800 transition-colors shadow-sm focus:ring-2 focus:ring-slate-900/20"
+                      >
+                        {editingHabitanteId ? "Guardar Cambios" : "Registrar Habitante"}
+                      </button>
+                      {editingHabitanteId && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setHabitanteForm(initialForm);
+                            setEditingHabitanteId(null);
+                            setHabitanteMsg({ type: "", text: "" });
+                          }}
+                          className="flex-1 rounded-xl border border-slate-300 px-4 py-3 font-medium text-slate-700 hover:bg-slate-50 transition-colors"
+                        >
+                          Cancelar
+                        </button>
+                      )}
+                    </div>
+                  </form>
+                </div>
+
+                <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                  <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+                    <h3 className="text-lg font-semibold text-slate-800">
+                      Directorio de Habitantes
+                    </h3>
+                    <div className="relative max-w-sm w-full">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                      <input
+                        className={`${inputClass} pl-10`}
+                        placeholder="Buscar por nombre o cédula..."
+                        value={habitanteSearch}
+                        onChange={(e) => setHabitanteSearch(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                  
+                  <TablaHabitantes
+                    rows={habitantesActuales.filter(h => 
+                      !habitanteSearch || 
+                      `${h.nombre} ${h.apellido} ${h.cedula}`.toLowerCase().includes(habitanteSearch.toLowerCase())
+                    )}
+                    onEdit={handleEditHabitante}
+                    onDelete={handleDeleteHabitante}
+                    onManageFamily={sessionUser?.isAdmin ? setFamilyManagerJefe : undefined}
+                    isSearching={!!habitanteSearch}
+                    allRows={habitantesActuales}
+                  />
+                </div>
+
+                {familyManagerJefe && (
+                  <FamiliaManagerModal 
+                    jefe={familyManagerJefe}
+                    allHabitantes={habitantesActualesOriginal}
+                    onClose={() => setFamilyManagerJefe(null)}
+                    onSave={async (jefeId, deps) => {
+                      try {
+                        await api.saveGrupoFamiliar(jefeId, deps);
+                        await cargarDatosConsejo(activeConsejo);
+                        setFamilyManagerJefe(null);
+                        setHabitanteMsg({ type: "success", text: "El grupo familiar se ha guardado exitosamente." });
+                      } catch (e) {
+                        setHabitanteMsg({ type: "error", text: "Error guardando la familia: " + e.message });
+                      }
+                    }}
+                    onDisolve={async (jefeId) => {
+                      try {
+                        await api.disolverGrupoFamiliar(jefeId);
+                        await cargarDatosConsejo(activeConsejo);
+                        setFamilyManagerJefe(null);
+                        setHabitanteMsg({ type: "success", text: "El grupo familiar se ha disuelto." });
+                      } catch (e) {
+                        setHabitanteMsg({ type: "error", text: "Error disolviendo: " + e.message });
+                      }
+                    }}
+                  />
+                )}
+              </div>
+            )}
+
+            {moduleTab === "buscar" && (
+              <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-6">
+                <div className="flex items-center gap-2 mb-2 pb-4 border-b border-slate-100">
+                  <div className="p-2 bg-cyan-50 rounded-lg text-cyan-600">
+                    <Search size={20} />
+                  </div>
+                  <h3 className="text-lg font-semibold text-slate-800">Búsqueda Avanzada</h3>
+                </div>
+                
+                <div className="grid gap-5 md:grid-cols-3 bg-slate-50/50 p-4 rounded-xl border border-slate-100">
+                  <div>
+                    <label className="mb-1.5 ml-1 block text-xs font-semibold text-slate-500 uppercase tracking-wider">Edad mínima</label>
+                    <input
+                      className={inputClass}
+                      type="number"
+                      placeholder="0"
+                      value={searchFilters.min}
+                      onChange={(e) => setSearchFilters((p) => ({ ...p, min: e.target.value }))}
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1.5 ml-1 block text-xs font-semibold text-slate-500 uppercase tracking-wider">Edad máxima</label>
+                    <input
+                      className={inputClass}
+                      type="number"
+                      placeholder="100"
+                      value={searchFilters.max}
+                      onChange={(e) => setSearchFilters((p) => ({ ...p, max: e.target.value }))}
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1.5 ml-1 block text-xs font-semibold text-slate-500 uppercase tracking-wider">Filtrar por Calle</label>
+                    <select
+                      className={inputClass}
+                      value={searchFilters.calle}
+                      onChange={(e) => setSearchFilters((p) => ({ ...p, calle: e.target.value }))}
+                    >
+                      <option>Todas</option>
+                      {calles.map((calle) => (
+                        <option key={calle}>{calle}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                
+                <TablaHabitantes
+                  rows={habitantesFiltrados}
+                  onEdit={handleEditHabitante}
+                  onDelete={handleDeleteHabitante}
+                  isSearching={true}
+                  allRows={habitantesActuales}
+                />
+              </div>
+            )}
+
+          </div>
+        </div>
       </main>
     </div>
   );
 }
-
-
 
 function TablaHabitantes({ rows, onEdit, onDelete, onManageFamily, isSearching, allRows }) {
   const [expanded, setExpanded] = useState({});
