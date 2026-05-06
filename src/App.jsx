@@ -65,6 +65,20 @@ const consejos = [
 
 const calles = ["Calle principal La Esperanza", "Calle la fe integral", "Los Portugueses", "Los Peñas", "La Acequia"];
 
+export const condicionesEspeciales = [
+  "Ninguna",
+  "Embarazo",
+  "Discapacidad Motora",
+  "Discapacidad Visual",
+  "Discapacidad Auditiva",
+  "Discapacidad Cognitiva",
+  "Enfermedad Crónica",
+  "Enfermedad Terminal",
+  "Adulto Mayor Solo",
+  "Desnutrición",
+  "Otro"
+];
+
 function getInitialActiveConsejo() {
   try {
     const s = JSON.parse(sessionStorage.getItem("comuna_session_v1") || "{}");
