@@ -616,8 +616,8 @@ function App() {
 
           {moduleTab === "habitantes" && (
             <div className="space-y-8">
-              {/* Solo admin: carga masiva Excel después de seleccionar consejo. Oculto para La Esperanza. */}
-              {sessionUser?.isAdmin && activeConsejo && !activeConsejo.toLowerCase().includes("esperanza") && (
+              {/* Solo admin: carga masiva Excel después de seleccionar consejo. */}
+              {sessionUser?.isAdmin && activeConsejo && (
                 <ExcelHabitantesUpload
                   consejo={activeConsejo}
                   calles={calles}
