@@ -153,18 +153,17 @@ export const api = {
       
       let q;
       if (isAdmin) {
-        // Admin ve todos los habitantes del consejo seleccionado
-        q = query(ref, where("consejo", "==", consejoNombre), orderBy("nombre"));
+        q = query(ref, where("consejo", "==", consejoNombre));
       } else if (userCalle) {
-        // Vocero ve solo los de su calle
-        q = query(ref, where("consejo", "==", consejoNombre), where("calle", "==", userCalle), orderBy("nombre"));
+        q = query(ref, where("consejo", "==", consejoNombre), where("calle", "==", userCalle));
       } else {
-        // Fallback: filtrar solo por consejo
-        q = query(ref, where("consejo", "==", consejoNombre), orderBy("nombre"));
+        q = query(ref, where("consejo", "==", consejoNombre));
       }
       
       const snap = await getDocs(q);
       const habitantes = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      // Ordenar por nombre en el cliente para evitar índices compuestos en Firebase
+      habitantes.sort((a, b) => (a.nombre || "").localeCompare(b.nombre || ""));
       return okRes({ stats: [], habitantes });
     } catch (e) { errRes(e.message); }
   },
