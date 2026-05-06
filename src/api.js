@@ -180,8 +180,18 @@ export const api = {
 
   createHabitantesBulk: async (payload) => {
     try {
-      const batch = writeBatch(db);
+      let batch = writeBatch(db);
       let count = 0;
+      let ops = 0;
+      
+      const commitIfFull = async () => {
+        if (ops >= 400) {
+          await batch.commit();
+          batch = writeBatch(db);
+          ops = 0;
+        }
+      };
+
       for (const fam of payload.familias) {
         if (!fam.jefe) continue;
         const jefeRef = doc(collection(db, "habitantes"));
@@ -193,6 +203,8 @@ export const api = {
           createdAt: serverTimestamp()
         });
         count++;
+        ops++;
+        await commitIfFull();
 
         for (const dep of (fam.dependientes || [])) {
           const depRef = doc(collection(db, "habitantes"));
@@ -204,9 +216,13 @@ export const api = {
             createdAt: serverTimestamp()
           });
           count++;
+          ops++;
+          await commitIfFull();
         }
       }
-      await batch.commit();
+      if (ops > 0) {
+        await batch.commit();
+      }
       return okRes({ total: count });
     } catch (e) { errRes(e.message); }
   },
