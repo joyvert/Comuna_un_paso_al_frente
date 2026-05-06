@@ -628,7 +628,7 @@ function App() {
                         const res = await api.createHabitantesBulk({ consejoNombre: activeConsejo, familias: payload.familias }, sessionUser.token);
                         if (res.ok) {
                           setHabitanteMsg({ type: "success", text: `¡Censo procesado! ${res.total} personas insertadas en ${activeConsejo}.` });
-                          getHabitantes();
+                          cargarDatosConsejo(activeConsejo);
                         } else {
                           setHabitanteMsg({ type: "error", text: res.message || "Error procesando el censo." });
                         }
@@ -653,7 +653,7 @@ function App() {
                         fail++;
                       }
                     }
-                    getHabitantes();
+                    cargarDatosConsejo(activeConsejo);
                     setHabitanteMsg({
                       type: fail === 0 ? "success" : "error",
                       text: `Carga simple finalizada: ${ok} registrados, ${fail} errores (DNI duplicados o falla de red).`,
