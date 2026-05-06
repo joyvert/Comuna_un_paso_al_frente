@@ -93,7 +93,7 @@ export const api = {
       const isFirst = snap.empty;
       
       const session = getSession();
-      if (!isFirst && (!session.user || !session.user.isAdmin)) {
+      if (!isFirst && (!session.isAdmin)) {
         return errRes("Solo el administrador puede crear nuevas cuentas.");
       }
 
@@ -292,7 +292,7 @@ export const api = {
   getPagos: async (consejoNombre) => {
     try {
       const session = getSession();
-      const q = session.user?.isAdmin 
+      const q = session.isAdmin 
         ? query(collection(db, "pagos"))
         : query(collection(db, "pagos"), where("consejo", "==", consejoNombre));
       const snap = await getDocs(q);
@@ -328,7 +328,7 @@ export const api = {
   getJornadas: async (consejoNombre) => {
     try {
       const session = getSession();
-      const q = session.user?.isAdmin 
+      const q = session.isAdmin 
         ? query(collection(db, "jornadas"))
         : query(collection(db, "jornadas"), where("consejo", "==", consejoNombre));
       const snap = await getDocs(q);
@@ -376,7 +376,7 @@ export const api = {
   getVotaciones: async () => {
     try {
       const session = getSession();
-      const isAdmin = session.user?.isAdmin;
+      const isAdmin = session.isAdmin;
       
       const habSnap = await getDocs(collection(db, "habitantes"));
       const votosSnap = await getDocs(collection(db, "votos"));
@@ -386,7 +386,7 @@ export const api = {
       let habitantes = habSnap.docs.map(d => ({ id: d.id, ...d.data(), voto: votosSet.has(d.id) }));
       
       if (!isAdmin) {
-        habitantes = habitantes.filter(h => h.consejo === session.user?.consejo && h.calle === session.user?.calle);
+        habitantes = habitantes.filter(h => h.consejo === session.vocero && h.calle === session.calle);
       }
       
       // Calculate Stats
@@ -429,11 +429,12 @@ export const api = {
   getVotacionesHistorial: async () => {
     try {
       const session = getSession();
-      const q = session.user?.isAdmin
-        ? query(collection(db, "historial_votos"), orderBy("createdAt", "desc"))
-        : query(collection(db, "historial_votos"), where("consejo", "==", session.user?.consejo));
+      const q = session.isAdmin
+        ? query(collection(db, "historial_votos"))
+        : query(collection(db, "historial_votos"), where("consejo", "==", session.vocero));
       const snap = await getDocs(q);
       const historial = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      historial.sort((a, b) => (b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0));
       return okRes({ historial });
     } catch (e) { errRes(e.message); }
   },
