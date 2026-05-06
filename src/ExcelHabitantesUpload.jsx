@@ -74,7 +74,6 @@ export default function ExcelHabitantesUpload({ consejo, calles, onUpload, input
           for (let i = 0; i < rows.length; i++) {
              const row = rows[i] || [];
              if (row[1] && row[1] !== "NOMBRE APELLIDO" && String(row[1]).trim() !== "") {
-                const isJefe = row[0] !== "" && row[0] !== null;
                 const fullName = String(row[1]).trim();
                 const sep = fullName.lastIndexOf(" ");
                 let nombre = fullName, apellido = "";
@@ -93,15 +92,8 @@ export default function ExcelHabitantesUpload({ consejo, calles, onUpload, input
                   calle: calleName
                 };
                 
-                if (isJefe) {
-                   currentJefe = habitante;
-                   familias.push({ jefe: habitante, dependientes: [] });
-                } else if (currentJefe && familias.length > 0) {
-                   familias[familias.length - 1].dependientes.push(habitante);
-                } else {
-                   familias.push({ jefe: habitante, dependientes: [] });
-                   currentJefe = habitante;
-                }
+                // Los cargamos todos como individuales (cada uno es jefe de su propia entrada)
+                familias.push({ jefe: habitante, dependientes: [] });
              }
           }
         }
