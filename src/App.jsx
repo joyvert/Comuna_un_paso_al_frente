@@ -339,23 +339,26 @@ function App() {
     if (!habitanteForm.nombre || !habitanteForm.apellido || !habitanteForm.cedula) return;
     
     try {
+      const payload = {
+        nombre: habitanteForm.nombre,
+        apellido: habitanteForm.apellido,
+        cedula: habitanteForm.cedula,
+        telefono: habitanteForm.telefono,
+        edad,
+        calle: habitanteCalleEfectiva,
+        nacimiento: habitanteForm.nacimiento || null,
+        requiere_ayuda: habitanteForm.requiere_ayuda || false,
+        condicion_especial: habitanteForm.requiere_ayuda ? (habitanteForm.condicion_especial || "Otro") : "Ninguna",
+      };
+
       if (editingHabitanteId) {
-        const resp = await api.updateHabitante(editingHabitanteId, {
-          nombre: habitanteForm.nombre,
-          apellido: habitanteForm.apellido,
-          cedula: habitanteForm.cedula,
-          telefono: habitanteForm.telefono,
-          edad,
-          calle: habitanteCalleEfectiva,
-          nacimiento: habitanteForm.nacimiento || null,
-        });
-        const actualizado = resp.habitante;
+        await api.updateHabitante(editingHabitanteId, payload);
         setDb((prev) => ({
           ...prev,
           [activeConsejo]: {
             ...prev[activeConsejo],
             habitantes: prev[activeConsejo].habitantes.map((h) =>
-              h.id === actualizado.id ? { ...h, ...actualizado } : h,
+              h.id === editingHabitanteId ? { ...h, ...payload } : h,
             ),
           },
         }));
@@ -365,15 +368,14 @@ function App() {
       } else {
         const resp = await api.createHabitante({
           consejoNombre: activeConsejo,
-          nombre: habitanteForm.nombre,
-          apellido: habitanteForm.apellido,
-          cedula: habitanteForm.cedula,
-          telefono: habitanteForm.telefono,
-          edad,
-          calle: habitanteCalleEfectiva,
-          nacimiento: habitanteForm.nacimiento || null,
+          ...payload
         });
-        const nuevo = resp.habitante;
+        const nuevo = { 
+          id: resp.id, 
+          ...payload, 
+          es_jefe_familia: false, 
+          jefe_familia_id: null 
+        };
         setDb((prev) => ({
           ...prev,
           [activeConsejo]: { ...prev[activeConsejo], habitantes: [nuevo, ...prev[activeConsejo].habitantes] },
@@ -394,6 +396,8 @@ function App() {
       telefono: h.telefono || "",
       nacimiento: h.nacimiento ? h.nacimiento.slice(0, 10) : "",
       calle: h.calle || calles[0],
+      requiere_ayuda: h.requiere_ayuda || false,
+      condicion_especial: h.condicion_especial || "Ninguna",
     });
     setEditingHabitanteId(h.id);
     setHabitanteMsg({ type: "", text: "" });
