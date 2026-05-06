@@ -52,15 +52,13 @@ export const api = {
       
       const sessionData = {
         accessToken: await userCred.user.getIdToken(),
-        user: {
-          id: userId,
-          userId,
-          nombre: data.nombre,
-          apellido: data.apellido,
-          vocero: data.vocero,
-          calle: data.calle,
-          isAdmin: data.isAdmin
-        }
+        id: userId,
+        userId,
+        nombre: data.nombre,
+        apellido: data.apellido,
+        vocero: data.vocero,
+        calle: data.calle,
+        isAdmin: data.isAdmin
       };
       setSession(sessionData);
       return okRes(sessionData);
@@ -149,14 +147,15 @@ export const api = {
   getHabitantes: async (consejoNombre) => {
     try {
       const session = getSession();
-      const isAdmin = session.user?.isAdmin;
+      const isAdmin = session.isAdmin || session.user?.isAdmin;
+      const userCalle = session.calle || session.user?.calle;
       const ref = collection(db, "habitantes");
       
       let q;
       if (isAdmin) {
         q = query(ref, orderBy("nombre"));
       } else {
-        q = query(ref, where("consejo", "==", consejoNombre), where("calle", "==", session.user?.calle), orderBy("nombre"));
+        q = query(ref, where("consejo", "==", consejoNombre), where("calle", "==", userCalle), orderBy("nombre"));
       }
       
       const snap = await getDocs(q);
