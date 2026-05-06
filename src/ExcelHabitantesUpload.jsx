@@ -217,33 +217,28 @@ export default function ExcelHabitantesUpload({ consejo, calles, onUpload, input
 
       {censoFamilias.length > 0 && importMode === "censo" && (
         <div className="space-y-2 mt-4">
-          <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Muestra del Censo (Primeras 2 familias):</div>
-          <div className="space-y-2">
-            {censoFamilias.slice(0, 2).map((fam, idx) => (
-              <div key={idx} className="border border-purple-200 rounded-lg p-3 bg-white shadow-sm">
-                <div className="flex items-center gap-2 mb-2 pb-2 border-b border-slate-100">
-                  <span className="text-lg">🏠</span>
-                  <div>
-                    <div className="font-semibold text-slate-800">{fam.jefe.nombre} {fam.jefe.apellido}</div>
-                    <div className="text-xs text-slate-500">Jefe de Familia • {fam.jefe.calle}</div>
-                  </div>
-                </div>
-                {fam.dependientes.length > 0 ? (
-                  <ul className="pl-8 list-none space-y-1">
-                    {fam.dependientes.map((d, i) => (
-                       <li key={i} className="text-sm text-slate-600 flex justify-between">
-                         <span>↳ {d.nombre} {d.apellido}</span>
-                         <span className="text-slate-400 text-xs">{d.cedula}</span>
-                       </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <div className="pl-8 text-xs text-slate-400 italic">Sin dependientes registrados</div>
-                )}
-              </div>
-            ))}
+          <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Muestra del Censo (Primeras 10 personas):</div>
+          <div className="overflow-hidden border rounded-lg bg-white text-xs">
+            <table className="min-w-full text-left text-slate-600">
+              <thead className="bg-slate-50 text-slate-700">
+                <tr>
+                  <th className="px-3 py-2">Nombre y Apellido</th>
+                  <th className="px-3 py-2">Cédula</th>
+                  <th className="px-3 py-2">Calle</th>
+                </tr>
+              </thead>
+              <tbody>
+                {censoFamilias.slice(0, 10).map((fam, idx) => (
+                  <tr key={idx} className="border-t border-slate-100">
+                    <td className="px-3 py-2 font-medium">{fam.jefe.nombre} {fam.jefe.apellido}</td>
+                    <td className="px-3 py-2 text-slate-500">{fam.jefe.cedula}</td>
+                    <td className="px-3 py-2 text-slate-400">{fam.jefe.calle}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-          <div className="text-xs text-right text-slate-600 font-medium">Total: {censoFamilias.length} familias, {totalPersonasCenso} personas.</div>
+          <div className="text-xs text-right text-slate-600 font-medium">Total a registrar: {totalPersonasCenso} personas.</div>
         </div>
       )}
 
@@ -257,7 +252,7 @@ export default function ExcelHabitantesUpload({ consejo, calles, onUpload, input
         onClick={handleUpload}
         disabled={loading || (!preview.length && !censoFamilias.length)}
       >
-        {loading ? "Procesando Importación..." : importMode === "censo" ? "Registrar Familias del Censo" : "Cargar Habitantes (Catálogo Simple)"}
+        {loading ? "Procesando Importación..." : importMode === "censo" ? "Registrar Personas del Censo" : "Cargar Habitantes (Catálogo Simple)"}
       </button>
     </div>
   );

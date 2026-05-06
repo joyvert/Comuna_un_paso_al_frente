@@ -633,7 +633,7 @@ function App() {
                           setHabitanteMsg({ type: "error", text: res.message || "Error procesando el censo." });
                         }
                       } catch (err) {
-                        setHabitanteMsg({ type: "error", text: "Error en el servidor al enviar el censo masivo." });
+                        setHabitanteMsg({ type: "error", text: `Error: ${err.message || "desconocido al enviar censo masivo."}` });
                       }
                       return;
                     }

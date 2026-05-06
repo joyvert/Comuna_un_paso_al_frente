@@ -198,7 +198,7 @@ export const api = {
         batch.set(jefeRef, {
           ...fam.jefe,
           consejo: payload.consejoNombre,
-          es_jefe_familia: true,
+          es_jefe_familia: false, // Se cargan como personas individuales, no jefes por defecto
           jefe_familia_id: null,
           createdAt: serverTimestamp()
         });
