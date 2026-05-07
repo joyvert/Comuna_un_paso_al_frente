@@ -34,6 +34,7 @@ import {
   Vote,
   HeartPulse,
   AlertCircle,
+  X,
 } from "lucide-react";
 
 /** Formatea dígitos como monto tipo 1.234,56 (últimos 2 = decimales) */
