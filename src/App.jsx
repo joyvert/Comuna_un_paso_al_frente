@@ -148,6 +148,8 @@ function App() {
   const [moduleTab, setModuleTab] = useState("resumen");
   const [habitanteForm, setHabitanteForm] = useState(initialForm);
   const [editingHabitanteId, setEditingHabitanteId] = useState(null);
+  const [showFormModal, setShowFormModal] = useState(false);
+  const [showExcelUpload, setShowExcelUpload] = useState(false);
   const [habitanteMsg, setHabitanteMsg] = useState({ type: "", text: "" });
   const [searchFilters, setSearchFilters] = useState({ min: "", max: "", calle: "Todas" });
   const [db, setDb] = useState(() =>
@@ -366,6 +368,7 @@ function App() {
         }));
         setHabitanteForm(initialForm);
         setEditingHabitanteId(null);
+        setShowFormModal(false);
         setHabitanteMsg({ type: "success", text: "Datos actualizados correctamente." });
       } else {
         const resp = await api.createHabitante({
@@ -383,6 +386,7 @@ function App() {
           [activeConsejo]: { ...prev[activeConsejo], habitantes: [nuevo, ...prev[activeConsejo].habitantes] },
         }));
         setHabitanteForm(initialForm);
+        setShowFormModal(false);
         setHabitanteMsg({ type: "success", text: "Habitante registrado correctamente." });
       }
     } catch (err) {
@@ -403,6 +407,7 @@ function App() {
     });
     setEditingHabitanteId(h.id);
     setHabitanteMsg({ type: "", text: "" });
+    setShowFormModal(true);
     setModuleTab("habitantes");
   };
 
@@ -686,9 +691,26 @@ function App() {
 
             {moduleTab === "habitantes" && (
               <div className="space-y-6">
+                <div className="flex flex-wrap gap-4 mb-2">
+                  <button 
+                    onClick={() => { setHabitanteForm(initialForm); setEditingHabitanteId(null); setHabitanteMsg({ type: "", text: "" }); setShowFormModal(true); }}
+                    className="bg-slate-900 hover:bg-slate-800 text-white px-5 py-2.5 rounded-xl font-medium shadow-sm transition-colors"
+                  >
+                    Registrar Nuevo Habitante
+                  </button>
+                  {sessionUser?.isAdmin && activeConsejo && (
+                    <button 
+                      onClick={() => setShowExcelUpload(!showExcelUpload)}
+                      className="bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 px-5 py-2.5 rounded-xl font-medium transition-colors"
+                    >
+                      {showExcelUpload ? "Ocultar Carga de Excel" : "Carga Masiva por Excel"}
+                    </button>
+                  )}
+                </div>
+
                 {/* Solo admin: carga masiva Excel después de seleccionar consejo. */}
-                {sessionUser?.isAdmin && activeConsejo && (
-                  <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                {sessionUser?.isAdmin && activeConsejo && showExcelUpload && (
+                  <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 animate-in slide-in-from-top-2 duration-300">
                     <ExcelHabitantesUpload
                       consejo={activeConsejo}
                       calles={calles}
@@ -734,8 +756,20 @@ function App() {
                   </div>
                 )}
 
-                <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-                  {habitanteMsg.text && (
+                {/* Modal Formulario */}
+                {showFormModal && (
+                  <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+                      <div className="flex justify-between items-center p-6 border-b border-slate-100 bg-slate-50 sticky top-0 z-10">
+                        <h3 className="text-xl font-bold text-slate-800">
+                          {editingHabitanteId ? "Actualizar Habitante" : "Registrar Nuevo Habitante"}
+                        </h3>
+                        <button type="button" onClick={() => setShowFormModal(false)} className="text-slate-400 hover:text-slate-600 bg-slate-200 p-1 rounded-lg">
+                          <X size={20} />
+                        </button>
+                      </div>
+                      <div className="p-6">
+                        {habitanteMsg.text && (
                     <div className={`mb-6 rounded-xl px-4 py-3 text-sm font-medium ${habitanteMsg.type === "error" ? "bg-red-50 text-red-700 border border-red-100" : "bg-emerald-50 text-emerald-700 border border-emerald-100"}`}>
                       {habitanteMsg.text}
                     </div>
@@ -857,6 +891,7 @@ function App() {
                             setHabitanteForm(initialForm);
                             setEditingHabitanteId(null);
                             setHabitanteMsg({ type: "", text: "" });
+                            setShowFormModal(false);
                           }}
                           className="flex-1 rounded-xl border border-slate-300 px-4 py-3 font-medium text-slate-700 hover:bg-slate-50 transition-colors"
                         >
@@ -865,7 +900,10 @@ function App() {
                       )}
                     </div>
                   </form>
-                </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
                   <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-4">
