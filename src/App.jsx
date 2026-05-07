@@ -450,7 +450,7 @@ function App() {
   return (
     <div className="flex h-screen overflow-hidden bg-slate-50 text-slate-900 font-sans">
       {/* SIDEBAR */}
-      <aside className="w-72 bg-slate-900 text-slate-300 flex flex-col transition-all duration-300 shadow-2xl z-20 shrink-0">
+      <aside className="w-72 bg-slate-900 text-slate-300 flex flex-col transition-all duration-300 shadow-2xl z-20 shrink-0 print:hidden">
         <div className="p-6 border-b border-slate-800">
           <div className="flex items-center gap-3 text-white mb-6">
             <div className="p-2 bg-cyan-500/20 rounded-lg text-cyan-400">
@@ -523,9 +523,9 @@ function App() {
       </aside>
 
       {/* MAIN CONTENT AREA */}
-      <main className="flex-1 flex flex-col h-screen overflow-hidden relative">
+      <main className="flex-1 flex flex-col h-screen overflow-hidden relative print:overflow-visible print:h-auto">
         {/* Top Header / Selector de Consejo solo para Admin */}
-        <header className="bg-white border-b border-slate-200 px-8 py-5 flex items-center justify-between z-10 shadow-sm shrink-0">
+        <header className="bg-white border-b border-slate-200 px-8 py-5 flex items-center justify-between z-10 shadow-sm shrink-0 print:hidden">
           <div>
             <h1 className="text-2xl font-bold text-slate-800">
               {moduleTab === "resumen" ? "Resumen" : (panelTabs.find(t => t.key === moduleTab)?.label || "Panel")}
@@ -550,7 +550,7 @@ function App() {
         </header>
 
         {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto p-6 md:p-8 bg-slate-50/50">
+        <div className="flex-1 overflow-y-auto p-6 md:p-8 bg-slate-50/50 print:p-0 print:bg-white print:overflow-visible">
           <div className="w-full space-y-6">
             
                         {moduleTab === "resumen" && (

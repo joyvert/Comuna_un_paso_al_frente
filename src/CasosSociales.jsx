@@ -86,12 +86,44 @@ export default function CasosSociales({ activeConsejo, db, setDb, sessionUser, i
 
       {/* Secciones de Reporte (Solo visible al imprimir) */}
       <div className="hidden print:block mb-8">
-        <h1 className="text-2xl font-bold text-center">Reporte de Casos Sociales y Vulnerabilidad</h1>
-        <p className="text-center text-slate-600 mb-4">Consejo Comunal: {activeConsejo}</p>
-        <hr className="mb-4" />
+        <div className="text-center mb-6">
+          <p className="font-bold text-sm uppercase">República Bolivariana de Venezuela</p>
+          <p className="font-bold text-sm uppercase">Ministerio del Poder Popular para las Comunas y los Movimientos Sociales</p>
+          <p className="font-bold text-sm uppercase">Consejo Comunal: {activeConsejo}</p>
+          <br />
+          <h1 className="text-xl font-bold underline mb-2">REPORTE OFICIAL DE CASOS SOCIALES Y VULNERABILIDAD</h1>
+          <p className="text-xs text-slate-500">Fecha de emisión: {new Date().toLocaleDateString()}</p>
+        </div>
+        <hr className="border-black mb-6" />
+
+        <div className="space-y-6">
+          {casos.length === 0 ? (
+            <p className="text-center italic">No hay casos sociales registrados.</p>
+          ) : (
+            casos.map((c, index) => (
+              <div key={c.id} className="border border-slate-300 p-4 rounded-lg break-inside-avoid">
+                <div className="flex justify-between items-start mb-2">
+                  <h3 className="font-bold text-lg">{index + 1}. {c.nombre} {c.apellido}</h3>
+                  <span className="font-bold uppercase text-xs border border-black px-2 py-1">Prioridad: {c.prioridad_caso || "Media"}</span>
+                </div>
+                <div className="grid grid-cols-2 gap-4 text-sm mb-3">
+                  <p><strong>Cédula:</strong> {c.cedula}</p>
+                  <p><strong>Edad:</strong> {c.edad} años</p>
+                  <p><strong>Teléfono:</strong> {c.telefono || "No registrado"}</p>
+                  <p><strong>Dirección:</strong> {c.calle}</p>
+                </div>
+                <div className="bg-slate-50 p-3 border border-slate-200">
+                  <p className="mb-1"><strong>Condición Médica / Especial:</strong> <span className="uppercase font-semibold">{c.condicion_especial}</span></p>
+                  <p className="mb-1"><strong>Estado de Atención:</strong> {c.estado_caso || "Pendiente"}</p>
+                  <p><strong>Observaciones / Diagnóstico:</strong> {c.notas_caso || "Sin observaciones adicionales."}</p>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden print:hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
