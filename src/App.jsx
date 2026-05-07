@@ -5,6 +5,7 @@ import ExcelHabitantesUpload from "./ExcelHabitantesUpload";
 import AuthCard from "./AuthCard";
 import Jornadas from "./Jornadas";
 import Votaciones from "./Votaciones";
+import CasosSociales from "./CasosSociales";
 import FamiliaManagerModal from "./FamiliaManagerModal";
 import { api } from "./api";
 import AOS from "aos";
@@ -278,6 +279,7 @@ function App() {
     { key: "habitantes", label: "Habitantes", icon: Users },
     { key: "buscar", label: "Buscar Habitantes", icon: Search },
     { key: "servicios", label: "Servicios", icon: CheckSquare },
+    { key: "casos_sociales", label: "Casos Sociales", icon: HeartPulse },
     { key: "votaciones", label: "Votaciones", icon: Vote },
     ...(sessionUser?.isAdmin ? [{ key: "admin", label: "Administración", icon: UserCog }] : []),
   ];
@@ -635,6 +637,19 @@ function App() {
                 </div>
               </div>
             )}
+            
+            {moduleTab === "casos_sociales" && (
+              <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                <CasosSociales 
+                  activeConsejo={activeConsejo}
+                  db={db}
+                  setDb={setDb}
+                  sessionUser={sessionUser}
+                  inputClass={inputClass}
+                />
+              </div>
+            )}
+            
             {moduleTab === "servicios" && (
               <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
                 <Jornadas 
