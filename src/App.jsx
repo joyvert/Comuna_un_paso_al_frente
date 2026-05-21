@@ -151,6 +151,7 @@ function App() {
   const [habitanteForm, setHabitanteForm] = useState(initialForm);
   const [editingHabitanteId, setEditingHabitanteId] = useState(null);
   const [showFormModal, setShowFormModal] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [showExcelUpload, setShowExcelUpload] = useState(false);
   const [habitanteMsg, setHabitanteMsg] = useState({ type: "", text: "" });
   const [searchFilters, setSearchFilters] = useState({ min: "", max: "", calle: "Todas" });
@@ -416,7 +417,13 @@ function App() {
   };
 
   const handleDeleteHabitante = async (h) => {
-    if (!window.confirm(`¿Eliminar a ${h.nombre} ${h.apellido} (${h.cedula})?`)) return;
+    setDeleteConfirm(h);
+  };
+
+  const confirmDeleteHabitante = async () => {
+    const h = deleteConfirm;
+    if (!h) return;
+    setDeleteConfirm(null);
     setHabitanteMsg({ type: "", text: "" });
     try {
       await api.deleteHabitante(h.id);
@@ -427,11 +434,7 @@ function App() {
           habitantes: prev[activeConsejo].habitantes.filter((x) => x.id !== h.id),
         },
       }));
-      setHabitanteMsg({ type: "success", text: "Habitante eliminado." });
-      if (editingHabitanteId === h.id) {
-        setHabitanteForm(initialForm);
-        setEditingHabitanteId(null);
-      }
+      setHabitanteMsg({ type: "success", text: "Habitante eliminado con éxito." });
     } catch (err) {
       setHabitanteMsg({ type: "error", text: err?.message || "Error al eliminar." });
     }
@@ -778,143 +781,133 @@ function App() {
                         </button>
                       </div>
                       <div className="p-6">
-                        {habitanteMsg.text && (
-                    <div className={`mb-6 rounded-xl px-4 py-3 text-sm font-medium ${habitanteMsg.type === "error" ? "bg-red-50 text-red-700 border border-red-100" : "bg-emerald-50 text-emerald-700 border border-emerald-100"}`}>
-                      {habitanteMsg.text}
-                    </div>
-                  )}
+                        <form onSubmit={handleRegistrar} className="grid gap-5 md:grid-cols-2">
+                          <div>
+                            <label className="mb-1.5 ml-1 block text-xs font-semibold text-slate-500 uppercase tracking-wider">Nombre</label>
+                            <input
+                              className={inputClass}
+                              placeholder="Ej. Juan"
+                              value={habitanteForm.nombre}
+                              onChange={(e) => setHabitanteForm((p) => ({ ...p, nombre: e.target.value }))}
+                            />
+                          </div>
+                          <div>
+                            <label className="mb-1.5 ml-1 block text-xs font-semibold text-slate-500 uppercase tracking-wider">Apellido</label>
+                            <input
+                              className={inputClass}
+                              placeholder="Ej. Pérez"
+                              value={habitanteForm.apellido}
+                              onChange={(e) => setHabitanteForm((p) => ({ ...p, apellido: e.target.value }))}
+                            />
+                          </div>
+                          <div>
+                            <label className="mb-1.5 ml-1 block text-xs font-semibold text-slate-500 uppercase tracking-wider">Cédula</label>
+                            <input
+                              className={inputClass}
+                              placeholder="Ej. 12345678"
+                              value={habitanteForm.cedula}
+                              onChange={(e) => setHabitanteForm((p) => ({ ...p, cedula: e.target.value }))}
+                            />
+                          </div>
+                          <div>
+                            <label className="mb-1.5 ml-1 block text-xs font-semibold text-slate-500 uppercase tracking-wider">Teléfono</label>
+                            <input
+                              className={inputClass}
+                              placeholder="Ej. 04121234567"
+                              value={habitanteForm.telefono}
+                              onChange={(e) => setHabitanteForm((p) => ({ ...p, telefono: e.target.value }))}
+                            />
+                          </div>
+                          <div>
+                            <label className="mb-1.5 ml-1 block text-xs font-semibold text-slate-500 uppercase tracking-wider">Nacimiento</label>
+                            <input
+                              className={inputClass}
+                              type="date"
+                              value={habitanteForm.nacimiento || ""}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                setHabitanteForm((p) => ({ ...p, nacimiento: val, edad: val ? calcAge(val) : p.edad }));
+                              }}
+                            />
+                          </div>
+                          <div>
+                            <label className="mb-1.5 ml-1 block text-xs font-semibold text-slate-500 uppercase tracking-wider">Edad Estimada</label>
+                            <input
+                              className={inputClass}
+                              type="number"
+                              min="0"
+                              placeholder="Ej. 35"
+                              value={habitanteForm.edad !== undefined ? habitanteForm.edad : ""}
+                              onChange={(e) => setHabitanteForm((p) => ({ ...p, edad: e.target.value }))}
+                            />
+                          </div>
+                          <div className="md:col-span-2">
+                            <label className="mb-1.5 ml-1 block text-xs font-semibold text-slate-500 uppercase tracking-wider">Calle</label>
+                            <select
+                              className={inputClass}
+                              value={habitanteCalleEfectiva}
+                              disabled={Boolean(sessionUser && !sessionUser.isAdmin)}
+                              onChange={(e) => setHabitanteForm((p) => ({ ...p, calle: e.target.value }))}
+                            >
+                              {calles.map((calle) => (
+                                <option key={calle}>{calle}</option>
+                              ))}
+                            </select>
+                          </div>
+                          
+                          <div className="md:col-span-2 mt-2 bg-slate-50/50 p-4 rounded-xl border border-slate-100">
+                            <div className="flex items-center gap-3 mb-2">
+                              <input
+                                type="checkbox"
+                                id="requiereAyuda"
+                                className="w-5 h-5 text-cyan-600 bg-white border-slate-300 rounded focus:ring-cyan-500 focus:ring-2 cursor-pointer"
+                                checked={habitanteForm.requiere_ayuda || false}
+                                onChange={(e) => setHabitanteForm((p) => ({ ...p, requiere_ayuda: e.target.checked, condicion_especial: e.target.checked ? "Embarazo" : "Ninguna" }))}
+                              />
+                              <label htmlFor="requiereAyuda" className="text-sm font-bold text-slate-700 cursor-pointer flex items-center gap-2">
+                                <HeartPulse size={18} className="text-red-500" />
+                                ¿Requiere atención prioritaria o es un Caso Social?
+                              </label>
+                            </div>
 
-                  <h3 className="text-lg font-semibold text-slate-800 mb-4 border-b border-slate-100 pb-2">
-                    {editingHabitanteId ? "Actualizar Habitante" : "Registrar Nuevo Habitante"}
-                  </h3>
-                  
-                  <form onSubmit={handleRegistrar} className="grid gap-5 md:grid-cols-2">
-                    <div>
-                      <label className="mb-1.5 ml-1 block text-xs font-semibold text-slate-500 uppercase tracking-wider">Nombre</label>
-                      <input
-                        className={inputClass}
-                        placeholder="Ej. Juan"
-                        value={habitanteForm.nombre}
-                        onChange={(e) => setHabitanteForm((p) => ({ ...p, nombre: e.target.value }))}
-                      />
-                    </div>
-                    <div>
-                      <label className="mb-1.5 ml-1 block text-xs font-semibold text-slate-500 uppercase tracking-wider">Apellido</label>
-                      <input
-                        className={inputClass}
-                        placeholder="Ej. Pérez"
-                        value={habitanteForm.apellido}
-                        onChange={(e) => setHabitanteForm((p) => ({ ...p, apellido: e.target.value }))}
-                      />
-                    </div>
-                    <div>
-                      <label className="mb-1.5 ml-1 block text-xs font-semibold text-slate-500 uppercase tracking-wider">Cédula</label>
-                      <input
-                        className={inputClass}
-                        placeholder="Ej. 12345678"
-                        value={habitanteForm.cedula}
-                        onChange={(e) => setHabitanteForm((p) => ({ ...p, cedula: e.target.value }))}
-                      />
-                    </div>
-                    <div>
-                      <label className="mb-1.5 ml-1 block text-xs font-semibold text-slate-500 uppercase tracking-wider">Teléfono</label>
-                      <input
-                        className={inputClass}
-                        placeholder="Ej. 04121234567"
-                        value={habitanteForm.telefono}
-                        onChange={(e) => setHabitanteForm((p) => ({ ...p, telefono: e.target.value }))}
-                      />
-                    </div>
-                    <div>
-                      <label className="mb-1.5 ml-1 block text-xs font-semibold text-slate-500 uppercase tracking-wider">Nacimiento</label>
-                      <input
-                        className={inputClass}
-                        type="date"
-                        value={habitanteForm.nacimiento || ""}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          setHabitanteForm((p) => ({ ...p, nacimiento: val, edad: val ? calcAge(val) : p.edad }));
-                        }}
-                      />
-                    </div>
-                    <div>
-                      <label className="mb-1.5 ml-1 block text-xs font-semibold text-slate-500 uppercase tracking-wider">Edad Estimada</label>
-                      <input
-                        className={inputClass}
-                        type="number"
-                        min="0"
-                        placeholder="Ej. 35"
-                        value={habitanteForm.edad !== undefined ? habitanteForm.edad : ""}
-                        onChange={(e) => setHabitanteForm((p) => ({ ...p, edad: e.target.value }))}
-                      />
-                    </div>
-                    <div className="md:col-span-2">
-                      <label className="mb-1.5 ml-1 block text-xs font-semibold text-slate-500 uppercase tracking-wider">Calle</label>
-                      <select
-                        className={inputClass}
-                        value={habitanteCalleEfectiva}
-                        disabled={Boolean(sessionUser && !sessionUser.isAdmin)}
-                        onChange={(e) => setHabitanteForm((p) => ({ ...p, calle: e.target.value }))}
-                      >
-                        {calles.map((calle) => (
-                          <option key={calle}>{calle}</option>
-                        ))}
-                      </select>
-                    </div>
-                    
-                    <div className="md:col-span-2 mt-2 bg-slate-50/50 p-4 rounded-xl border border-slate-100">
-                      <div className="flex items-center gap-3 mb-2">
-                        <input
-                          type="checkbox"
-                          id="requiereAyuda"
-                          className="w-5 h-5 text-cyan-600 bg-white border-slate-300 rounded focus:ring-cyan-500 focus:ring-2 cursor-pointer"
-                          checked={habitanteForm.requiere_ayuda || false}
-                          onChange={(e) => setHabitanteForm((p) => ({ ...p, requiere_ayuda: e.target.checked, condicion_especial: e.target.checked ? "Embarazo" : "Ninguna" }))}
-                        />
-                        <label htmlFor="requiereAyuda" className="text-sm font-bold text-slate-700 cursor-pointer flex items-center gap-2">
-                          <HeartPulse size={18} className="text-red-500" />
-                          ¿Requiere atención prioritaria o es un Caso Social?
-                        </label>
-                      </div>
-
-                      {habitanteForm.requiere_ayuda && (
-                        <div className="mt-3 pl-8">
-                          <label className="mb-1.5 block text-xs font-semibold text-slate-500 uppercase tracking-wider">Especificar Condición Especial</label>
-                          <select
-                            className={inputClass}
-                            value={habitanteForm.condicion_especial || "Otro"}
-                            onChange={(e) => setHabitanteForm((p) => ({ ...p, condicion_especial: e.target.value }))}
-                          >
-                            {condicionesEspeciales.filter(c => c !== "Ninguna").map((cond) => (
-                              <option key={cond} value={cond}>{cond}</option>
-                            ))}
-                          </select>
-                        </div>
-                      )}
-                    </div>
-                    <div className="md:col-span-2 flex gap-3 pt-2">
-                      <button
-                        type="submit"
-                        className="flex-1 rounded-xl bg-slate-900 px-4 py-3 font-medium text-white hover:bg-slate-800 transition-colors shadow-sm focus:ring-2 focus:ring-slate-900/20"
-                      >
-                        {editingHabitanteId ? "Guardar Cambios" : "Registrar Habitante"}
-                      </button>
-                      {editingHabitanteId && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setHabitanteForm(initialForm);
-                            setEditingHabitanteId(null);
-                            setHabitanteMsg({ type: "", text: "" });
-                            setShowFormModal(false);
-                          }}
-                          className="flex-1 rounded-xl border border-slate-300 px-4 py-3 font-medium text-slate-700 hover:bg-slate-50 transition-colors"
-                        >
-                          Cancelar
-                        </button>
-                      )}
-                    </div>
-                  </form>
+                            {habitanteForm.requiere_ayuda && (
+                              <div className="mt-3 pl-8">
+                                <label className="mb-1.5 block text-xs font-semibold text-slate-500 uppercase tracking-wider">Especificar Condición Especial</label>
+                                <select
+                                  className={inputClass}
+                                  value={habitanteForm.condicion_especial || "Otro"}
+                                  onChange={(e) => setHabitanteForm((p) => ({ ...p, condicion_especial: e.target.value }))}
+                                >
+                                  {condicionesEspeciales.filter(c => c !== "Ninguna").map((cond) => (
+                                    <option key={cond} value={cond}>{cond}</option>
+                                  ))}
+                                </select>
+                              </div>
+                            )}
+                          </div>
+                          <div className="md:col-span-2 flex gap-3 pt-2">
+                            <button
+                              type="submit"
+                              className="flex-1 rounded-xl bg-slate-900 px-4 py-3 font-medium text-white hover:bg-slate-800 transition-colors shadow-sm focus:ring-2 focus:ring-slate-900/20"
+                            >
+                              {editingHabitanteId ? "Guardar Cambios" : "Registrar Habitante"}
+                            </button>
+                            {editingHabitanteId && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setHabitanteForm(initialForm);
+                                  setEditingHabitanteId(null);
+                                  setHabitanteMsg({ type: "", text: "" });
+                                  setShowFormModal(false);
+                                }}
+                                className="flex-1 rounded-xl border border-slate-300 px-4 py-3 font-medium text-slate-700 hover:bg-slate-50 transition-colors"
+                              >
+                                Cancelar
+                              </button>
+                            )}
+                          </div>
+                        </form>
                       </div>
                     </div>
                   </div>
@@ -1037,6 +1030,53 @@ function App() {
           </div>
         </div>
       </main>
+
+      {/* Global Toast Notification */}
+      {habitanteMsg.text && (
+        <div className="fixed bottom-6 right-6 z-[100] animate-fade-in-up">
+          <div className={`flex items-center gap-3 px-6 py-4 rounded-xl shadow-xl border ${
+            habitanteMsg.type === "error" 
+              ? "bg-red-50 border-red-100 text-red-700" 
+              : "bg-emerald-50 border-emerald-100 text-emerald-700"
+          }`}>
+            <div className={`flex items-center justify-center w-8 h-8 rounded-full ${
+              habitanteMsg.type === "error" ? "bg-red-100" : "bg-emerald-100"
+            }`}>
+              {habitanteMsg.type === "error" ? <AlertCircle size={18} /> : <CheckCircle2 size={18} />}
+            </div>
+            <p className="font-medium">{habitanteMsg.text}</p>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirm && (
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-fade-in">
+          <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden p-6 text-center animate-scale-in">
+            <div className="mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
+              <Trash2 className="text-red-600" size={32} />
+            </div>
+            <h3 className="text-xl font-bold text-slate-800 mb-2">¿Eliminar Habitante?</h3>
+            <p className="text-slate-500 mb-8">
+              Estás a punto de eliminar a <span className="font-semibold text-slate-700">{deleteConfirm.nombre} {deleteConfirm.apellido}</span>. Esta acción no se puede deshacer.
+            </p>
+            <div className="flex gap-3 justify-center">
+              <button
+                onClick={() => setDeleteConfirm(null)}
+                className="px-6 py-2.5 text-slate-600 font-medium hover:bg-slate-100 rounded-xl transition"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={confirmDeleteHabitante}
+                className="px-6 py-2.5 bg-red-600 text-white font-medium hover:bg-red-700 rounded-xl transition shadow-sm"
+              >
+                Sí, eliminar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
