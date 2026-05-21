@@ -130,6 +130,7 @@ const initialForm = {
   cedula: "",
   telefono: "",
   nacimiento: "",
+  edad: "",
   calle: calles[0],
   jefe_familia_id: null,
   es_jefe_familia: true,
@@ -336,10 +337,12 @@ function App() {
     e.preventDefault();
     setHabitanteMsg({ type: "", text: "" });
     
-    // Si no hay fecha de nacimiento, conservar la edad original importada o 0
-    const habitanteOriginal = editingHabitanteId ? habitantesActuales.find(h => h.id === editingHabitanteId) : null;
-    const edadFallback = habitanteOriginal ? (habitanteOriginal.edad || 0) : 0;
-    const edad = habitanteForm.nacimiento ? calcAge(habitanteForm.nacimiento) : edadFallback;
+    let edad = parseInt(habitanteForm.edad, 10);
+    if (isNaN(edad)) {
+      const habitanteOriginal = editingHabitanteId ? habitantesActuales.find(h => h.id === editingHabitanteId) : null;
+      const edadFallback = habitanteOriginal ? (habitanteOriginal.edad || 0) : 0;
+      edad = habitanteForm.nacimiento ? calcAge(habitanteForm.nacimiento) : edadFallback;
+    }
 
     if (!habitanteForm.nombre || !habitanteForm.apellido || !habitanteForm.cedula) return;
     
@@ -822,16 +825,22 @@ function App() {
                       <input
                         className={inputClass}
                         type="date"
-                        value={habitanteForm.nacimiento}
-                        onChange={(e) => setHabitanteForm((p) => ({ ...p, nacimiento: e.target.value }))}
+                        value={habitanteForm.nacimiento || ""}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setHabitanteForm((p) => ({ ...p, nacimiento: val, edad: val ? calcAge(val) : p.edad }));
+                        }}
                       />
                     </div>
                     <div>
                       <label className="mb-1.5 ml-1 block text-xs font-semibold text-slate-500 uppercase tracking-wider">Edad Estimada</label>
                       <input
-                        className={`${inputClass} bg-slate-100/50 text-slate-500 border-dashed`}
-                        readOnly
-                        value={calcAge(habitanteForm.nacimiento) === "" ? "Edad" : `${calcAge(habitanteForm.nacimiento)} años`}
+                        className={inputClass}
+                        type="number"
+                        min="0"
+                        placeholder="Ej. 35"
+                        value={habitanteForm.edad !== undefined ? habitanteForm.edad : ""}
+                        onChange={(e) => setHabitanteForm((p) => ({ ...p, edad: e.target.value }))}
                       />
                     </div>
                     <div className="md:col-span-2">
