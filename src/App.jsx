@@ -559,11 +559,11 @@ function App() {
         </header>
 
         {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto p-6 md:p-8 bg-slate-50/50 print:p-0 print:bg-white print:overflow-visible">
-          <div className="w-full space-y-6">
+        <div className="flex-1 overflow-y-auto p-6 md:p-8 bg-slate-50/50 print:p-0 print:bg-white print:overflow-visible flex flex-col">
+          <div className="w-full flex-1 flex flex-col">
             
                         {moduleTab === "resumen" && (
-              <div className="space-y-6">
+              <div className="flex flex-col h-full flex-1 space-y-6">
                 <div className="grid gap-6 md:grid-cols-3">
                   <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex items-center gap-4">
                     <div className="p-4 bg-blue-50 text-blue-600 rounded-xl">
@@ -594,10 +594,10 @@ function App() {
                   </div>
                 </div>
 
-                <div className="grid gap-6 md:grid-cols-2">
-                  <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-                    <h3 className="text-lg font-semibold text-slate-800 mb-4">Distribución por Edades</h3>
-                    <div className="h-64 w-full">
+                <div className="grid gap-6 md:grid-cols-2 flex-1">
+                  <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col">
+                    <h3 className="text-lg font-semibold text-slate-800 mb-4 shrink-0">Distribución por Edades</h3>
+                    <div className="flex-1 w-full min-h-[300px]">
                       <ResponsiveContainer>
                         <PieChart>
                           <Pie
@@ -625,9 +625,9 @@ function App() {
                     </div>
                   </div>
 
-                  <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-                    <h3 className="text-lg font-semibold text-slate-800 mb-4">Habitantes por Calle</h3>
-                    <div className="h-64 w-full">
+                  <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col">
+                    <h3 className="text-lg font-semibold text-slate-800 mb-4 shrink-0">Habitantes por Calle</h3>
+                    <div className="flex-1 w-full min-h-[300px]">
                       <ResponsiveContainer>
                         <BarChart data={
                           calles.map(calle => ({
@@ -638,7 +638,12 @@ function App() {
                           <XAxis dataKey="name" fontSize={10} tick={{fill: '#64748b'}} />
                           <YAxis fontSize={12} tick={{fill: '#64748b'}} />
                           <RechartsTooltip cursor={{fill: '#f1f5f9'}} />
-                          <Bar dataKey="Habitantes" fill="#06b6d4" radius={[4, 4, 0, 0]} />
+                          <Bar dataKey="Habitantes" radius={[4, 4, 0, 0]}>
+                            {calles.map((entry, index) => {
+                              const colors = ['#06b6d4', '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#f43f5e', '#14b8a6', '#84cc16'];
+                              return <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />;
+                            })}
+                          </Bar>
                         </BarChart>
                       </ResponsiveContainer>
                     </div>
