@@ -444,9 +444,22 @@ function App() {
   const habitantesFiltrados = useMemo(() => {
     return habitantesActuales.filter((h) => {
       const byStreet = searchFilters.calle === "Todas" || h.calle === searchFilters.calle;
-      const min = searchFilters.min === "" ? -Infinity : Number(searchFilters.min);
-      const max = searchFilters.max === "" ? Infinity : Number(searchFilters.max);
-      const byAge = Number(h.edad) >= min && Number(h.edad) <= max;
+      
+      const isMinActive = searchFilters.min !== "";
+      const isMaxActive = searchFilters.max !== "";
+      
+      let byAge = true;
+      if (isMinActive || isMaxActive) {
+        const min = isMinActive ? Number(searchFilters.min) : -Infinity;
+        const max = isMaxActive ? Number(searchFilters.max) : Infinity;
+        
+        if (h.edad === "" || h.edad === null || h.edad === undefined) {
+           byAge = false; // No tiene edad, no cumple el filtro numérico
+        } else {
+           byAge = Number(h.edad) >= min && Number(h.edad) <= max;
+        }
+      }
+      
       return byStreet && byAge;
     });
   }, [habitantesActuales, searchFilters]);
