@@ -138,7 +138,7 @@ const initialForm = {
   requiere_ayuda: false,
   condicion_especial: "Ninguna",
   condicion_especial_otro: "",
-  prioridad_social: "Media",
+  prioridad_caso: "Media",
 };
 
 
@@ -362,7 +362,7 @@ function App() {
         requiere_ayuda: habitanteForm.requiere_ayuda || false,
         condicion_especial: habitanteForm.requiere_ayuda ? (habitanteForm.condicion_especial || "Otro") : "Ninguna",
         condicion_especial_otro: habitanteForm.requiere_ayuda && habitanteForm.condicion_especial === "Otro" ? (habitanteForm.condicion_especial_otro || "") : "",
-        prioridad_social: habitanteForm.requiere_ayuda ? (habitanteForm.prioridad_social || "Media") : "",
+        prioridad_caso: habitanteForm.requiere_ayuda ? (habitanteForm.prioridad_caso || "Media") : "",
       };
 
       if (editingHabitanteId) {
@@ -416,7 +416,7 @@ function App() {
       requiere_ayuda: h.requiere_ayuda || false,
       condicion_especial: h.condicion_especial || "Ninguna",
       condicion_especial_otro: h.condicion_especial_otro || "",
-      prioridad_social: h.prioridad_social || "Media",
+      prioridad_caso: h.prioridad_caso || "Media",
     });
     setEditingHabitanteId(h.id);
     setHabitanteMsg({ type: "", text: "" });
@@ -905,9 +905,9 @@ function App() {
                                     ))}
                                   </select>
                                   <select
-                                    className={`${inputClass} w-[40%] font-medium ${habitanteForm.prioridad_social === 'Alta' ? 'text-red-600 bg-red-50 border-red-200' : habitanteForm.prioridad_social === 'Media' ? 'text-amber-600 bg-amber-50 border-amber-200' : 'text-emerald-600 bg-emerald-50 border-emerald-200'}`}
-                                    value={habitanteForm.prioridad_social || "Media"}
-                                    onChange={(e) => setHabitanteForm((p) => ({ ...p, prioridad_social: e.target.value }))}
+                                    className={`${inputClass} w-[40%] font-medium ${habitanteForm.prioridad_caso === 'Alta' ? 'text-red-600 bg-red-50 border-red-200' : habitanteForm.prioridad_caso === 'Media' ? 'text-amber-600 bg-amber-50 border-amber-200' : 'text-emerald-600 bg-emerald-50 border-emerald-200'}`}
+                                    value={habitanteForm.prioridad_caso || "Media"}
+                                    onChange={(e) => setHabitanteForm((p) => ({ ...p, prioridad_caso: e.target.value }))}
                                   >
                                     <option value="Alta" className="text-red-600">Prioridad Alta</option>
                                     <option value="Media" className="text-amber-600">Prioridad Media</option>
