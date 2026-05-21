@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { Pencil, Save, X, Printer, HeartPulse } from "lucide-react";
+import { Pencil, Save, X, Printer, HeartPulse, History } from "lucide-react";
 import { api } from "./api";
 
 export default function CasosSociales({ activeConsejo, db, setDb, sessionUser, inputClass }) {
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState({});
   const [msg, setMsg] = useState("");
+  const [tab, setTab] = useState("activos"); // "activos" | "historial"
 
   const habitantesActuales = db[activeConsejo]?.habitantes || [];
 
@@ -87,6 +88,31 @@ export default function CasosSociales({ activeConsejo, db, setDb, sessionUser, i
         </div>
       )}
 
+      <div className="flex gap-4 border-b border-slate-200 print:hidden mt-4">
+        <button
+          onClick={() => setTab("activos")}
+          className={`pb-3 text-sm font-bold flex items-center gap-2 border-b-2 transition-colors ${
+            tab === "activos"
+              ? "border-cyan-500 text-cyan-600"
+              : "border-transparent text-slate-500 hover:text-slate-700"
+          }`}
+        >
+          <HeartPulse size={18} />
+          Casos Activos
+        </button>
+        <button
+          onClick={() => setTab("historial")}
+          className={`pb-3 text-sm font-bold flex items-center gap-2 border-b-2 transition-colors ${
+            tab === "historial"
+              ? "border-cyan-500 text-cyan-600"
+              : "border-transparent text-slate-500 hover:text-slate-700"
+          }`}
+        >
+          <History size={18} />
+          Historial Atendidos
+        </button>
+      </div>
+
       {/* Secciones de Reporte (Solo visible al imprimir) */}
       <div className="hidden print:block mb-8">
         <div className="text-center mb-6">
@@ -127,195 +153,203 @@ export default function CasosSociales({ activeConsejo, db, setDb, sessionUser, i
       </div>
 
       <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden print:hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 text-sm">
-                <th className="p-4 font-semibold">Habitante</th>
-                <th className="p-4 font-semibold">Cédula / Calle</th>
-                <th className="p-4 font-semibold">Condición Especial</th>
-                <th className="p-4 font-semibold">Prioridad</th>
-                <th className="p-4 font-semibold">Estado</th>
-                <th className="p-4 font-semibold w-1/3">Observaciones</th>
-                <th className="p-4 font-semibold print:hidden">Acción</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 text-sm">
-              {casosActivos.length === 0 ? (
-                <tr>
-                  <td colSpan="7" className="p-8 text-center text-slate-500">
-                    No hay casos sociales activos registrados en tu sector.
-                  </td>
+        {tab === "activos" && (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 text-sm">
+                  <th className="p-4 font-semibold">Habitante</th>
+                  <th className="p-4 font-semibold">Cédula / Calle</th>
+                  <th className="p-4 font-semibold">Condición Especial</th>
+                  <th className="p-4 font-semibold">Prioridad</th>
+                  <th className="p-4 font-semibold">Estado</th>
+                  <th className="p-4 font-semibold w-1/3">Observaciones</th>
+                  <th className="p-4 font-semibold print:hidden">Acción</th>
                 </tr>
-              ) : (
-                casosActivos.map(c => {
-                  const isEditing = editingId === c.id;
-                  return (
-                    <tr key={c.id} className="hover:bg-slate-50 transition-colors">
-                      <td className="p-4 font-medium text-slate-800">{c.nombre} {c.apellido}</td>
-                      <td className="p-4 text-slate-500">
-                        {c.cedula}
-                        <br />
-                        <span className="text-xs text-slate-400">{c.calle}</span>
-                      </td>
-                      <td className="p-4 text-red-600 font-semibold">{c.condicion_especial}</td>
-                      
-                      <td className="p-4">
-                        {isEditing ? (
-                          <select 
-                            className={inputClass}
-                            value={editForm.prioridad_caso}
-                            onChange={e => setEditForm({...editForm, prioridad_caso: e.target.value})}
-                          >
-                            <option value="Alta">Alta</option>
-                            <option value="Media">Media</option>
-                            <option value="Baja">Baja</option>
-                          </select>
-                        ) : (
-                          <span className={`px-2 py-1 rounded-md text-xs font-bold ${
-                            (c.prioridad_caso || "Media") === "Alta" ? "bg-red-100 text-red-700" :
-                            (c.prioridad_caso || "Media") === "Media" ? "bg-amber-100 text-amber-700" :
-                            "bg-emerald-100 text-emerald-700"
-                          }`}>
-                            {c.prioridad_caso || "Media"}
-                          </span>
-                        )}
-                      </td>
+              </thead>
+              <tbody className="divide-y divide-slate-100 text-sm">
+                {casosActivos.length === 0 ? (
+                  <tr>
+                    <td colSpan="7" className="p-8 text-center text-slate-500">
+                      No hay casos sociales activos registrados en tu sector.
+                    </td>
+                  </tr>
+                ) : (
+                  casosActivos.map(c => {
+                    const isEditing = editingId === c.id;
+                    return (
+                      <tr key={c.id} className="hover:bg-slate-50 transition-colors">
+                        <td className="p-4 font-medium text-slate-800">{c.nombre} {c.apellido}</td>
+                        <td className="p-4 text-slate-500">
+                          {c.cedula}
+                          <br />
+                          <span className="text-xs text-slate-400">{c.calle}</span>
+                        </td>
+                        <td className="p-4 text-red-600 font-semibold">{c.condicion_especial}</td>
+                        
+                        <td className="p-4">
+                          {isEditing ? (
+                            <select 
+                              className={inputClass}
+                              value={editForm.prioridad_caso}
+                              onChange={e => setEditForm({...editForm, prioridad_caso: e.target.value})}
+                            >
+                              <option value="Alta">Alta</option>
+                              <option value="Media">Media</option>
+                              <option value="Baja">Baja</option>
+                            </select>
+                          ) : (
+                            <span className={`px-2 py-1 rounded-md text-xs font-bold ${
+                              (c.prioridad_caso || "Media") === "Alta" ? "bg-red-100 text-red-700" :
+                              (c.prioridad_caso || "Media") === "Media" ? "bg-amber-100 text-amber-700" :
+                              "bg-emerald-100 text-emerald-700"
+                            }`}>
+                              {c.prioridad_caso || "Media"}
+                            </span>
+                          )}
+                        </td>
 
-                      <td className="p-4">
-                        {isEditing ? (
-                          <select 
-                            className={inputClass}
-                            value={editForm.estado_caso}
-                            onChange={e => setEditForm({...editForm, estado_caso: e.target.value})}
-                          >
-                            <option value="Pendiente">Pendiente</option>
-                            <option value="En Proceso">En Proceso</option>
-                            <option value="Atendido">Atendido</option>
-                          </select>
-                        ) : (
-                          <span className={`px-2 py-1 rounded-full text-xs font-bold ${
-                            (c.estado_caso || "Pendiente") === "Pendiente" ? "bg-slate-100 text-slate-600" :
-                            (c.estado_caso || "Pendiente") === "En Proceso" ? "bg-blue-100 text-blue-700" :
-                            "bg-green-100 text-green-700"
-                          }`}>
-                            {c.estado_caso || "Pendiente"}
-                          </span>
-                        )}
-                      </td>
+                        <td className="p-4">
+                          {isEditing ? (
+                            <select 
+                              className={inputClass}
+                              value={editForm.estado_caso}
+                              onChange={e => setEditForm({...editForm, estado_caso: e.target.value})}
+                            >
+                              <option value="Pendiente">Pendiente</option>
+                              <option value="En Proceso">En Proceso</option>
+                              <option value="Atendido">Atendido</option>
+                            </select>
+                          ) : (
+                            <span className={`px-2 py-1 rounded-full text-xs font-bold ${
+                              (c.estado_caso || "Pendiente") === "Pendiente" ? "bg-slate-100 text-slate-600" :
+                              (c.estado_caso || "Pendiente") === "En Proceso" ? "bg-blue-100 text-blue-700" :
+                              "bg-green-100 text-green-700"
+                            }`}>
+                              {c.estado_caso || "Pendiente"}
+                            </span>
+                          )}
+                        </td>
 
-                      <td className="p-4">
-                        {isEditing ? (
-                          <textarea
-                            className={`${inputClass} min-h-[60px] text-xs`}
-                            value={editForm.notas_caso}
-                            onChange={e => setEditForm({...editForm, notas_caso: e.target.value})}
-                            placeholder="Añade notas o historial aquí..."
-                          />
-                        ) : (
-                          <p className="text-xs text-slate-500 whitespace-pre-wrap">
-                            {c.notas_caso || <span className="italic text-slate-300">Sin observaciones</span>}
-                          </p>
-                        )}
-                      </td>
+                        <td className="p-4">
+                          {isEditing ? (
+                            <textarea
+                              className={`${inputClass} min-h-[60px] text-xs`}
+                              value={editForm.notas_caso}
+                              onChange={e => setEditForm({...editForm, notas_caso: e.target.value})}
+                              placeholder="Añade notas o historial aquí..."
+                            />
+                          ) : (
+                            <p className="text-xs text-slate-500 whitespace-pre-wrap">
+                              {c.notas_caso || <span className="italic text-slate-300">Sin observaciones</span>}
+                            </p>
+                          )}
+                        </td>
 
-                      <td className="p-4 print:hidden">
-                        {isEditing ? (
-                          <div className="flex gap-2">
-                            <button onClick={() => handleSave(c)} className="p-1.5 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 rounded-lg" title="Guardar">
-                              <Save size={16} />
+                        <td className="p-4 print:hidden">
+                          {isEditing ? (
+                            <div className="flex gap-2">
+                              <button onClick={() => handleSave(c)} className="p-1.5 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 rounded-lg" title="Guardar">
+                                <Save size={16} />
+                              </button>
+                              <button onClick={() => setEditingId(null)} className="p-1.5 bg-slate-100 text-slate-600 hover:bg-slate-200 rounded-lg" title="Cancelar">
+                                <X size={16} />
+                              </button>
+                            </div>
+                          ) : (
+                            <button onClick={() => handleEdit(c)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg" title="Editar seguimiento">
+                              <Pencil size={16} />
                             </button>
-                            <button onClick={() => setEditingId(null)} className="p-1.5 bg-slate-100 text-slate-600 hover:bg-slate-200 rounded-lg" title="Cancelar">
-                              <X size={16} />
-                            </button>
-                          </div>
-                        ) : (
-                          <button onClick={() => handleEdit(c)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg" title="Editar seguimiento">
-                            <Pencil size={16} />
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  )
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
+                          )}
+                        </td>
+                      </tr>
+                    )
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       {/* Casos Atendidos / Historial */}
-      {casosAtendidos.length > 0 && (
-        <div className="mt-8 bg-slate-50 rounded-2xl shadow-sm border border-slate-200 overflow-hidden print:hidden">
+      {tab === "historial" && (
+        <div className="bg-slate-50 rounded-2xl shadow-sm border border-slate-200 overflow-hidden print:hidden">
           <div className="p-4 border-b border-slate-200 flex items-center justify-between">
             <h4 className="font-bold text-slate-700">Historial de Casos Atendidos</h4>
             <span className="bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full">{casosAtendidos.length} resueltos</span>
           </div>
-          <div className="overflow-x-auto opacity-75 hover:opacity-100 transition-opacity">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-slate-100/50 border-b border-slate-200 text-slate-500 text-sm">
-                  <th className="p-4 font-semibold">Habitante</th>
-                  <th className="p-4 font-semibold">Cédula / Calle</th>
-                  <th className="p-4 font-semibold">Condición</th>
-                  <th className="p-4 font-semibold">Estado</th>
-                  <th className="p-4 font-semibold w-1/3">Observaciones</th>
-                  <th className="p-4 font-semibold">Acción</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 text-sm">
-                {casosAtendidos.map(c => {
-                  const isEditing = editingId === c.id;
-                  return (
-                    <tr key={c.id} className="hover:bg-slate-100 transition-colors">
-                      <td className="p-4 font-medium text-slate-600">{c.nombre} {c.apellido}</td>
-                      <td className="p-4 text-slate-500">{c.cedula}<br/><span className="text-xs">{c.calle}</span></td>
-                      <td className="p-4 text-slate-600 font-semibold">{c.condicion_especial}</td>
-                      <td className="p-4">
-                        {isEditing ? (
-                          <select 
-                            className={inputClass}
-                            value={editForm.estado_caso}
-                            onChange={e => setEditForm({...editForm, estado_caso: e.target.value})}
-                          >
-                            <option value="Pendiente">Pendiente</option>
-                            <option value="En Proceso">En Proceso</option>
-                            <option value="Atendido">Atendido</option>
-                          </select>
-                        ) : (
-                          <span className="px-2 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700">
-                            Atendido
-                          </span>
-                        )}
-                      </td>
-                      <td className="p-4">
-                        {isEditing ? (
-                          <textarea
-                            className={`${inputClass} min-h-[60px] text-xs`}
-                            value={editForm.notas_caso}
-                            onChange={e => setEditForm({...editForm, notas_caso: e.target.value})}
-                            placeholder="Añade notas..."
-                          />
-                        ) : (
-                          <p className="text-xs text-slate-500 whitespace-pre-wrap">{c.notas_caso || "Sin observaciones"}</p>
-                        )}
-                      </td>
-                      <td className="p-4">
-                        {isEditing ? (
-                          <div className="flex gap-2">
-                            <button onClick={() => handleSave(c)} className="p-1.5 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 rounded-lg"><Save size={16} /></button>
-                            <button onClick={() => setEditingId(null)} className="p-1.5 bg-slate-100 text-slate-600 hover:bg-slate-200 rounded-lg"><X size={16} /></button>
-                          </div>
-                        ) : (
-                          <button onClick={() => handleEdit(c)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg"><Pencil size={16} /></button>
-                        )}
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
+          {casosAtendidos.length === 0 ? (
+            <div className="p-8 text-center text-slate-500 text-sm">
+              No hay casos sociales en el historial.
+            </div>
+          ) : (
+            <div className="overflow-x-auto opacity-80 hover:opacity-100 transition-opacity">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-slate-100/50 border-b border-slate-200 text-slate-500 text-sm">
+                    <th className="p-4 font-semibold">Habitante</th>
+                    <th className="p-4 font-semibold">Cédula / Calle</th>
+                    <th className="p-4 font-semibold">Condición</th>
+                    <th className="p-4 font-semibold">Estado</th>
+                    <th className="p-4 font-semibold w-1/3">Observaciones</th>
+                    <th className="p-4 font-semibold">Acción</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 text-sm">
+                  {casosAtendidos.map(c => {
+                    const isEditing = editingId === c.id;
+                    return (
+                      <tr key={c.id} className="hover:bg-slate-100 transition-colors">
+                        <td className="p-4 font-medium text-slate-600">{c.nombre} {c.apellido}</td>
+                        <td className="p-4 text-slate-500">{c.cedula}<br/><span className="text-xs">{c.calle}</span></td>
+                        <td className="p-4 text-slate-600 font-semibold">{c.condicion_especial}</td>
+                        <td className="p-4">
+                          {isEditing ? (
+                            <select 
+                              className={inputClass}
+                              value={editForm.estado_caso}
+                              onChange={e => setEditForm({...editForm, estado_caso: e.target.value})}
+                            >
+                              <option value="Pendiente">Pendiente</option>
+                              <option value="En Proceso">En Proceso</option>
+                              <option value="Atendido">Atendido</option>
+                            </select>
+                          ) : (
+                            <span className="px-2 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700">
+                              Atendido
+                            </span>
+                          )}
+                        </td>
+                        <td className="p-4">
+                          {isEditing ? (
+                            <textarea
+                              className={`${inputClass} min-h-[60px] text-xs`}
+                              value={editForm.notas_caso}
+                              onChange={e => setEditForm({...editForm, notas_caso: e.target.value})}
+                              placeholder="Añade notas..."
+                            />
+                          ) : (
+                            <p className="text-xs text-slate-500 whitespace-pre-wrap">{c.notas_caso || "Sin observaciones"}</p>
+                          )}
+                        </td>
+                        <td className="p-4">
+                          {isEditing ? (
+                            <div className="flex gap-2">
+                              <button onClick={() => handleSave(c)} className="p-1.5 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 rounded-lg"><Save size={16} /></button>
+                              <button onClick={() => setEditingId(null)} className="p-1.5 bg-slate-100 text-slate-600 hover:bg-slate-200 rounded-lg"><X size={16} /></button>
+                            </div>
+                          ) : (
+                            <button onClick={() => handleEdit(c)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg"><Pencil size={16} /></button>
+                          )}
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       )}
     </div>
