@@ -18,6 +18,7 @@ export default function Votaciones({ sessionUser, inputClass, onMessage, calles 
   const [showStartModal, setShowStartModal] = useState(false);
   const [startTitulo, setStartTitulo] = useState("");
   const [adminSettingTitle, setAdminSettingTitle] = useState(false);
+  const [showCloseGlobalElectionModal, setShowCloseGlobalElectionModal] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -130,12 +131,15 @@ export default function Votaciones({ sessionUser, inputClass, onMessage, calles 
     }
   };
 
-  const handleCloseGlobalElection = async () => {
-    if (!window.confirm("¿Segurísimo que deseas cerrar la elección a nivel global? Esto impedirá que se abran nuevas mesas.")) return;
+  const handleCloseGlobalElection = () => {
+    setShowCloseGlobalElectionModal(true);
+  };
+
+  const confirmCloseGlobalElection = async () => {
+    setShowCloseGlobalElectionModal(false);
     try {
       await api.setElectionConfig("");
       setGlobalElectionTitle(null);
-      // Wait, we probably want to clear Admin's active session too just in case
       setActiveElectionTitle("");
       localStorage.removeItem("comuna_active_election");
       onMessage?.({ type: "success", text: "Jornada electoral global ha sido cerrada." });
@@ -607,6 +611,35 @@ export default function Votaciones({ sessionUser, inputClass, onMessage, calles 
                  </div>
               </form>
            </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal for Closing Global Election */}
+      {showCloseGlobalElectionModal && (
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-fade-in">
+          <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden p-6 text-center animate-scale-in">
+            <div className="mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
+              <Lock className="text-red-600" size={32} />
+            </div>
+            <h3 className="text-xl font-bold text-slate-800 mb-2">¿Cerrar Elección Global?</h3>
+            <p className="text-slate-500 mb-8">
+              ¿Segurísimo que deseas cerrar la elección a nivel global? Esto impedirá que se abran nuevas mesas.
+            </p>
+            <div className="flex gap-3 justify-center">
+              <button
+                onClick={() => setShowCloseGlobalElectionModal(false)}
+                className="px-6 py-2.5 text-slate-600 font-medium hover:bg-slate-100 rounded-xl transition"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={confirmCloseGlobalElection}
+                className="px-6 py-2.5 bg-red-600 text-white font-medium hover:bg-red-700 rounded-xl transition shadow-sm"
+              >
+                Sí, cerrar
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
