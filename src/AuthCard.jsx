@@ -307,7 +307,14 @@ export default function AuthCard({ onAuthSuccess }) {
       let accessToken = null;
 
       try {
-        const login = await api.login({ userId, passwordHash: hash });
+        let login;
+        try {
+          login = await api.login({ userId, passwordHash: hash });
+        } catch (e) {
+          // Fallback para contraseñas reseteadas por Firebase Console o Email (Texto plano)
+          login = await api.login({ userId, passwordHash: loginForm.password });
+        }
+        
         sessionUserId = login?.userId || login?.user?.user_id || userId;
         // api.login ahora devuelve datos en la raíz, no en .user
         userData = login?.user || login;
