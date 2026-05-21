@@ -373,6 +373,27 @@ export const api = {
     } catch (e) { errRes(e.message); }
   },
 
+  closeGlobalElection: async (titulo) => {
+    try {
+      const votosSnap = await getDocs(collection(db, "votos"));
+      let count = votosSnap.size;
+      const batch = writeBatch(db);
+      
+      if (titulo) {
+        const histRef = doc(collection(db, "historial_votos"));
+        batch.set(histRef, {
+          titulo, consejo: "Global", calle: "Todas", cantidad_votos: count, createdAt: serverTimestamp()
+        });
+      }
+      
+      votosSnap.forEach(v => batch.delete(v.ref));
+      batch.delete(doc(db, "config", "election"));
+      
+      await batch.commit();
+      return okRes({ message: "Jornada global cerrada y votos reiniciados." });
+    } catch (e) { errRes(e.message); }
+  },
+
   getVotaciones: async () => {
     try {
       const session = getSession();

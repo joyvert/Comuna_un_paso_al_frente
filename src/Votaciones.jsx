@@ -138,11 +138,12 @@ export default function Votaciones({ sessionUser, inputClass, onMessage, calles 
   const confirmCloseGlobalElection = async () => {
     setShowCloseGlobalElectionModal(false);
     try {
-      await api.setElectionConfig("");
+      await api.closeGlobalElection(activeElectionTitle || globalElectionTitle);
       setGlobalElectionTitle(null);
       setActiveElectionTitle("");
       localStorage.removeItem("comuna_active_election");
-      onMessage?.({ type: "success", text: "Jornada electoral global ha sido cerrada." });
+      onMessage?.({ type: "success", text: "Jornada electoral global ha sido cerrada y los votos se han reiniciado." });
+      await loadData();
     } catch (err) {
       onMessage?.({ type: "error", text: "Error: " + err.message });
     }
