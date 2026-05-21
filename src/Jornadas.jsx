@@ -87,7 +87,25 @@ export default function Jornadas({ sessionUser, activeConsejo, db, setDb, inputC
     try {
       setLoading(true);
       const res = await api.getJornadas(activeConsejo);
-      setJornadasHistory(res.jornadas || []);
+      const computedJornadas = (res.jornadas || []).map(j => {
+        let dateObj = new Date();
+        if (j.createdAt?.seconds) {
+           dateObj = new Date(j.createdAt.seconds * 1000);
+        } else if (j.createdAt) {
+           dateObj = new Date(j.createdAt);
+        }
+        
+        const total_hab = Array.isArray(j.pagos) ? j.pagos.length : 0;
+        const total_recaudado = Array.isArray(j.pagos) ? j.pagos.reduce((acc, p) => acc + (Number(p.monto) || 0), 0) : 0;
+
+        return {
+           ...j,
+           created_at: dateObj.toISOString(),
+           total_hab,
+           total_recaudado
+        };
+      });
+      setJornadasHistory(computedJornadas);
     } catch (e) {
       console.error(e);
     } finally {
