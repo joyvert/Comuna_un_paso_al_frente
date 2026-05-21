@@ -337,11 +337,11 @@ function App() {
     e.preventDefault();
     setHabitanteMsg({ type: "", text: "" });
     
-    let edad = parseInt(habitanteForm.edad, 10);
-    if (isNaN(edad)) {
-      const habitanteOriginal = editingHabitanteId ? habitantesActuales.find(h => h.id === editingHabitanteId) : null;
-      const edadFallback = habitanteOriginal && habitanteOriginal.edad !== undefined ? habitanteOriginal.edad : "";
-      edad = habitanteForm.nacimiento ? calcAge(habitanteForm.nacimiento) : edadFallback;
+    let edad = habitanteForm.edad;
+    if (edad === "" || edad === null || edad === undefined || isNaN(parseInt(edad, 10))) {
+      edad = habitanteForm.nacimiento ? calcAge(habitanteForm.nacimiento) : "";
+    } else {
+      edad = parseInt(edad, 10);
     }
 
     if (!habitanteForm.nombre || !habitanteForm.apellido) return;
