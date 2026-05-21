@@ -34,6 +34,7 @@ import {
   Vote,
   HeartPulse,
   AlertCircle,
+  CheckCircle2,
   X,
 } from "lucide-react";
 
