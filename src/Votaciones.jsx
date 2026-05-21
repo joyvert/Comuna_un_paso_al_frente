@@ -57,10 +57,23 @@ export default function Votaciones({ sessionUser, inputClass, onMessage, calles 
         const matched = calles.find((c) => c.toLowerCase() === call.toLowerCase());
         return { ...h, calle: matched || call };
       });
+      const computedHistorial = (histRes.historial || []).map(h => {
+        let dateObj = new Date();
+        if (h.createdAt?.seconds) {
+           dateObj = new Date(h.createdAt.seconds * 1000);
+        } else if (h.createdAt) {
+           dateObj = new Date(h.createdAt);
+        }
+        return {
+           ...h,
+           created_at: dateObj.toISOString(),
+        };
+      });
+
       setData({ 
         stats: res.stats || [], 
         habitantes: normalizedHabitantes,
-        historial: histRes.historial || []
+        historial: computedHistorial
       });
     } catch (err) {
       onMessage?.({ type: "error", text: "Error cargando votaciones: " + err.message });
