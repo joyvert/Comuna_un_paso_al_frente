@@ -340,11 +340,11 @@ function App() {
     let edad = parseInt(habitanteForm.edad, 10);
     if (isNaN(edad)) {
       const habitanteOriginal = editingHabitanteId ? habitantesActuales.find(h => h.id === editingHabitanteId) : null;
-      const edadFallback = habitanteOriginal ? (habitanteOriginal.edad || 0) : 0;
+      const edadFallback = habitanteOriginal && habitanteOriginal.edad !== undefined ? habitanteOriginal.edad : "";
       edad = habitanteForm.nacimiento ? calcAge(habitanteForm.nacimiento) : edadFallback;
     }
 
-    if (!habitanteForm.nombre || !habitanteForm.apellido || !habitanteForm.cedula) return;
+    if (!habitanteForm.nombre || !habitanteForm.apellido) return;
     
     try {
       const payload = {
