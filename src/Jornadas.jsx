@@ -7,6 +7,7 @@ export default function Jornadas({ sessionUser, activeConsejo, db, setDb, inputC
   const [jornadasHistory, setJornadasHistory] = useState([]);
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState({ type: "", text: "" });
+  const [deleteConfirm, setDeleteConfirm] = useState(null);
 
   const hoy = new Date().toISOString().split("T")[0];
   const [form, setForm] = useState({ fecha: hoy, servicio: "Gas" });
@@ -129,6 +130,19 @@ export default function Jornadas({ sessionUser, activeConsejo, db, setDb, inputC
       ...p,
       [hId]: { ...p[hId], checked: !p[hId]?.checked }
     }));
+  };
+
+  const confirmDeleteJornada = async () => {
+    const j = deleteConfirm;
+    if (!j) return;
+    setDeleteConfirm(null);
+    try {
+      await api.deleteJornada(j.id);
+      setServerMsg("success", "Jornada eliminada con éxito.");
+      fetchHistory();
+    } catch (e) {
+      setServerMsg("error", e.message || "Error al eliminar");
+    }
   };
 
   const handleChangeField = (hId, field, value) => {
@@ -428,17 +442,7 @@ export default function Jornadas({ sessionUser, activeConsejo, db, setDb, inputC
                 </div>
                 {sessionUser?.isAdmin && (
                   <button 
-                    onClick={async () => {
-                      if (window.confirm("¿Seguro que deseas eliminar esta jornada y todos sus pagos?")) {
-                        try {
-                          await api.deleteJornada(j.id);
-                          setServerMsg("success", "Jornada eliminada.");
-                          fetchHistory();
-                        } catch (e) {
-                          setServerMsg("error", e.message || "Error al eliminar");
-                        }
-                      }
-                    }}
+                    onClick={() => setDeleteConfirm(j)}
                     className="w-full text-center py-2 text-sm text-red-600 font-medium hover:bg-red-100 rounded-lg border border-red-200 flex items-center justify-center gap-2 transition"
                   >
                     <Trash2 size={16} /> Eliminar Jornada
@@ -447,6 +451,35 @@ export default function Jornadas({ sessionUser, activeConsejo, db, setDb, inputC
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirm && (
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-fade-in">
+          <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden p-6 text-center animate-scale-in">
+            <div className="mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
+              <Trash2 className="text-red-600" size={32} />
+            </div>
+            <h3 className="text-xl font-bold text-slate-800 mb-2">¿Eliminar Jornada?</h3>
+            <p className="text-slate-500 mb-8">
+              Estás a punto de eliminar esta jornada de <span className="font-semibold text-slate-700">{deleteConfirm.servicio}</span> y todos sus pagos. Esta acción no se puede deshacer.
+            </p>
+            <div className="flex gap-3 justify-center">
+              <button
+                onClick={() => setDeleteConfirm(null)}
+                className="px-6 py-2.5 text-slate-600 font-medium hover:bg-slate-100 rounded-xl transition"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={confirmDeleteJornada}
+                className="px-6 py-2.5 bg-red-600 text-white font-medium hover:bg-red-700 rounded-xl transition shadow-sm"
+              >
+                Sí, eliminar
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
