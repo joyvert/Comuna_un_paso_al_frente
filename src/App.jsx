@@ -137,6 +137,8 @@ const initialForm = {
   es_jefe_familia: true,
   requiere_ayuda: false,
   condicion_especial: "Ninguna",
+  condicion_especial_otro: "",
+  prioridad_social: "Media",
 };
 
 
@@ -359,6 +361,8 @@ function App() {
         nacimiento: habitanteForm.nacimiento || null,
         requiere_ayuda: habitanteForm.requiere_ayuda || false,
         condicion_especial: habitanteForm.requiere_ayuda ? (habitanteForm.condicion_especial || "Otro") : "Ninguna",
+        condicion_especial_otro: habitanteForm.requiere_ayuda && habitanteForm.condicion_especial === "Otro" ? (habitanteForm.condicion_especial_otro || "") : "",
+        prioridad_social: habitanteForm.requiere_ayuda ? (habitanteForm.prioridad_social || "Media") : "",
       };
 
       if (editingHabitanteId) {
@@ -407,9 +411,12 @@ function App() {
       cedula: h.cedula,
       telefono: h.telefono || "",
       nacimiento: h.nacimiento ? h.nacimiento.slice(0, 10) : "",
+      edad: h.edad || "",
       calle: h.calle || calles[0],
       requiere_ayuda: h.requiere_ayuda || false,
       condicion_especial: h.condicion_especial || "Ninguna",
+      condicion_especial_otro: h.condicion_especial_otro || "",
+      prioridad_social: h.prioridad_social || "Media",
     });
     setEditingHabitanteId(h.id);
     setHabitanteMsg({ type: "", text: "" });
@@ -887,15 +894,39 @@ function App() {
                             {habitanteForm.requiere_ayuda && (
                               <div className="mt-3 pl-8">
                                 <label className="mb-1.5 block text-xs font-semibold text-slate-500 uppercase tracking-wider">Especificar Condición Especial</label>
-                                <select
-                                  className={inputClass}
-                                  value={habitanteForm.condicion_especial || "Otro"}
-                                  onChange={(e) => setHabitanteForm((p) => ({ ...p, condicion_especial: e.target.value }))}
-                                >
-                                  {condicionesEspeciales.filter(c => c !== "Ninguna").map((cond) => (
-                                    <option key={cond} value={cond}>{cond}</option>
-                                  ))}
-                                </select>
+                                <div className="flex gap-3">
+                                  <select
+                                    className={`${inputClass} w-[60%]`}
+                                    value={habitanteForm.condicion_especial || "Otro"}
+                                    onChange={(e) => setHabitanteForm((p) => ({ ...p, condicion_especial: e.target.value }))}
+                                  >
+                                    {condicionesEspeciales.filter(c => c !== "Ninguna").map((cond) => (
+                                      <option key={cond} value={cond}>{cond}</option>
+                                    ))}
+                                  </select>
+                                  <select
+                                    className={`${inputClass} w-[40%] font-medium ${habitanteForm.prioridad_social === 'Alta' ? 'text-red-600 bg-red-50 border-red-200' : habitanteForm.prioridad_social === 'Media' ? 'text-amber-600 bg-amber-50 border-amber-200' : 'text-emerald-600 bg-emerald-50 border-emerald-200'}`}
+                                    value={habitanteForm.prioridad_social || "Media"}
+                                    onChange={(e) => setHabitanteForm((p) => ({ ...p, prioridad_social: e.target.value }))}
+                                  >
+                                    <option value="Alta" className="text-red-600">Prioridad Alta</option>
+                                    <option value="Media" className="text-amber-600">Prioridad Media</option>
+                                    <option value="Baja" className="text-emerald-600">Prioridad Baja</option>
+                                  </select>
+                                </div>
+                                
+                                {habitanteForm.condicion_especial === "Otro" && (
+                                  <div className="mt-3 animate-fade-in">
+                                    <input
+                                      type="text"
+                                      placeholder="Especifique la condición..."
+                                      className={inputClass}
+                                      value={habitanteForm.condicion_especial_otro || ""}
+                                      onChange={(e) => setHabitanteForm((p) => ({ ...p, condicion_especial_otro: e.target.value }))}
+                                      required
+                                    />
+                                  </div>
+                                )}
                               </div>
                             )}
                           </div>
