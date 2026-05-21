@@ -565,31 +565,31 @@ function App() {
                         {moduleTab === "resumen" && (
               <div className="flex flex-col h-full flex-1 space-y-6">
                 <div className="grid gap-6 md:grid-cols-3">
-                  <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex items-center gap-4">
-                    <div className="p-4 bg-blue-50 text-blue-600 rounded-xl">
-                      <Users size={24} />
+                  <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 flex items-center gap-6">
+                    <div className="p-5 bg-blue-50 text-blue-600 rounded-2xl">
+                      <Users size={32} />
                     </div>
                     <div>
-                      <p className="text-sm text-slate-500 font-medium">Total Habitantes</p>
-                      <h4 className="text-2xl font-bold text-slate-800">{stats.totalHabitantes}</h4>
+                      <p className="text-base text-slate-500 font-medium">Total Habitantes</p>
+                      <h4 className="text-4xl font-bold text-slate-800">{stats.totalHabitantes}</h4>
                     </div>
                   </div>
-                  <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex items-center gap-4">
-                    <div className="p-4 bg-indigo-50 text-indigo-600 rounded-xl">
-                      <Home size={24} />
+                  <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 flex items-center gap-6">
+                    <div className="p-5 bg-indigo-50 text-indigo-600 rounded-2xl">
+                      <Home size={32} />
                     </div>
                     <div>
-                      <p className="text-sm text-slate-500 font-medium">Total Familias</p>
-                      <h4 className="text-2xl font-bold text-slate-800">{stats.totalFamilias}</h4>
+                      <p className="text-base text-slate-500 font-medium">Total Familias</p>
+                      <h4 className="text-4xl font-bold text-slate-800">{stats.totalFamilias}</h4>
                     </div>
                   </div>
-                  <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex items-center gap-4">
-                    <div className="p-4 bg-red-50 text-red-600 rounded-xl">
-                      <HeartPulse size={24} />
+                  <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 flex items-center gap-6">
+                    <div className="p-5 bg-red-50 text-red-600 rounded-2xl">
+                      <HeartPulse size={32} />
                     </div>
                     <div>
-                      <p className="text-sm text-slate-500 font-medium">Casos Sociales</p>
-                      <h4 className="text-2xl font-bold text-slate-800">{habitantesActuales.filter(h => h.requiere_ayuda).length}</h4>
+                      <p className="text-base text-slate-500 font-medium">Casos Sociales</p>
+                      <h4 className="text-4xl font-bold text-slate-800">{habitantesActuales.filter(h => h.requiere_ayuda).length}</h4>
                     </div>
                   </div>
                 </div>
@@ -609,7 +609,7 @@ function App() {
                             ].filter(d => d.value > 0)}
                             cx="50%"
                             cy="50%"
-                            outerRadius={80}
+                            outerRadius={140}
                             fill="#8884d8"
                             dataKey="value"
                             label={({name, percent}) => `${name} (${(percent * 100).toFixed(0)}%)`}
