@@ -36,6 +36,7 @@ import {
   AlertCircle,
   CheckCircle2,
   X,
+  Menu,
 } from "lucide-react";
 
 /** Formatea dígitos como monto tipo 1.234,56 (últimos 2 = decimales) */
@@ -157,6 +158,7 @@ function App() {
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [showExcelUpload, setShowExcelUpload] = useState(false);
   const [habitanteMsg, setHabitanteMsg] = useState({ type: "", text: "" });
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [searchFilters, setSearchFilters] = useState({ min: "", max: "", calle: "Todas" });
   const [db, setDb] = useState(() =>
     consejos.reduce((acc, consejo) => {
@@ -482,8 +484,16 @@ function App() {
 
   return (
     <div className="flex h-screen overflow-hidden bg-slate-50 text-slate-900 font-sans">
+      {/* MOBILE OVERLAY */}
+      {sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-slate-900/50 z-40 md:hidden transition-opacity" 
+          onClick={() => setSidebarOpen(false)} 
+        />
+      )}
+
       {/* SIDEBAR */}
-      <aside className="w-72 bg-slate-900 text-slate-300 flex flex-col transition-all duration-300 shadow-2xl z-20 shrink-0 print:hidden">
+      <aside className={`w-72 bg-slate-900 text-slate-300 flex flex-col transition-transform duration-300 shadow-2xl z-50 shrink-0 print:hidden fixed inset-y-0 left-0 md:relative md:translate-x-0 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`}>
         <div className="p-6 border-b border-slate-800">
           <div className="flex items-center gap-3 text-white mb-6">
             <div className="p-2 bg-cyan-500/20 rounded-lg text-cyan-400">
@@ -494,7 +504,7 @@ function App() {
           
           <button 
             type="button"
-            onClick={() => setModuleTab("resumen")}
+            onClick={() => { setModuleTab("resumen"); setSidebarOpen(false); }}
             className={`w-full text-left p-4 rounded-xl border transition-all ${
               moduleTab === "resumen" 
                 ? "bg-cyan-500/20 border-cyan-500/50 shadow-md" 
@@ -521,7 +531,7 @@ function App() {
               <button
                 key={tab.key}
                 type="button"
-                onClick={() => setModuleTab(tab.key)}
+                onClick={() => { setModuleTab(tab.key); setSidebarOpen(false); }}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
                   isActive 
                     ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 shadow-sm" 
@@ -558,12 +568,20 @@ function App() {
       {/* MAIN CONTENT AREA */}
       <main className="flex-1 flex flex-col h-screen overflow-hidden relative print:overflow-visible print:h-auto">
         {/* Top Header / Selector de Consejo solo para Admin */}
-        <header className="bg-white border-b border-slate-200 px-8 py-5 flex items-center justify-between z-10 shadow-sm shrink-0 print:hidden">
-          <div>
-            <h1 className="text-2xl font-bold text-slate-800">
-              {moduleTab === "resumen" ? "Resumen" : (panelTabs.find(t => t.key === moduleTab)?.label || "Panel")}
-            </h1>
-            <p className="text-sm text-slate-500 mt-1">Gestionando información del consejo comunal</p>
+        <header className="bg-white border-b border-slate-200 px-6 md:px-8 py-4 md:py-5 flex items-center justify-between z-10 shadow-sm shrink-0 print:hidden">
+          <div className="flex items-center gap-3">
+            <button 
+              className="md:hidden p-2 -ml-2 text-slate-500 hover:bg-slate-100 rounded-xl transition-colors"
+              onClick={() => setSidebarOpen(true)}
+            >
+              <Menu size={24} />
+            </button>
+            <div>
+              <h1 className="text-xl md:text-2xl font-bold text-slate-800">
+                {moduleTab === "resumen" ? "Resumen" : (panelTabs.find(t => t.key === moduleTab)?.label || "Panel")}
+              </h1>
+              <p className="text-xs md:text-sm text-slate-500 mt-0.5 md:mt-1">Gestionando información del consejo comunal</p>
+            </div>
           </div>
 
           {sessionUser?.isAdmin && (
