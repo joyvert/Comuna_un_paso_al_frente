@@ -18,6 +18,9 @@ export default function CasosSociales({ activeConsejo, db, setDb, sessionUser, i
     return true;
   });
 
+  const casosActivos = casos.filter(c => (c.estado_caso || "Pendiente") !== "Atendido");
+  const casosAtendidos = casos.filter(c => (c.estado_caso || "Pendiente") === "Atendido");
+
   const handleEdit = (c) => {
     setEditingId(c.id);
     setEditForm({
@@ -97,10 +100,10 @@ export default function CasosSociales({ activeConsejo, db, setDb, sessionUser, i
         <hr className="border-black mb-6" />
 
         <div className="space-y-6">
-          {casos.length === 0 ? (
-            <p className="text-center italic">No hay casos sociales registrados.</p>
+          {casosActivos.length === 0 ? (
+            <p className="text-center italic">No hay casos sociales activos registrados.</p>
           ) : (
-            casos.map((c, index) => (
+            casosActivos.map((c, index) => (
               <div key={c.id} className="border border-slate-300 p-4 rounded-lg break-inside-avoid">
                 <div className="flex justify-between items-start mb-2">
                   <h3 className="font-bold text-lg">{index + 1}. {c.nombre} {c.apellido}</h3>
@@ -138,14 +141,14 @@ export default function CasosSociales({ activeConsejo, db, setDb, sessionUser, i
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-sm">
-              {casos.length === 0 ? (
+              {casosActivos.length === 0 ? (
                 <tr>
                   <td colSpan="7" className="p-8 text-center text-slate-500">
-                    No hay casos sociales registrados en tu sector.
+                    No hay casos sociales activos registrados en tu sector.
                   </td>
                 </tr>
               ) : (
-                casos.map(c => {
+                casosActivos.map(c => {
                   const isEditing = editingId === c.id;
                   return (
                     <tr key={c.id} className="hover:bg-slate-50 transition-colors">
@@ -240,6 +243,81 @@ export default function CasosSociales({ activeConsejo, db, setDb, sessionUser, i
           </table>
         </div>
       </div>
+
+      {/* Casos Atendidos / Historial */}
+      {casosAtendidos.length > 0 && (
+        <div className="mt-8 bg-slate-50 rounded-2xl shadow-sm border border-slate-200 overflow-hidden print:hidden">
+          <div className="p-4 border-b border-slate-200 flex items-center justify-between">
+            <h4 className="font-bold text-slate-700">Historial de Casos Atendidos</h4>
+            <span className="bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full">{casosAtendidos.length} resueltos</span>
+          </div>
+          <div className="overflow-x-auto opacity-75 hover:opacity-100 transition-opacity">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-slate-100/50 border-b border-slate-200 text-slate-500 text-sm">
+                  <th className="p-4 font-semibold">Habitante</th>
+                  <th className="p-4 font-semibold">Cédula / Calle</th>
+                  <th className="p-4 font-semibold">Condición</th>
+                  <th className="p-4 font-semibold">Estado</th>
+                  <th className="p-4 font-semibold w-1/3">Observaciones</th>
+                  <th className="p-4 font-semibold">Acción</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 text-sm">
+                {casosAtendidos.map(c => {
+                  const isEditing = editingId === c.id;
+                  return (
+                    <tr key={c.id} className="hover:bg-slate-100 transition-colors">
+                      <td className="p-4 font-medium text-slate-600">{c.nombre} {c.apellido}</td>
+                      <td className="p-4 text-slate-500">{c.cedula}<br/><span className="text-xs">{c.calle}</span></td>
+                      <td className="p-4 text-slate-600 font-semibold">{c.condicion_especial}</td>
+                      <td className="p-4">
+                        {isEditing ? (
+                          <select 
+                            className={inputClass}
+                            value={editForm.estado_caso}
+                            onChange={e => setEditForm({...editForm, estado_caso: e.target.value})}
+                          >
+                            <option value="Pendiente">Pendiente</option>
+                            <option value="En Proceso">En Proceso</option>
+                            <option value="Atendido">Atendido</option>
+                          </select>
+                        ) : (
+                          <span className="px-2 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700">
+                            Atendido
+                          </span>
+                        )}
+                      </td>
+                      <td className="p-4">
+                        {isEditing ? (
+                          <textarea
+                            className={`${inputClass} min-h-[60px] text-xs`}
+                            value={editForm.notas_caso}
+                            onChange={e => setEditForm({...editForm, notas_caso: e.target.value})}
+                            placeholder="Añade notas..."
+                          />
+                        ) : (
+                          <p className="text-xs text-slate-500 whitespace-pre-wrap">{c.notas_caso || "Sin observaciones"}</p>
+                        )}
+                      </td>
+                      <td className="p-4">
+                        {isEditing ? (
+                          <div className="flex gap-2">
+                            <button onClick={() => handleSave(c)} className="p-1.5 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 rounded-lg"><Save size={16} /></button>
+                            <button onClick={() => setEditingId(null)} className="p-1.5 bg-slate-100 text-slate-600 hover:bg-slate-200 rounded-lg"><X size={16} /></button>
+                          </div>
+                        ) : (
+                          <button onClick={() => handleEdit(c)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg"><Pencil size={16} /></button>
+                        )}
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
