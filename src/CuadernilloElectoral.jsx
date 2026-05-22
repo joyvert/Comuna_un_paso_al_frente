@@ -25,6 +25,16 @@ export default function CuadernilloElectoral({ activeConsejo, db }) {
 
   return (
     <div className="space-y-6 print:m-0 print:p-0">
+      <style>
+        {`
+          @media print {
+            @page {
+              size: letter;
+              margin: 1.5cm;
+            }
+          }
+        `}
+      </style>
       <div className="flex justify-between items-center print:hidden">
         <div>
           <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
@@ -53,11 +63,11 @@ export default function CuadernilloElectoral({ activeConsejo, db }) {
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden print:shadow-none print:border-none print:overflow-visible">
-        <div className="overflow-x-auto print:overflow-visible">
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden print:shadow-none print:border-none print:overflow-visible flex flex-col">
+        <div className="overflow-x-auto overflow-y-auto max-h-[60vh] print:max-h-none print:overflow-visible custom-scrollbar">
           <table className="w-full text-left border-collapse print:text-[11px]">
-            <thead>
-              <tr className="bg-slate-50 border-b-2 border-slate-300 text-slate-700 text-sm print:text-[11px]">
+            <thead className="sticky top-0 bg-slate-50 z-10 shadow-[0_1px_2px_rgba(0,0,0,0.05)] print:static print:shadow-none">
+              <tr className="border-b-2 border-slate-300 text-slate-700 text-sm print:text-[11px]">
                 <th className="p-3 border-r border-slate-200 font-bold text-center w-12">#</th>
                 <th className="p-3 border-r border-slate-200 font-bold">Cédula</th>
                 <th className="p-3 border-r border-slate-200 font-bold">Nombres</th>
