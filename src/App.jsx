@@ -735,7 +735,7 @@ function App() {
             )}
 
             {moduleTab === "cuadernillo" && sessionUser?.isAdmin && (
-              <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col flex-1 min-h-0 print:block print:p-0 print:border-none print:shadow-none print:bg-transparent">
+              <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col h-full print:block print:p-0 print:border-none print:shadow-none print:bg-transparent">
                 <CuadernilloElectoral 
                   activeConsejo={activeConsejo}
                   db={db}
