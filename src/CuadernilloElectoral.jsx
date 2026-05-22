@@ -66,6 +66,10 @@ export default function CuadernilloElectoral({ activeConsejo, db }) {
         <div className="overflow-auto flex-1 print:overflow-visible custom-scrollbar print:block">
           <table className="w-full text-left border-collapse print:text-[11px]">
             <thead className="sticky top-0 bg-slate-50 z-10 shadow-[0_1px_2px_rgba(0,0,0,0.05)] print:static print:shadow-none">
+              {/* Spacer row for print to simulate top margin on repeated headers */}
+              <tr className="hidden print:table-row">
+                <th colSpan="7" className="h-10 border-0"></th>
+              </tr>
               <tr className="border-b-2 border-slate-300 text-slate-700 text-sm print:text-[11px]">
                 <th className="p-3 border-r border-slate-200 font-bold text-center w-12">#</th>
                 <th className="p-3 border-r border-slate-200 font-bold">Cédula</th>
