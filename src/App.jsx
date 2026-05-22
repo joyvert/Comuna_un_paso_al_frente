@@ -609,7 +609,7 @@ function App() {
         <div className={`flex-1 p-6 md:p-8 bg-slate-50/50 print:p-0 print:bg-white print:overflow-visible flex flex-col ${
           moduleTab === "cuadernillo" ? "overflow-hidden" : "overflow-y-auto"
         }`}>
-          <div className="w-full flex-1 flex flex-col">
+          <div className={`w-full flex-1 flex flex-col ${moduleTab === "cuadernillo" ? "min-h-0" : ""}`}>
             
                         {moduleTab === "resumen" && (
               <div className="flex flex-col h-full flex-1 space-y-6">
