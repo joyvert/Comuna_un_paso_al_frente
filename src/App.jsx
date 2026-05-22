@@ -5,6 +5,7 @@ import ExcelHabitantesUpload from "./ExcelHabitantesUpload";
 import AuthCard from "./AuthCard";
 import Jornadas from "./Jornadas";
 import Votaciones from "./Votaciones";
+import CuadernilloElectoral from "./CuadernilloElectoral";
 import CasosSociales from "./CasosSociales";
 import FamiliaManagerModal from "./FamiliaManagerModal";
 import { api } from "./api";
@@ -37,6 +38,7 @@ import {
   CheckCircle2,
   X,
   Menu,
+  BookOpen,
 } from "lucide-react";
 
 /** Formatea dígitos como monto tipo 1.234,56 (últimos 2 = decimales) */
@@ -291,7 +293,10 @@ function App() {
     { key: "servicios", label: "Servicios", icon: CheckSquare },
     { key: "casos_sociales", label: "Casos Sociales", icon: HeartPulse },
     { key: "votaciones", label: "Votaciones", icon: Vote },
-    ...(sessionUser?.isAdmin ? [{ key: "admin", label: "Administración", icon: UserCog }] : []),
+    ...(sessionUser?.isAdmin ? [
+      { key: "cuadernillo", label: "Cuadernillo Electoral", icon: BookOpen },
+      { key: "admin", label: "Administración", icon: UserCog }
+    ] : []),
   ];
 
   const habitantesActualesOriginal = db[activeConsejo]?.habitantes || [];
@@ -725,6 +730,15 @@ function App() {
                   inputClass={inputClass}
                   onMessage={setHabitanteMsg}
                   calles={calles}
+                />
+              </div>
+            )}
+
+            {moduleTab === "cuadernillo" && sessionUser?.isAdmin && (
+              <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                <CuadernilloElectoral 
+                  activeConsejo={activeConsejo}
+                  db={db}
                 />
               </div>
             )}
