@@ -571,7 +571,7 @@ function App() {
       </aside>
 
       {/* MAIN CONTENT AREA */}
-      <main className="flex-1 flex flex-col h-screen overflow-hidden relative print:overflow-visible print:h-auto">
+      <main className="flex-1 flex flex-col h-screen overflow-hidden relative print:overflow-visible print:h-auto print:block">
         {/* Top Header / Selector de Consejo solo para Admin */}
         <header className="bg-white border-b border-slate-200 px-6 md:px-8 py-4 md:py-5 flex items-center justify-between z-10 shadow-sm shrink-0 print:hidden">
           <div className="flex items-center gap-3">
@@ -606,10 +606,10 @@ function App() {
         </header>
 
         {/* Scrollable Content */}
-        <div className={`flex-1 p-6 md:p-8 bg-slate-50/50 print:p-0 print:bg-white print:overflow-visible flex flex-col ${
+        <div className={`flex-1 p-6 md:p-8 bg-slate-50/50 print:p-0 print:bg-white print:overflow-visible flex flex-col print:block ${
           moduleTab === "cuadernillo" ? "overflow-hidden" : "overflow-y-auto"
         }`}>
-          <div className={`w-full flex-1 flex flex-col ${moduleTab === "cuadernillo" ? "min-h-0" : ""}`}>
+          <div className={`w-full flex-1 flex flex-col print:block ${moduleTab === "cuadernillo" ? "min-h-0" : ""}`}>
             
                         {moduleTab === "resumen" && (
               <div className="flex flex-col h-full flex-1 space-y-6">

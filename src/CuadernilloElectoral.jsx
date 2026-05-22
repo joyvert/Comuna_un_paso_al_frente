@@ -24,13 +24,13 @@ export default function CuadernilloElectoral({ activeConsejo, db }) {
   };
 
   return (
-    <div className="flex flex-col flex-1 min-h-0 print:block print:m-0 print:p-0">
+    <div className="flex flex-col flex-1 min-h-0 print:block print:m-0 print:p-8">
       <style>
         {`
           @media print {
             @page {
               size: letter;
-              margin: 1.5cm;
+              margin: 0;
             }
           }
         `}
@@ -59,12 +59,11 @@ export default function CuadernilloElectoral({ activeConsejo, db }) {
           <p className="font-bold text-sm uppercase">Consejo Comunal: {activeConsejo}</p>
           <br />
           <h1 className="text-xl font-bold underline mb-2">CUADERNILLO ELECTORAL</h1>
-          <p className="text-xs text-slate-500">Impreso el: {new Date().toLocaleDateString()}</p>
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden print:shadow-none print:border-none print:overflow-visible flex flex-col flex-1 min-h-0">
-        <div className="overflow-auto flex-1 print:overflow-visible custom-scrollbar">
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden print:shadow-none print:border-none print:overflow-visible flex flex-col flex-1 min-h-0 print:block">
+        <div className="overflow-auto flex-1 print:overflow-visible custom-scrollbar print:block">
           <table className="w-full text-left border-collapse print:text-[11px]">
             <thead className="sticky top-0 bg-slate-50 z-10 shadow-[0_1px_2px_rgba(0,0,0,0.05)] print:static print:shadow-none">
               <tr className="border-b-2 border-slate-300 text-slate-700 text-sm print:text-[11px]">
@@ -86,7 +85,7 @@ export default function CuadernilloElectoral({ activeConsejo, db }) {
                 </tr>
               ) : (
                 votantes.map((v, index) => (
-                  <tr key={v.id} className="hover:bg-slate-50">
+                  <tr key={v.id} className="hover:bg-slate-50 print:break-inside-avoid">
                     <td className="p-3 border-r border-slate-200 text-center font-medium text-slate-500">{index + 1}</td>
                     <td className="p-3 border-r border-slate-200 font-medium text-slate-700">{v.cedula}</td>
                     <td className="p-3 border-r border-slate-200 uppercase text-slate-700">{v.nombre}</td>
