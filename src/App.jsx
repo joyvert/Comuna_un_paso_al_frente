@@ -488,7 +488,7 @@ function App() {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-slate-50 text-slate-900 font-sans">
+    <div className="flex h-screen overflow-hidden print:h-auto print:overflow-visible print:block bg-slate-50 text-slate-900 font-sans">
       {/* MOBILE OVERLAY */}
       {sidebarOpen && (
         <div 

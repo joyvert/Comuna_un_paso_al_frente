@@ -29,8 +29,8 @@ export default function CuadernilloElectoral({ activeConsejo, db }) {
         {`
           @media print {
             @page {
-              size: letter;
-              margin: 0;
+              size: auto;
+              margin: 0mm !important;
             }
           }
         `}
