@@ -24,7 +24,7 @@ export default function CuadernilloElectoral({ activeConsejo, db }) {
   };
 
   return (
-    <div className="flex flex-col h-full print:block print:m-0 print:p-0">
+    <div className="flex flex-col flex-1 min-h-0 print:block print:m-0 print:p-0">
       <style>
         {`
           @media print {
@@ -63,8 +63,8 @@ export default function CuadernilloElectoral({ activeConsejo, db }) {
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden print:shadow-none print:border-none print:overflow-visible">
-        <div className="overflow-auto max-h-[calc(100vh-280px)] print:max-h-none print:overflow-visible custom-scrollbar">
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden print:shadow-none print:border-none print:overflow-visible flex flex-col flex-1 min-h-0">
+        <div className="overflow-auto flex-1 print:overflow-visible custom-scrollbar">
           <table className="w-full text-left border-collapse print:text-[11px]">
             <thead className="sticky top-0 bg-slate-50 z-10 shadow-[0_1px_2px_rgba(0,0,0,0.05)] print:static print:shadow-none">
               <tr className="border-b-2 border-slate-300 text-slate-700 text-sm print:text-[11px]">

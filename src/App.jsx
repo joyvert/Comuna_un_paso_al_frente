@@ -606,7 +606,9 @@ function App() {
         </header>
 
         {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto p-6 md:p-8 bg-slate-50/50 print:p-0 print:bg-white print:overflow-visible flex flex-col">
+        <div className={`flex-1 p-6 md:p-8 bg-slate-50/50 print:p-0 print:bg-white print:overflow-visible flex flex-col ${
+          moduleTab === "cuadernillo" ? "overflow-hidden" : "overflow-y-auto"
+        }`}>
           <div className="w-full flex-1 flex flex-col">
             
                         {moduleTab === "resumen" && (
@@ -735,7 +737,7 @@ function App() {
             )}
 
             {moduleTab === "cuadernillo" && sessionUser?.isAdmin && (
-              <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col h-full print:block print:p-0 print:border-none print:shadow-none print:bg-transparent">
+              <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col flex-1 min-h-0 print:block print:p-0 print:border-none print:shadow-none print:bg-transparent">
                 <CuadernilloElectoral 
                   activeConsejo={activeConsejo}
                   db={db}
