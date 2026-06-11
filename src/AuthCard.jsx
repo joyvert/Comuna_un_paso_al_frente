@@ -570,8 +570,8 @@ export default function AuthCard({ onAuthSuccess }) {
       <div className="absolute bottom-1/4 right-1/4 translate-x-1/2 translate-y-1/2 w-96 h-96 bg-[#06b6d4]/10 rounded-full blur-[120px] pointer-events-none"></div>
       
       <div className="relative w-full max-w-2xl z-10 animate-fade-in-up">
-        <div className="rounded-3xl bg-white/90 backdrop-blur-xl p-6 md:p-10 shadow-2xl border border-white/40">
-          <div className="mb-5 flex items-center justify-between gap-4">
+        <div className="rounded-3xl bg-white/90 backdrop-blur-xl p-4 sm:p-6 md:p-10 shadow-2xl border border-white/40">
+          <div className="mb-4 sm:mb-5 flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-900/10 text-cyan-600 shadow-sm">
                 <ShieldCheck className="h-5 w-5" aria-hidden />
@@ -598,15 +598,15 @@ export default function AuthCard({ onAuthSuccess }) {
               style={{ height: panelHeight || undefined }}
             >
               {mode === "recover" ? (
-                <div ref={recoveryPanelRef} className="p-6 md:p-10">
-                  <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                <div ref={recoveryPanelRef} className="p-4 sm:p-6 md:p-10">
+                  <div className="mb-4 sm:mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                     <div className="flex items-center gap-3">
                       <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-amber-50 text-amber-800 shadow-sm">
                         <KeyRound className="h-5 w-5" aria-hidden />
                       </div>
                       <div>
-                        <h2 className="text-2xl font-bold text-cyan-600">Recuperar contraseña</h2>
-                        <p className="mt-1 text-sm text-slate-600">
+                        <h2 className="text-xl sm:text-2xl font-bold text-cyan-600">Recuperar contraseña</h2>
+                        <p className="mt-0.5 sm:mt-1 text-xs sm:text-sm text-slate-600">
                           {recoverStep === 1
                             ? "Indica tu correo o cédula para cargar tus preguntas de seguridad."
                             : "Responde como al registrarte y elige una contraseña nueva."}
@@ -737,22 +737,22 @@ export default function AuthCard({ onAuthSuccess }) {
               {/* Login */}
               <div
                 ref={loginPanelRef}
-                className={`p-6 md:p-10 ${allowRegisterUi ? "w-1/2" : "w-full"}`}
+                className={`p-4 sm:p-6 md:p-10 ${allowRegisterUi ? "w-1/2" : "w-full"}`}
               >
                 <form
-                  className="space-y-5"
+                  className="space-y-4 sm:space-y-5"
                   autoComplete="off"
                   onSubmit={handleLogin}
                 >
-                  <div className="flex items-start justify-between gap-4">
+                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
                     <div>
-                      <h2 className="text-2xl font-bold text-cyan-600">Inicio de Sesión</h2>
-                      <p className="mt-1 text-sm text-slate-600">Accede con tu correo o cédula.</p>
+                      <h2 className="text-xl sm:text-2xl font-bold text-cyan-600">Inicio de Sesión</h2>
+                      <p className="mt-0.5 sm:mt-1 text-xs sm:text-sm text-slate-600">Accede con tu correo o cédula.</p>
                     </div>
                     {allowRegisterUi ? (
                       <button
                         type="button"
-                        className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-100"
+                        className="rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-1.5 sm:px-3 sm:py-2 text-xs sm:text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-100 self-start sm:self-auto"
                         onClick={() => {
                           setGlobalMessage({ type: "info", text: "" });
                           setMode("register");
@@ -761,7 +761,7 @@ export default function AuthCard({ onAuthSuccess }) {
                         Registrarte
                       </button>
                     ) : (
-                      <p className="max-w-[220px] text-right text-xs text-slate-500">
+                      <p className="max-w-[220px] text-left sm:text-right text-[10px] sm:text-xs text-slate-500 leading-normal">
                         {regStatus.loading
                           ? "Comprobando registro…"
                           : regStatus.error
@@ -811,7 +811,7 @@ export default function AuthCard({ onAuthSuccess }) {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="mt-2 w-full rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300"
+                    className="mt-2 w-full rounded-xl bg-slate-900 px-4 py-2 sm:py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300"
                   >
                     {loading ? "Validando…" : "Iniciar Sesión"}
                   </button>
@@ -833,16 +833,16 @@ export default function AuthCard({ onAuthSuccess }) {
 
               {/* Registro: primer usuario en BD o ALLOW_PUBLIC_REGISTER en API */}
               {allowRegisterUi ? (
-              <div ref={registerPanelRef} className="w-1/2 p-6 md:p-10">
+              <div ref={registerPanelRef} className="w-1/2 p-4 sm:p-6 md:p-10">
                 <form
-                  className="space-y-5"
+                  className="space-y-4 sm:space-y-5"
                   autoComplete="off"
                   onSubmit={handleRegister}
                 >
-                  <div className="flex items-start justify-between gap-4">
+                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
                     <div>
-                      <h2 className="text-2xl font-bold text-cyan-600">Registro</h2>
-                      <p className="mt-1 text-sm text-slate-600">
+                      <h2 className="text-xl sm:text-2xl font-bold text-cyan-600">Registro</h2>
+                      <p className="mt-0.5 sm:mt-1 text-xs sm:text-sm text-slate-600">
                         {regStatus.firstUserPending
                           ? "Eres el primer usuario: esta cuenta será administrador del sistema."
                           : "Crea una cuenta de vocero (solo un administrador autorizado puede abrir el registro público)."}
@@ -850,7 +850,7 @@ export default function AuthCard({ onAuthSuccess }) {
                     </div>
                     <button
                       type="button"
-                      className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-100"
+                      className="rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-1.5 sm:px-3 sm:py-2 text-xs sm:text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-100 self-start sm:self-auto shrink-0"
                       onClick={() => setMode("login")}
                     >
                       Ya tengo cuenta
