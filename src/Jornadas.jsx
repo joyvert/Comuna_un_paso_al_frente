@@ -216,7 +216,7 @@ export default function Jornadas({ sessionUser, activeConsejo, db, setDb, inputC
           onClick={() => setTab("nueva")}
           className={`px-4 py-2 font-medium ${tab === "nueva" ? "border-b-2 border-blue-600 text-blue-600" : "text-slate-500 hover:text-slate-700"}`}
         >
-          Nueva Entrga (Masiva)
+          Nueva Entrega (Masiva)
         </button>
         <button
           onClick={() => setTab("historial")}
@@ -234,9 +234,9 @@ export default function Jornadas({ sessionUser, activeConsejo, db, setDb, inputC
 
       {tab === "nueva" && (
         <div className="space-y-6">
-          <div className="grid gap-4 md:grid-cols-2 rounded-xl bg-slate-100 p-4">
+          <div className="grid grid-cols-2 gap-3 md:gap-4 rounded-xl bg-slate-100 p-3.5 md:p-4">
             <div>
-              <label className="mb-1 block text-sm font-medium text-slate-700">Servicio</label>
+              <label className="mb-1 block text-xs md:text-sm font-medium text-slate-700">Servicio</label>
               <select
                 className={inputClass}
                 value={form.servicio}
@@ -247,7 +247,7 @@ export default function Jornadas({ sessionUser, activeConsejo, db, setDb, inputC
               </select>
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-slate-700">Fecha de Entrega</label>
+              <label className="mb-1 block text-xs md:text-sm font-medium text-slate-700">Fecha de Entrega</label>
               <input
                 type="date"
                 className={inputClass}
