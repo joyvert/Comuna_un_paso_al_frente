@@ -1,8 +1,6 @@
 {
-  "totalRows": 678,
+  "totalRows": 523,
   "callesDetectadas": {
-    "CALLE VIA LA ACEQUIA": 148,
-    "CALLE PRINCIPAL LA ESPERAZA": 144,
-    "CALLE LA FE INTEGRAL": 379
+    "Desconocida": 148
   }
 }

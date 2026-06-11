@@ -151,6 +151,17 @@ function App() {
   const [habitanteSearch, setHabitanteSearch] = useState("");
   const [familyManagerJefe, setFamilyManagerJefe] = useState(null);
 
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
   const [slide, setSlide] = useState(0);
   const [activeConsejo, setActiveConsejo] = useState(getInitialActiveConsejo);
   const [moduleTab, setModuleTab] = useState("resumen");
@@ -617,41 +628,41 @@ function App() {
           <div className={`w-full flex-1 flex flex-col print:block ${moduleTab === "cuadernillo" ? "min-h-0" : ""}`}>
             
             {moduleTab === "resumen" && (
-              <div className="flex flex-col h-full flex-1 space-y-6 animate-fade-in-up">
-                <div className="grid gap-6 md:grid-cols-3">
-                  <div className="bg-white rounded-2xl border border-slate-100 p-8 flex items-center gap-6 shadow-sm hover-lift transition-all duration-300">
-                    <div className="p-5 bg-indigo-50/80 text-[#3b82f6] rounded-2xl shadow-inner">
-                      <Users size={32} />
+              <div className="flex flex-col h-full flex-1 space-y-4 md:space-y-6 animate-fade-in-up">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-6">
+                  <div className="bg-white rounded-xl md:rounded-2xl border border-slate-100 p-3.5 md:p-8 flex items-center gap-3 md:gap-6 shadow-sm hover-lift transition-all duration-300">
+                    <div className="p-2.5 md:p-5 bg-indigo-50/80 text-[#3b82f6] rounded-xl md:rounded-2xl shadow-inner shrink-0">
+                      <Users size={isMobile ? 20 : 32} />
                     </div>
-                    <div>
-                      <p className="text-sm text-slate-400 font-semibold uppercase tracking-wider">Total Habitantes</p>
-                      <h4 className="text-4xl font-extrabold text-slate-800 font-heading mt-1">{stats.totalHabitantes}</h4>
-                    </div>
-                  </div>
-                  <div className="bg-white rounded-2xl border border-slate-100 p-8 flex items-center gap-6 shadow-sm hover-lift transition-all duration-300">
-                    <div className="p-5 bg-purple-50/80 text-purple-600 rounded-2xl shadow-inner">
-                      <Home size={32} />
-                    </div>
-                    <div>
-                      <p className="text-sm text-slate-400 font-semibold uppercase tracking-wider">Total Familias</p>
-                      <h4 className="text-4xl font-extrabold text-slate-800 font-heading mt-1">{stats.totalFamilias}</h4>
+                    <div className="min-w-0">
+                      <p className="text-[10px] md:text-sm text-slate-400 font-semibold uppercase tracking-wider truncate">Total Habitantes</p>
+                      <h4 className="text-xl md:text-4xl font-extrabold text-slate-800 font-heading mt-0.5 md:mt-1">{stats.totalHabitantes}</h4>
                     </div>
                   </div>
-                  <div className="bg-white rounded-2xl border border-slate-100 p-8 flex items-center gap-6 shadow-sm hover-lift transition-all duration-300">
-                    <div className="p-5 bg-rose-50/80 text-rose-600 rounded-2xl shadow-inner">
-                      <HeartPulse size={32} />
+                  <div className="bg-white rounded-xl md:rounded-2xl border border-slate-100 p-3.5 md:p-8 flex items-center gap-3 md:gap-6 shadow-sm hover-lift transition-all duration-300">
+                    <div className="p-2.5 md:p-5 bg-purple-50/80 text-purple-600 rounded-xl md:rounded-2xl shadow-inner shrink-0">
+                      <Home size={isMobile ? 20 : 32} />
                     </div>
-                    <div>
-                      <p className="text-sm text-slate-400 font-semibold uppercase tracking-wider">Casos Sociales</p>
-                      <h4 className="text-4xl font-extrabold text-slate-800 font-heading mt-1">{habitantesActuales.filter(h => h.requiere_ayuda).length}</h4>
+                    <div className="min-w-0">
+                      <p className="text-[10px] md:text-sm text-slate-400 font-semibold uppercase tracking-wider truncate">Total Familias</p>
+                      <h4 className="text-xl md:text-4xl font-extrabold text-slate-800 font-heading mt-0.5 md:mt-1">{stats.totalFamilias}</h4>
+                    </div>
+                  </div>
+                  <div className="bg-white rounded-xl md:rounded-2xl border border-slate-100 p-3.5 md:p-8 flex items-center gap-3 md:gap-6 shadow-sm hover-lift transition-all duration-300 col-span-1">
+                    <div className="p-2.5 md:p-5 bg-rose-50/80 text-rose-600 rounded-xl md:rounded-2xl shadow-inner shrink-0">
+                      <HeartPulse size={isMobile ? 20 : 32} />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[10px] md:text-sm text-slate-400 font-semibold uppercase tracking-wider truncate">Casos Sociales</p>
+                      <h4 className="text-xl md:text-4xl font-extrabold text-slate-800 font-heading mt-0.5 md:mt-1">{habitantesActuales.filter(h => h.requiere_ayuda).length}</h4>
                     </div>
                   </div>
                 </div>
                 
-                <div className="grid gap-6 md:grid-cols-2 flex-1">
-                  <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex flex-col hover-lift transition-all">
-                    <h3 className="text-lg font-bold text-slate-800 mb-4 font-heading shrink-0">Distribución por Edades</h3>
-                    <div className="flex-1 w-full min-h-[380px]">
+                <div className="grid gap-4 md:gap-6 md:grid-cols-2 flex-1">
+                  <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 md:p-6 flex flex-col hover-lift transition-all">
+                    <h3 className="text-sm md:text-lg font-bold text-slate-800 mb-2 md:mb-4 font-heading shrink-0">Distribución por Edades</h3>
+                    <div className="flex-1 w-full min-h-[220px] md:min-h-[380px]">
                       <ResponsiveContainer>
                         <PieChart>
                           <Pie
@@ -663,10 +674,11 @@ function App() {
                             ].filter(d => d.value > 0)}
                             cx="50%"
                             cy="50%"
-                            outerRadius={125}
+                            outerRadius={isMobile ? 65 : 125}
                             fill="#8884d8"
                             dataKey="value"
-                            label={({name, percent}) => `${name} (${(percent * 100).toFixed(0)}%)`}
+                            label={isMobile ? ({percent}) => `${(percent * 100).toFixed(0)}%` : ({name, percent}) => `${name} (${(percent * 100).toFixed(0)}%)`}
+                            labelLine={!isMobile}
                           >
                             <Cell fill="#06b6d4" />
                             <Cell fill="#8b5cf6" />
@@ -674,14 +686,15 @@ function App() {
                             <Cell fill="#ec4899" />
                           </Pie>
                           <RechartsTooltip />
+                          {isMobile && <Legend verticalAlign="bottom" height={36} iconSize={8} wrapperStyle={{ fontSize: '10px' }} />}
                         </PieChart>
                       </ResponsiveContainer>
                     </div>
                   </div>
 
-                  <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex flex-col hover-lift transition-all">
-                    <h3 className="text-lg font-bold text-slate-800 mb-4 font-heading shrink-0">Habitantes por Calle</h3>
-                    <div className="flex-1 w-full min-h-[380px]">
+                  <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 md:p-6 flex flex-col hover-lift transition-all">
+                    <h3 className="text-sm md:text-lg font-bold text-slate-800 mb-2 md:mb-4 font-heading shrink-0">Habitantes por Calle</h3>
+                    <div className="flex-1 w-full min-h-[220px] md:min-h-[380px]">
                       <ResponsiveContainer>
                         <BarChart data={
                           calles.map(calle => ({
@@ -689,8 +702,13 @@ function App() {
                             Habitantes: habitantesActuales.filter(h => h.calle === calle).length
                           })).filter(d => d.Habitantes > 0)
                         }>
-                          <XAxis dataKey="name" fontSize={9} tick={{fill: '#64748b'}} />
-                          <YAxis fontSize={11} tick={{fill: '#64748b'}} />
+                          <XAxis 
+                            dataKey="name" 
+                            fontSize={isMobile ? 8 : 9} 
+                            tick={{fill: '#64748b'}} 
+                            tickFormatter={isMobile ? (value) => value.replace("Calle principal ", "C. Pral. ").replace("Calle ", "C. ").slice(0, 15) : undefined}
+                          />
+                          <YAxis fontSize={isMobile ? 9 : 11} tick={{fill: '#64748b'}} />
                           <RechartsTooltip cursor={{fill: '#f8fafc'}} />
                           <Bar dataKey="Habitantes" radius={[6, 6, 0, 0]}>
                             {calles.map((entry, index) => {
