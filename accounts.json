@@ -1,0 +1,41 @@
+{"users": [
+{
+  "localId": "6CkqqfY4xaSTsOvYxufeLKVTZM62",
+  "email": "124@comunapasofrente.com",
+  "emailVerified": false,
+  "passwordHash": "NNG8xJyXFc+YrB3RlcOVLGTFJOH/n4PelfVGG5SLRDarCUQcpiH2SP/K5dFUs3nsgZDPRIdfe3+YgAhkuKYd2g==",
+  "salt": "SscIIOJthhy1RA==",
+  "lastSignedInAt": "1777943775286",
+  "createdAt": "1777943775286",
+  "providerUserInfo": []
+},
+{
+  "localId": "Nc6zEJD2GeSISLhAaSVFXgZwI2e2",
+  "email": "123@comunapasofrente.com",
+  "emailVerified": false,
+  "passwordHash": "cBgSq+tzwReDBZz0fjjj/1Odoo1HkP9xPjVlafKCrjveCdv+fV3p5481TpgXJkJeN+XusdoWRT236T8BMFsyHw==",
+  "salt": "2xVGibp3XzQUWQ==",
+  "lastSignedInAt": "1777943317988",
+  "createdAt": "1777943317988",
+  "providerUserInfo": []
+},
+{
+  "localId": "dSCQZsE0vPaB2clAbWXP4g0Ur2b2",
+  "email": "123@comunapasofrente.local",
+  "emailVerified": false,
+  "passwordHash": "4TTuj3zbi0oZ5Rwn+wti+eR7huw4+fkFoIQDImjmMochF45T5VaV3fBTQxtURCtHhr/LSkqH5O/YNgj1ajrhZw==",
+  "salt": "jtnc8EDAiyMfmw==",
+  "lastSignedInAt": "1777943073875",
+  "createdAt": "1777943073875",
+  "providerUserInfo": []
+},
+{
+  "localId": "mZf4bP9xytcDgbS9Slgz8kwvxNQ2",
+  "email": "joyvert.albero23@gmail.com",
+  "emailVerified": false,
+  "passwordHash": "DhN5opnkCa8JOrKZBBtDfrwQNyTMvt7tb4TSjT+NdEwasnyUJ9H2a069yb+Wfb46gcoZKK/ZFNkqXLuRjnIAJA==",
+  "salt": "kWK6W8K+tvk6mg==",
+  "lastSignedInAt": "1778111602781",
+  "createdAt": "1778025391240",
+  "providerUserInfo": []
+}]}

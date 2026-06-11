@@ -61,28 +61,25 @@ async function hashPasswordWithSalt(password, salt) {
 function passwordStrength(password) {
   const pw = String(password || "");
   const rules = [
-    { label: "Mínimo 10 caracteres", ok: pw.length >= 10 },
-    { label: "Mayúscula", ok: /[A-Z]/.test(pw) },
-    { label: "Minúscula", ok: /[a-z]/.test(pw) },
+    { label: "Mínimo 8 caracteres", ok: pw.length >= 8 },
     { label: "Número", ok: /\d/.test(pw) },
-    { label: "Símbolo", ok: /[^A-Za-z0-9]/.test(pw) },
   ];
   const score = rules.reduce((acc, r) => acc + (r.ok ? 1 : 0), 0);
   const percent = (score / rules.length) * 100;
   const strength =
-    score <= 1 ? "Débil" : score <= 3 ? "Media" : score <= 4 ? "Buena" : "Fuerte";
+    score === 0 ? "Débil" : score === 1 ? "Media" : "Fuerte";
 
   return { rules, score, percent, strength };
 }
 
 function TextField({ icon: Icon, label, placeholder, value, onChange, type = "text" }) {
   return (
-    <label className="block group">
-      <span className="mb-1.5 block text-sm font-medium text-slate-700 transition-colors group-focus-within:text-indigo-600">{label}</span>
-      <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white/50 px-4 py-3 shadow-sm backdrop-blur-sm transition-all focus-within:border-indigo-500 focus-within:bg-white focus-within:ring-4 focus-within:ring-indigo-500/10 hover:border-indigo-300">
-        {Icon ? <Icon className="h-5 w-5 text-slate-400 transition-colors group-focus-within:text-indigo-500" aria-hidden /> : null}
+    <label className="block">
+      <span className="mb-1 block text-xs font-medium text-slate-600">{label}</span>
+      <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2 shadow-sm">
+        {Icon ? <Icon className="h-4 w-4 text-cyan-600" aria-hidden /> : null}
         <input
-          className="w-full bg-transparent outline-none text-base text-slate-800 placeholder:text-slate-400"
+          className="w-full bg-transparent outline-none text-sm text-slate-800 placeholder:text-slate-400"
           placeholder={placeholder}
           value={value}
           type={type}
@@ -95,12 +92,12 @@ function TextField({ icon: Icon, label, placeholder, value, onChange, type = "te
 
 function PasswordField({ icon: Icon, label, placeholder, value, onChange, visible, onToggle }) {
   return (
-    <label className="block group">
-      <span className="mb-1.5 block text-sm font-medium text-slate-700 transition-colors group-focus-within:text-indigo-600">{label}</span>
-      <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white/50 px-4 py-3 shadow-sm backdrop-blur-sm transition-all focus-within:border-indigo-500 focus-within:bg-white focus-within:ring-4 focus-within:ring-indigo-500/10 hover:border-indigo-300">
-        {Icon ? <Icon className="h-5 w-5 text-slate-400 transition-colors group-focus-within:text-indigo-500" aria-hidden /> : null}
+    <label className="block">
+      <span className="mb-1 block text-xs font-medium text-slate-600">{label}</span>
+      <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2 shadow-sm">
+        {Icon ? <Icon className="h-4 w-4 text-cyan-600" aria-hidden /> : null}
         <input
-          className="w-full bg-transparent outline-none text-base text-slate-800 placeholder:text-slate-400"
+          className="w-full bg-transparent outline-none text-sm text-slate-800 placeholder:text-slate-400"
           placeholder={placeholder}
           value={value}
           type={visible ? "text" : "password"}
@@ -108,11 +105,11 @@ function PasswordField({ icon: Icon, label, placeholder, value, onChange, visibl
         />
         <button
           type="button"
-          className="rounded-xl p-1.5 text-slate-400 transition-all hover:bg-slate-100 hover:text-indigo-600 active:scale-95"
+          className="rounded-lg p-1 text-slate-500 hover:bg-slate-100 hover:text-slate-700"
           onClick={onToggle}
           aria-label={visible ? "Ocultar contraseña" : "Mostrar contraseña"}
         >
-          {visible ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+          {visible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
         </button>
       </div>
     </label>
@@ -121,10 +118,10 @@ function PasswordField({ icon: Icon, label, placeholder, value, onChange, visibl
 
 function SelectField({ label, value, onChange, options }) {
   return (
-    <label className="block group">
-      <span className="mb-1.5 block text-sm font-medium text-slate-700 transition-colors group-focus-within:text-indigo-600">{label}</span>
+    <label className="block">
+      <span className="mb-1 block text-xs font-medium text-slate-600">{label}</span>
       <select
-        className="w-full rounded-2xl border border-slate-200 bg-white/50 px-4 py-3 text-base text-slate-800 shadow-sm backdrop-blur-sm outline-none transition-all focus-within:border-indigo-500 focus-within:bg-white focus-within:ring-4 focus-within:ring-indigo-500/10 hover:border-indigo-300"
+        className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2 shadow-sm text-sm text-slate-800 outline-none focus:ring-2 focus:ring-[#143c6e]/15"
         value={value}
         onChange={onChange}
       >
@@ -231,6 +228,7 @@ export default function AuthCard({ onAuthSuccess }) {
   }, [recoveryMeta, recoverA1, recoverA2, recoverPw, recoverPw2]);
 
   function resetRecoveryView() {
+    setGlobalMessage({ type: "info", text: "" });
     setRecoverStep(1);
     setRecoverUserId("");
     setRecoveryMeta(null);
@@ -309,9 +307,17 @@ export default function AuthCard({ onAuthSuccess }) {
       let accessToken = null;
 
       try {
-        const login = await api.login({ userId, passwordHash: hash });
-        sessionUserId = login?.user?.user_id || userId;
-        userData = login?.user;
+        let login;
+        try {
+          login = await api.login({ userId, passwordHash: hash });
+        } catch (e) {
+          // Fallback para contraseñas reseteadas por Firebase Console o Email (Texto plano)
+          login = await api.login({ userId, passwordHash: loginForm.password });
+        }
+        
+        sessionUserId = login?.userId || login?.user?.user_id || userId;
+        // api.login ahora devuelve datos en la raíz, no en .user
+        userData = login?.user || login;
         accessToken = login?.accessToken ?? null;
       } catch (err) {
         if (isRateLimitOrLockout(err)) {
@@ -328,7 +334,7 @@ export default function AuthCard({ onAuthSuccess }) {
       if (!accessToken || !userData) {
         setGlobalMessage({
           type: "error",
-          text: "El servidor no devolvió sesión. Revisa JWT_SECRET en la API y vuelve a intentar.",
+          text: "Error de sesión. Intenta de nuevo o contacta al administrador.",
         });
         return;
       }
@@ -345,9 +351,9 @@ export default function AuthCard({ onAuthSuccess }) {
         apellido: userData.apellido,
         vocero: userData.vocero,
         calle: userData.calle,
-        isAdmin: Boolean(userData.is_admin),
+        isAdmin: Boolean(userData.isAdmin || userData.is_admin),
       };
-      localStorage.setItem(STORAGE_SESSION_KEY, JSON.stringify(session));
+      sessionStorage.setItem(STORAGE_SESSION_KEY, JSON.stringify(session));
       setGlobalMessage({ type: "success", text: "¡Inicio de sesión exitoso!" });
       onAuthSuccess?.();
     } catch (err) {
@@ -558,16 +564,16 @@ export default function AuthCard({ onAuthSuccess }) {
   const isSuccess = globalMessage.type === "success";
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center bg-[url('https://images.unsplash.com/photo-1517048676732-d65bc937f952?auto=format&fit=crop&w=1800&q=80')] bg-cover bg-center px-4 before:absolute before:inset-0 before:bg-gradient-to-br before:from-indigo-900/80 before:to-slate-900/90 before:backdrop-blur-[2px]">
-      <div className="relative z-10 w-full max-w-2xl">
-        <div className="rounded-3xl glass-card p-6 md:p-10">
+    <div className="min-h-screen flex items-center justify-center bg-slate-900 px-4 relative overflow-hidden">
+      <div className="relative w-full max-w-2xl">
+        <div className="rounded-3xl bg-white/95 backdrop-blur-xl p-6 md:p-10 shadow-2xl border border-white/20">
           <div className="mb-5 flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-indigo-600/10 text-indigo-900 shadow-sm">
+              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-900/10 text-cyan-600 shadow-sm">
                 <ShieldCheck className="h-5 w-5" aria-hidden />
               </div>
               <div>
-                <p className="text-sm font-semibold text-slate-800">Comuna Pro</p>
+                <p className="text-sm font-semibold text-slate-800">Comuna un paso al frente</p>
                 <p className="text-xs text-slate-500">Acceso seguro para el equipo</p>
               </div>
             </div>
@@ -577,10 +583,10 @@ export default function AuthCard({ onAuthSuccess }) {
             </div>
           </div>
 
-          <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white [perspective:1200px]">
+          <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-slate-50/80 [perspective:1200px]">
             {/* Overlay para sensación de flip */}
             <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300">
-              <div className="absolute -right-20 -top-20 h-40 w-40 rounded-full bg-indigo-600/10 blur-2xl" />
+              <div className="absolute -right-20 -top-20 h-40 w-40 rounded-full bg-slate-900/10 blur-2xl" />
             </div>
 
             <div
@@ -595,7 +601,7 @@ export default function AuthCard({ onAuthSuccess }) {
                         <KeyRound className="h-5 w-5" aria-hidden />
                       </div>
                       <div>
-                        <h2 className="text-2xl font-bold text-indigo-900">Recuperar contraseña</h2>
+                        <h2 className="text-2xl font-bold text-cyan-600">Recuperar contraseña</h2>
                         <p className="mt-1 text-sm text-slate-600">
                           {recoverStep === 1
                             ? "Indica tu correo o cédula para cargar tus preguntas de seguridad."
@@ -603,17 +609,17 @@ export default function AuthCard({ onAuthSuccess }) {
                         </p>
                       </div>
                     </div>
-                    <button
-                      type="button"
-                      className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-100"
-                      onClick={() => {
-                        resetRecoveryView();
-                        setMode("login");
-                      }}
-                    >
-                      <ArrowLeft className="h-4 w-4" aria-hidden />
-                      Volver al login
-                    </button>
+                      <button
+                        type="button"
+                        className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-100"
+                        onClick={() => {
+                          setGlobalMessage({ type: "info", text: "" });
+                          setMode("login");
+                        }}
+                      >
+                        <ArrowLeft className="h-4 w-4" aria-hidden />
+                        Volver al login
+                      </button>
                   </div>
 
                   {globalMessage.text ? (
@@ -641,7 +647,7 @@ export default function AuthCard({ onAuthSuccess }) {
                       <button
                         type="submit"
                         disabled={loading}
-                        className="w-full rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-slate-300"
+                        className="w-full rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300"
                       >
                         {loading ? "Buscando…" : "Continuar"}
                       </button>
@@ -663,7 +669,7 @@ export default function AuthCard({ onAuthSuccess }) {
                       <PasswordField
                         icon={Lock}
                         label="Nueva contraseña"
-                        placeholder="Mínimo 10 caracteres, mayúscula, número y símbolo"
+                        placeholder="Mínimo 8 caracteres y 1 número"
                         value={recoverPw}
                         onChange={(e) => setRecoverPw(e.target.value)}
                         visible={showRecoverPw}
@@ -682,11 +688,11 @@ export default function AuthCard({ onAuthSuccess }) {
                       <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 shadow-sm">
                         <div className="flex items-center justify-between gap-3">
                           <p className="text-xs font-semibold text-slate-600">Fuerza de contraseña</p>
-                          <p className="text-xs font-semibold text-indigo-900">{strengthRecover.strength}</p>
+                          <p className="text-xs font-semibold text-cyan-600">{strengthRecover.strength}</p>
                         </div>
                         <div className="mt-2 h-2.5 rounded-full bg-slate-200">
                           <div
-                            className="h-2.5 rounded-full bg-indigo-600"
+                            className="h-2.5 rounded-full bg-slate-900"
                             style={{ width: `${strengthRecover.percent}%` }}
                             aria-hidden
                           />
@@ -710,7 +716,7 @@ export default function AuthCard({ onAuthSuccess }) {
                       <button
                         type="submit"
                         disabled={loading || !canSubmitRecovery}
-                        className="w-full rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-slate-300"
+                        className="w-full rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300"
                       >
                         {loading ? "Guardando…" : "Restablecer contraseña"}
                       </button>
@@ -736,14 +742,17 @@ export default function AuthCard({ onAuthSuccess }) {
                 >
                   <div className="flex items-start justify-between gap-4">
                     <div>
-                      <h2 className="text-2xl font-bold text-indigo-900">Inicio de Sesión</h2>
+                      <h2 className="text-2xl font-bold text-cyan-600">Inicio de Sesión</h2>
                       <p className="mt-1 text-sm text-slate-600">Accede con tu correo o cédula.</p>
                     </div>
                     {allowRegisterUi ? (
                       <button
                         type="button"
                         className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-100"
-                        onClick={() => setMode("register")}
+                        onClick={() => {
+                          setGlobalMessage({ type: "info", text: "" });
+                          setMode("register");
+                        }}
                       >
                         Registrarte
                       </button>
@@ -778,14 +787,17 @@ export default function AuthCard({ onAuthSuccess }) {
                   />
 
                   <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
-                    <button type="button" className="text-indigo-900 font-medium hover:underline" onClick={openRecovery}>
+                    <button type="button" className="text-cyan-600 font-medium hover:underline" onClick={openRecovery}>
                       Olvidé mi contraseña
                     </button>
                     {allowRegisterUi ? (
                       <button
                         type="button"
-                        className="text-indigo-900 font-medium hover:underline"
-                        onClick={() => setMode("register")}
+                        className="text-cyan-600 font-medium hover:underline"
+                        onClick={() => {
+                          setGlobalMessage({ type: "info", text: "" });
+                          setMode("register");
+                        }}
                       >
                         ¿No tienes cuenta? Regístrate aquí
                       </button>
@@ -795,7 +807,7 @@ export default function AuthCard({ onAuthSuccess }) {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="mt-2 w-full rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-slate-300"
+                    className="mt-2 w-full rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300"
                   >
                     {loading ? "Validando…" : "Iniciar Sesión"}
                   </button>
@@ -825,7 +837,7 @@ export default function AuthCard({ onAuthSuccess }) {
                 >
                   <div className="flex items-start justify-between gap-4">
                     <div>
-                      <h2 className="text-2xl font-bold text-indigo-900">Registro</h2>
+                      <h2 className="text-2xl font-bold text-cyan-600">Registro</h2>
                       <p className="mt-1 text-sm text-slate-600">
                         {regStatus.firstUserPending
                           ? "Eres el primer usuario: esta cuenta será administrador del sistema."
@@ -903,11 +915,11 @@ export default function AuthCard({ onAuthSuccess }) {
                   <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 shadow-sm">
                     <div className="flex items-center justify-between gap-3">
                       <p className="text-xs font-semibold text-slate-600">Fuerza de contraseña</p>
-                      <p className="text-xs font-semibold text-indigo-900">{strength.strength}</p>
+                      <p className="text-xs font-semibold text-cyan-600">{strength.strength}</p>
                     </div>
                     <div className="mt-2 h-2.5 rounded-full bg-slate-200">
                       <div
-                        className="h-2.5 rounded-full bg-indigo-600"
+                        className="h-2.5 rounded-full bg-slate-900"
                         style={{ width: `${strength.percent}%` }}
                         aria-hidden
                       />
@@ -934,8 +946,8 @@ export default function AuthCard({ onAuthSuccess }) {
                   </div>
 
                   {/* Seguridad */}
-                  <div className="rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-sm">
-                    <h3 className="text-sm font-semibold text-indigo-900">
+                  <div className="rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-4 shadow-sm">
+                    <h3 className="text-sm font-semibold text-cyan-600">
                       Preguntas de Seguridad (para recuperación de cuenta)
                     </h3>
                     <div className="mt-3 grid gap-4 sm:grid-cols-2">
@@ -973,7 +985,7 @@ export default function AuthCard({ onAuthSuccess }) {
                   <button
                     type="submit"
                     disabled={loading || !canRegister}
-                    className="w-full rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-slate-300"
+                    className="w-full rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300"
                   >
                     {loading ? "Creando cuenta…" : "Crear Cuenta"}
                   </button>
@@ -981,7 +993,7 @@ export default function AuthCard({ onAuthSuccess }) {
                   <div className="flex justify-center text-xs">
                     <button
                       type="button"
-                      className="text-indigo-900 font-medium hover:underline"
+                      className="text-cyan-600 font-medium hover:underline"
                       onClick={() => setMode("login")}
                     >
                       Ya tengo cuenta, Iniciar Sesión

@@ -1,12 +1,23 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, Fragment } from "react";
+import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, Legend, ResponsiveContainer } from "recharts";
 import AdminVoceros from "./AdminVoceros";
+import ExcelHabitantesUpload from "./ExcelHabitantesUpload";
 import AuthCard from "./AuthCard";
+import Jornadas from "./Jornadas";
+import Votaciones from "./Votaciones";
+import CuadernilloElectoral from "./CuadernilloElectoral";
+import CasosSociales from "./CasosSociales";
+import FamiliaManagerModal from "./FamiliaManagerModal";
 import { api } from "./api";
 import AOS from "aos";
 import "aos/dist/aos.css";
 import {
   Building2,
   ChartColumnBig,
+  CheckSquare,
+  ChevronDown,
+  ChevronRight,
+  Home,
   CircleDollarSign,
   Droplets,
   LayoutDashboard,
@@ -21,6 +32,13 @@ import {
   UserCog,
   Users,
   UtensilsCrossed,
+  Vote,
+  HeartPulse,
+  AlertCircle,
+  CheckCircle2,
+  X,
+  Menu,
+  BookOpen,
 } from "lucide-react";
 
 /** Formatea dígitos como monto tipo 1.234,56 (últimos 2 = decimales) */
@@ -51,11 +69,25 @@ const consejos = [
   "José Gregorio Hernández",
 ];
 
-const calles = ["El Plan", "Los Portugueses", "Los Peñas", "La Acequia"];
+const calles = ["Calle principal La Esperanza", "Calle la fe integral", "Los Portugueses", "Los Peñas", "La Acequia"];
+
+export const condicionesEspeciales = [
+  "Ninguna",
+  "Embarazo",
+  "Discapacidad Motora",
+  "Discapacidad Visual",
+  "Discapacidad Auditiva",
+  "Discapacidad Cognitiva",
+  "Enfermedad Crónica",
+  "Enfermedad Terminal",
+  "Adulto Mayor Solo",
+  "Desnutrición",
+  "Otro"
+];
 
 function getInitialActiveConsejo() {
   try {
-    const s = JSON.parse(localStorage.getItem("comuna_session_v1") || "{}");
+    const s = JSON.parse(sessionStorage.getItem("comuna_session_v1") || "{}");
     if (!s.isAdmin && s.vocero && consejos.includes(s.vocero)) return s.vocero;
   } catch {
     /* noop */
@@ -102,31 +134,34 @@ const initialForm = {
   cedula: "",
   telefono: "",
   nacimiento: "",
+  edad: "",
   calle: calles[0],
+  jefe_familia_id: null,
+  es_jefe_familia: true,
+  requiere_ayuda: false,
+  condicion_especial: "Ninguna",
+  condicion_especial_otro: "",
+  prioridad_caso: "Media",
 };
 
-const initialServicios = {
-  gas: {
-    query: "",
-    habitante: null,
-    monto: "",
-    roscaCantidad: 0,
-    presionCantidad: 0,
-    verificado: false,
-  },
-  proteinas: { query: "", habitante: null, monto: "", combos: 1, verificado: false },
-};
+
 
 function App() {
+  // Búsqueda de habitantes locales
+  const [habitanteSearch, setHabitanteSearch] = useState("");
+  const [familyManagerJefe, setFamilyManagerJefe] = useState(null);
+
   const [slide, setSlide] = useState(0);
   const [activeConsejo, setActiveConsejo] = useState(getInitialActiveConsejo);
-  const [moduleTab, setModuleTab] = useState("habitantes");
-  const [serviceTab, setServiceTab] = useState("gas");
+  const [moduleTab, setModuleTab] = useState("resumen");
   const [habitanteForm, setHabitanteForm] = useState(initialForm);
   const [editingHabitanteId, setEditingHabitanteId] = useState(null);
+  const [showFormModal, setShowFormModal] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [showExcelUpload, setShowExcelUpload] = useState(false);
   const [habitanteMsg, setHabitanteMsg] = useState({ type: "", text: "" });
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [searchFilters, setSearchFilters] = useState({ min: "", max: "", calle: "Todas" });
-  const [serviciosForm, setServiciosForm] = useState(initialServicios);
   const [db, setDb] = useState(() =>
     consejos.reduce((acc, consejo) => {
       acc[consejo] = { habitantes: [], pagos: [] };
@@ -137,7 +172,7 @@ function App() {
   // Estado y lógica de autenticación (persistencia local para demo SPA)
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
     try {
-      return Boolean(localStorage.getItem("comuna_session_v1"));
+      return Boolean(sessionStorage.getItem("comuna_session_v1"));
     } catch {
       return false;
     }
@@ -151,7 +186,7 @@ function App() {
   const handleAuthSuccess = () => {
     setDb(emptyDb());
     try {
-      const s = JSON.parse(localStorage.getItem("comuna_session_v1") || "{}");
+      const s = JSON.parse(sessionStorage.getItem("comuna_session_v1") || "{}");
       if (!s.isAdmin && s.vocero && consejos.includes(s.vocero)) {
         setActiveConsejo(s.vocero);
       }
@@ -163,7 +198,7 @@ function App() {
 
   const handleLogout = () => {
     try {
-      localStorage.removeItem("comuna_session_v1");
+      sessionStorage.removeItem("comuna_session_v1");
     } catch {
       /* noop */
     }
@@ -175,7 +210,7 @@ function App() {
   const sessionUser = useMemo(() => {
     if (!isAuthenticated) return null;
     try {
-      const s = JSON.parse(localStorage.getItem("comuna_session_v1") || "{}");
+      const s = JSON.parse(sessionStorage.getItem("comuna_session_v1") || "{}");
       return s.nombre && s.apellido
         ? {
             nombre: s.nombre,
@@ -197,10 +232,18 @@ function App() {
       api.getHabitantes(consejoNombre),
       api.getPagos(consejoNombre),
     ]);
+
+    // Normalizar capitalización de las calles para evitar fallos de renderizado o filtros
+    const normalizedHabitantes = (hab.habitantes || []).map((h) => {
+      const call = (h.calle || "").trim();
+      const matched = calles.find((c) => c.toLowerCase() === call.toLowerCase());
+      return { ...h, calle: matched || call };
+    });
+
     setDb((prev) => ({
       ...prev,
       [consejoNombre]: {
-        habitantes: hab.habitantes || [],
+        habitantes: normalizedHabitantes,
         pagos: (pag.pagos || []).map((p) => ({
           ...p,
           monto: Number(p.monto),
@@ -247,24 +290,56 @@ function App() {
   const panelTabs = [
     { key: "habitantes", label: "Habitantes", icon: Users },
     { key: "buscar", label: "Buscar Habitantes", icon: Search },
-    { key: "servicios", label: "Servicios", icon: ShieldCheck },
-    ...(sessionUser?.isAdmin ? [{ key: "admin", label: "Administración", icon: UserCog }] : []),
+    { key: "servicios", label: "Servicios", icon: CheckSquare },
+    { key: "casos_sociales", label: "Casos Sociales", icon: HeartPulse },
+    { key: "votaciones", label: "Votaciones", icon: Vote },
+    ...(sessionUser?.isAdmin ? [
+      { key: "cuadernillo", label: "Cuadernillo Electoral", icon: BookOpen },
+      { key: "admin", label: "Administración", icon: UserCog }
+    ] : []),
   ];
 
-  const habitantesActuales = db[activeConsejo].habitantes;
-  const pagosGas = [...db[activeConsejo].pagos].filter((p) => p.servicio === "Gas").reverse().slice(0, 8);
-  const pagosProteinas = [...db[activeConsejo].pagos].filter((p) => p.servicio === "Proteínas").reverse().slice(0, 8);
+  const habitantesActualesOriginal = db[activeConsejo]?.habitantes || [];
+  const habitantesActuales = useMemo(() => {
+    const jefes = [];
+    const solteros = [];
+    const depsMap = {};
+
+    habitantesActualesOriginal.forEach(h => {
+      if (h.es_jefe_familia) jefes.push(h);
+      else if (h.jefe_familia_id) {
+        if (!depsMap[h.jefe_familia_id]) depsMap[h.jefe_familia_id] = [];
+        depsMap[h.jefe_familia_id].push(h);
+      } else solteros.push(h);
+    });
+
+    const ordenados = [];
+    jefes.forEach(j => {
+      ordenados.push(j);
+      if (depsMap[j.id]) {
+        ordenados.push(...depsMap[j.id]);
+        delete depsMap[j.id];
+      }
+    });
+
+    ordenados.push(...solteros);
+    Object.values(depsMap).forEach(arr => ordenados.push(...arr));
+
+    return ordenados;
+  }, [habitantesActualesOriginal]);
+
+
 
   const stats = useMemo(() => {
     if (sessionUser?.isAdmin) {
       const totalHabitantes = Object.values(db).reduce((a, c) => a + c.habitantes.length, 0);
-      const totalPagos = Object.values(db).reduce((a, c) => a + c.pagos.length, 0);
-      return { totalHabitantes, totalPagos, voceroScope: false };
+      const totalFamilias = Object.values(db).reduce((a, c) => a + c.habitantes.filter(h => h.es_jefe_familia).length, 0);
+      return { totalHabitantes, totalFamilias, voceroScope: false };
     }
     const slice = db[activeConsejo] || { habitantes: [], pagos: [] };
     return {
       totalHabitantes: slice.habitantes.length,
-      totalPagos: slice.pagos.length,
+      totalFamilias: slice.habitantes.filter(h => h.es_jefe_familia).length,
       voceroScope: true,
     };
   }, [db, sessionUser?.isAdmin, activeConsejo]);
@@ -272,49 +347,63 @@ function App() {
   const handleRegistrar = async (e) => {
     e.preventDefault();
     setHabitanteMsg({ type: "", text: "" });
-    const edad = calcAge(habitanteForm.nacimiento);
-    if (!edad || !habitanteForm.nombre || !habitanteForm.apellido || !habitanteForm.cedula) return;
+    
+    let edad = habitanteForm.edad;
+    if (edad === "" || edad === null || edad === undefined || isNaN(parseInt(edad, 10))) {
+      edad = habitanteForm.nacimiento ? calcAge(habitanteForm.nacimiento) : "";
+    } else {
+      edad = parseInt(edad, 10);
+    }
+
+    if (!habitanteForm.nombre || !habitanteForm.apellido) return;
+    
     try {
+      const payload = {
+        nombre: habitanteForm.nombre,
+        apellido: habitanteForm.apellido,
+        cedula: habitanteForm.cedula,
+        telefono: habitanteForm.telefono,
+        edad,
+        calle: habitanteCalleEfectiva,
+        nacimiento: habitanteForm.nacimiento || null,
+        requiere_ayuda: habitanteForm.requiere_ayuda || false,
+        condicion_especial: habitanteForm.requiere_ayuda ? (habitanteForm.condicion_especial || "Otro") : "Ninguna",
+        condicion_especial_otro: habitanteForm.requiere_ayuda && habitanteForm.condicion_especial === "Otro" ? (habitanteForm.condicion_especial_otro || "") : "",
+        prioridad_caso: habitanteForm.requiere_ayuda ? (habitanteForm.prioridad_caso || "Media") : "",
+      };
+
       if (editingHabitanteId) {
-        const resp = await api.updateHabitante(editingHabitanteId, {
-          nombre: habitanteForm.nombre,
-          apellido: habitanteForm.apellido,
-          cedula: habitanteForm.cedula,
-          telefono: habitanteForm.telefono,
-          edad,
-          calle: habitanteCalleEfectiva,
-          nacimiento: habitanteForm.nacimiento || null,
-        });
-        const actualizado = resp.habitante;
+        await api.updateHabitante(editingHabitanteId, payload);
         setDb((prev) => ({
           ...prev,
           [activeConsejo]: {
             ...prev[activeConsejo],
             habitantes: prev[activeConsejo].habitantes.map((h) =>
-              h.id === actualizado.id ? actualizado : h,
+              h.id === editingHabitanteId ? { ...h, ...payload } : h,
             ),
           },
         }));
         setHabitanteForm(initialForm);
         setEditingHabitanteId(null);
+        setShowFormModal(false);
         setHabitanteMsg({ type: "success", text: "Datos actualizados correctamente." });
       } else {
         const resp = await api.createHabitante({
           consejoNombre: activeConsejo,
-          nombre: habitanteForm.nombre,
-          apellido: habitanteForm.apellido,
-          cedula: habitanteForm.cedula,
-          telefono: habitanteForm.telefono,
-          edad,
-          calle: habitanteCalleEfectiva,
-          nacimiento: habitanteForm.nacimiento || null,
+          ...payload
         });
-        const nuevo = resp.habitante;
+        const nuevo = { 
+          id: resp.id, 
+          ...payload, 
+          es_jefe_familia: false, 
+          jefe_familia_id: null 
+        };
         setDb((prev) => ({
           ...prev,
           [activeConsejo]: { ...prev[activeConsejo], habitantes: [nuevo, ...prev[activeConsejo].habitantes] },
         }));
         setHabitanteForm(initialForm);
+        setShowFormModal(false);
         setHabitanteMsg({ type: "success", text: "Habitante registrado correctamente." });
       }
     } catch (err) {
@@ -329,15 +418,27 @@ function App() {
       cedula: h.cedula,
       telefono: h.telefono || "",
       nacimiento: h.nacimiento ? h.nacimiento.slice(0, 10) : "",
+      edad: h.edad || "",
       calle: h.calle || calles[0],
+      requiere_ayuda: h.requiere_ayuda || false,
+      condicion_especial: h.condicion_especial || "Ninguna",
+      condicion_especial_otro: h.condicion_especial_otro || "",
+      prioridad_caso: h.prioridad_caso || "Media",
     });
     setEditingHabitanteId(h.id);
     setHabitanteMsg({ type: "", text: "" });
+    setShowFormModal(true);
     setModuleTab("habitantes");
   };
 
   const handleDeleteHabitante = async (h) => {
-    if (!window.confirm(`¿Eliminar a ${h.nombre} ${h.apellido} (${h.cedula})?`)) return;
+    setDeleteConfirm(h);
+  };
+
+  const confirmDeleteHabitante = async () => {
+    const h = deleteConfirm;
+    if (!h) return;
+    setDeleteConfirm(null);
     setHabitanteMsg({ type: "", text: "" });
     try {
       await api.deleteHabitante(h.id);
@@ -348,11 +449,7 @@ function App() {
           habitantes: prev[activeConsejo].habitantes.filter((x) => x.id !== h.id),
         },
       }));
-      setHabitanteMsg({ type: "success", text: "Habitante eliminado." });
-      if (editingHabitanteId === h.id) {
-        setHabitanteForm(initialForm);
-        setEditingHabitanteId(null);
-      }
+      setHabitanteMsg({ type: "success", text: "Habitante eliminado con éxito." });
     } catch (err) {
       setHabitanteMsg({ type: "error", text: err?.message || "Error al eliminar." });
     }
@@ -361,566 +458,773 @@ function App() {
   const habitantesFiltrados = useMemo(() => {
     return habitantesActuales.filter((h) => {
       const byStreet = searchFilters.calle === "Todas" || h.calle === searchFilters.calle;
-      const min = searchFilters.min === "" ? -Infinity : Number(searchFilters.min);
-      const max = searchFilters.max === "" ? Infinity : Number(searchFilters.max);
-      const byAge = Number(h.edad) >= min && Number(h.edad) <= max;
+      
+      const isMinActive = searchFilters.min !== "";
+      const isMaxActive = searchFilters.max !== "";
+      
+      let byAge = true;
+      if (isMinActive || isMaxActive) {
+        const min = isMinActive ? Number(searchFilters.min) : -Infinity;
+        const max = isMaxActive ? Number(searchFilters.max) : Infinity;
+        
+        if (h.edad === "" || h.edad === null || h.edad === undefined) {
+           byAge = false; // No tiene edad, no cumple el filtro numérico
+        } else {
+           byAge = Number(h.edad) >= min && Number(h.edad) <= max;
+        }
+      }
+      
       return byStreet && byAge;
     });
   }, [habitantesActuales, searchFilters]);
 
-  const buscarHabitanteServicio = (kind) => {
-    const query = serviciosForm[kind].query.trim().toLowerCase();
-    const habitante = habitantesActuales.find(
-      (h) => h.nombre.toLowerCase().includes(query) || h.cedula.toLowerCase().includes(query),
-    );
-    setServiciosForm((prev) => ({ ...prev, [kind]: { ...prev[kind], habitante: habitante || null } }));
-  };
 
-  const registrarPago = async (kind) => {
-    const data = serviciosForm[kind];
-    if (!data.habitante || !data.verificado) return;
-    const montoNum = parseMontoFromDigits(data.monto);
-    if (montoNum <= 0) return;
-    if (kind === "gas" && Number(data.roscaCantidad) + Number(data.presionCantidad) <= 0) return;
-    const detalle =
-      kind === "gas"
-        ? `Rosca x${Number(data.roscaCantidad) || 0}, Presión x${Number(data.presionCantidad) || 0}`
-        : `Combos x${data.combos}`;
-
-    const servicio = kind === "gas" ? "Gas" : "Proteínas";
-    const resp = await api.createPago({
-      consejoNombre: activeConsejo,
-      habitanteId: data.habitante.id,
-      servicio,
-      detalle,
-      monto: montoNum,
-    });
-    const pago = {
-      ...resp.pago,
-      servicio,
-      habitante: `${data.habitante.nombre} ${data.habitante.apellido}`,
-      cedula: data.habitante.cedula,
-      monto: Number(resp.pago.monto),
-      fecha: new Date(resp.pago.fecha).toLocaleString(),
-    };
-
-    setDb((prev) => ({
-      ...prev,
-      [activeConsejo]: {
-        ...prev[activeConsejo],
-        pagos: [...prev[activeConsejo].pagos, pago],
-      },
-    }));
-    setServiciosForm((prev) => ({
-      ...prev,
-      [kind]: { ...initialServicios[kind], query: data.query },
-    }));
-  };
 
   const navItem = "rounded-xl px-4 py-2 text-sm font-medium text-slate-100 transition hover:bg-white/15";
-  const inputClass =
-    "w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-slate-800 outline-none transition focus:border-blue-700";
+  const inputClass = "w-full rounded-xl border border-slate-300 bg-slate-50/50 px-4 py-2.5 text-sm text-slate-800 outline-none transition-all focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20";
 
   if (!isAuthenticated) {
     return <AuthCard onAuthSuccess={handleAuthSuccess} />;
   }
 
   return (
-    <div className="min-h-screen w-full bg-slate-50 text-slate-900">
-      <header className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-indigo-600/90 backdrop-blur">
-        <nav className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 md:px-8">
-          <div className="flex items-center gap-2 text-white">
-            <LayoutDashboard size={20} />
-            <span className="font-semibold">Comuna Pro</span>
-        </div>
-          <div className="flex items-center gap-2">
-            <div className="hidden gap-2 md:flex">
-              <a href="#inicio" className={navItem}>
-                Inicio
-              </a>
-              <a href="#info" className={navItem}>
-                Misión y Visión
-              </a>
-              <a href="#dashboard" className={navItem}>
-                Dashboard
-              </a>
-        </div>
-        <button
-              type="button"
-              onClick={handleLogout}
-              className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-sm font-medium text-white transition hover:bg-white/20"
-        >
-              <LogOut className="h-4 w-4" aria-hidden />
-              Salir
-        </button>
-          </div>
-        </nav>
-      </header>
+    <div className="flex h-screen overflow-hidden print:h-auto print:overflow-visible print:block bg-slate-50 text-slate-900 font-sans">
+      {/* MOBILE OVERLAY */}
+      {sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-slate-900/50 z-40 md:hidden transition-opacity" 
+          onClick={() => setSidebarOpen(false)} 
+        />
+      )}
 
-      <section id="inicio" className="relative h-screen pt-16">
-        {heroSlides.map((item, idx) => (
-          <div
-            key={item.title}
-            className={`absolute inset-0 bg-cover bg-center transition-opacity duration-1000 ${
-              idx === slide ? "opacity-100" : "opacity-0"
+      {/* SIDEBAR */}
+      <aside className={`w-72 bg-slate-900 text-slate-300 flex flex-col transition-transform duration-300 shadow-2xl z-50 shrink-0 print:hidden fixed inset-y-0 left-0 md:relative md:translate-x-0 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`}>
+        <div className="p-6 border-b border-slate-800">
+          <div className="flex items-center gap-3 text-white mb-6">
+            <div className="p-2 bg-cyan-500/20 rounded-lg text-cyan-400">
+              <LayoutDashboard size={24} />
+            </div>
+            <span className="font-bold text-lg leading-tight tracking-wide">Comuna Un Paso<br/>Al Frente</span>
+          </div>
+          
+          <button 
+            type="button"
+            onClick={() => { setModuleTab("resumen"); setSidebarOpen(false); }}
+            className={`w-full text-left p-4 rounded-xl border transition-all ${
+              moduleTab === "resumen" 
+                ? "bg-cyan-500/20 border-cyan-500/50 shadow-md" 
+                : "bg-slate-800/50 border-slate-700/50 hover:bg-slate-800"
             }`}
-            style={{
-              backgroundImage: `linear-gradient(rgba(15, 40, 71, 0.7), rgba(15, 40, 71, 0.65)), url(${item.image})`,
-            }}
-          />
-        ))}
-        <div className="relative z-10 mx-auto flex h-full max-w-7xl items-center px-6">
-          <div className="max-w-2xl text-white">
-            <h1 className="text-4xl font-bold leading-tight md:text-6xl">{heroSlides[slide].title}</h1>
-            <p className="mt-5 text-base text-slate-100 md:text-xl">{heroSlides[slide].text}</p>
-          </div>
-        </div>
-      </section>
-
-      <section id="info" className="mx-auto max-w-7xl px-4 py-20 md:px-8">
-        <div className="grid gap-6 md:grid-cols-3">
-          <article data-aos="fade-up" className="rounded-3xl glass-card p-6 md:p-8 shadow-xl transition-transform hover:-translate-y-1 hover:shadow-2xl">
-            <h3 className="mb-2 text-xl font-semibold text-indigo-900">Misión</h3>
-            <p>Fortalecer la organización comunitaria con una gestión digital transparente y eficiente.</p>
-          </article>
-          <article
-            data-aos="fade-up"
-            data-aos-delay="120"
-            className="rounded-3xl glass-card p-6 md:p-8 shadow-xl transition-transform hover:-translate-y-1 hover:shadow-2xl"
           >
-            <h3 className="mb-2 text-xl font-semibold text-indigo-900">Visión</h3>
-            <p>Consolidar una comuna moderna, conectada y orientada a resultados medibles.</p>
-          </article>
-          <article
-            data-aos="fade-up"
-            data-aos-delay="240"
-            className="rounded-3xl glass-card p-6 md:p-8 shadow-xl transition-transform hover:-translate-y-1 hover:shadow-2xl"
-          >
-            <h3 className="mb-2 text-xl font-semibold text-indigo-900">Estadísticas</h3>
-            {stats.voceroScope && (
-              <p className="mb-2 text-xs text-slate-500">Solo tu calle en el consejo actual.</p>
+            <p className="text-xs text-slate-400 mb-1">Panel de Control</p>
+            <p className="font-semibold text-white truncate">{activeConsejo}</p>
+            {!sessionUser?.isAdmin && sessionUser?.calle && (
+              <p className="text-sm text-cyan-400 mt-1 flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
+                Calle {sessionUser.calle}
+              </p>
             )}
-            <div className="space-y-2 text-sm">
-              <p className="flex items-center gap-2">
-                <Users size={16} /> Habitantes registrados: <strong>{stats.totalHabitantes}</strong>
-              </p>
-              <p className="flex items-center gap-2">
-                <CircleDollarSign size={16} /> Pagos registrados: <strong>{stats.totalPagos}</strong>
-              </p>
-              <p className="flex items-center gap-2">
-                <Building2 size={16} /> Consejos activos:{" "}
-                <strong>{stats.voceroScope ? 1 : consejos.length}</strong>
-              </p>
-            </div>
-          </article>
+          </button>
         </div>
-      </section>
 
-      <main id="dashboard" className="mx-auto max-w-7xl space-y-6 px-4 pb-16 md:px-8">
-        <section className="rounded-2xl bg-indigo-600 p-5 text-white shadow-lg">
-          <h2 className="mb-4 flex items-center gap-2 text-xl font-semibold">
-            <ChartColumnBig size={20} />{" "}
-            {sessionUser?.isAdmin ? "Selector de Consejos" : "Tu consejo comunal"}
-          </h2>
-          {sessionUser?.isAdmin ? (
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-              {consejos.map((consejo) => (
-                <button
-                  key={consejo}
-                  type="button"
-                  onClick={() => setActiveConsejo(consejo)}
-                  className={`rounded-xl border px-3 py-3 text-left text-sm transition ${
-                    activeConsejo === consejo ? "border-white bg-white/20" : "border-white/20 bg-white/5 hover:bg-white/10"
-                  }`}
-                >
-                  {consejo}
-                </button>
-              ))}
-            </div>
-          ) : (
-            <p className="rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm">
-              Gestionas únicamente el consejo <strong>{sessionUser?.vocero || activeConsejo}</strong> y la calle{" "}
-              <strong>{sessionUser?.calle}</strong>. Los datos mostrados son solo de habitantes de tu calle.
-            </p>
-          )}
-        </section>
+        <nav className="flex-1 overflow-y-auto p-4 space-y-2">
+          {panelTabs.map((tab) => {
+            if (tab.key === "admin" && !sessionUser?.isAdmin) return null;
+            const TabIcon = tab.icon;
+            const isActive = moduleTab === tab.key;
+            return (
+              <button
+                key={tab.key}
+                type="button"
+                onClick={() => { setModuleTab(tab.key); setSidebarOpen(false); }}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
+                  isActive 
+                    ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 shadow-sm" 
+                    : "text-slate-400 hover:bg-slate-800 hover:text-slate-200"
+                }`}
+              >
+                <TabIcon size={18} className={isActive ? "text-cyan-400" : "text-slate-500"} /> 
+                {tab.label}
+              </button>
+            );
+          })}
+        </nav>
 
-        <section className="rounded-3xl glass-card p-6 md:p-10 shadow-2xl">
-          <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
-            <h3 className="flex items-center gap-2 text-lg font-semibold text-indigo-900">
-              <LayoutDashboard size={18} /> Panel de Control — {activeConsejo}
-              {!sessionUser?.isAdmin && sessionUser?.calle && (
-                <span className="text-sm font-normal text-slate-500">(calle {sessionUser.calle})</span>
-              )}
-            </h3>
-            {sessionUser && (
-              <div className="rounded-xl bg-slate-50 px-4 py-2 text-right text-sm text-slate-700">
-                <span className="font-medium">Vocero:</span>{" "}
+        <div className="p-4 border-t border-slate-800">
+          {sessionUser && (
+            <div className="mb-4 px-2">
+              <p className="text-xs font-medium text-slate-500 mb-1">Conectado como</p>
+              <p className="text-sm text-white truncate">
                 {[sessionUser.nombre, sessionUser.apellido].filter(Boolean).join(" ")}
-                {sessionUser.vocero && ` / ${sessionUser.vocero}`}
-                {sessionUser.calle && ` · Calle: ${sessionUser.calle}`}
+              </p>
+              {sessionUser.isAdmin && <span className="inline-block mt-1 px-2 py-0.5 bg-indigo-500/20 text-indigo-400 text-[10px] uppercase tracking-wider rounded font-bold">Admin</span>}
+            </div>
+          )}
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors border border-transparent hover:border-red-500/20"
+          >
+            <LogOut size={16} /> Salir del sistema
+          </button>
+        </div>
+      </aside>
+
+      {/* MAIN CONTENT AREA */}
+      <main className="flex-1 flex flex-col h-screen overflow-hidden relative print:overflow-visible print:h-auto print:block">
+        {/* Top Header / Selector de Consejo solo para Admin */}
+        <header className="bg-white border-b border-slate-200 px-6 md:px-8 py-4 md:py-5 flex items-center justify-between z-10 shadow-sm shrink-0 print:hidden">
+          <div className="flex items-center gap-3">
+            <button 
+              className="md:hidden p-2 -ml-2 text-slate-500 hover:bg-slate-100 rounded-xl transition-colors"
+              onClick={() => setSidebarOpen(true)}
+            >
+              <Menu size={24} />
+            </button>
+            <div>
+              <h1 className="text-xl md:text-2xl font-bold text-slate-800">
+                {moduleTab === "resumen" ? "Resumen" : (panelTabs.find(t => t.key === moduleTab)?.label || "Panel")}
+              </h1>
+              <p className="text-xs md:text-sm text-slate-500 mt-0.5 md:mt-1">Gestionando información del consejo comunal</p>
+            </div>
+          </div>
+
+          {sessionUser?.isAdmin && (
+            <div className="flex items-center gap-3 bg-slate-50 p-1.5 rounded-xl border border-slate-200 shadow-sm">
+              <label className="text-sm font-semibold text-slate-600 pl-2">Consejo:</label>
+              <select 
+                value={activeConsejo}
+                onChange={(e) => setActiveConsejo(e.target.value)}
+                className="bg-white border-none text-slate-800 text-sm rounded-lg focus:ring-0 block p-2 cursor-pointer outline-none font-medium"
+              >
+                {consejos.map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+            </div>
+          )}
+        </header>
+
+        {/* Scrollable Content */}
+        <div className={`flex-1 p-6 md:p-8 bg-slate-50/50 print:p-0 print:bg-white print:overflow-visible flex flex-col print:block ${
+          moduleTab === "cuadernillo" ? "overflow-hidden" : "overflow-y-auto"
+        }`}>
+          <div className={`w-full flex-1 flex flex-col print:block ${moduleTab === "cuadernillo" ? "min-h-0" : ""}`}>
+            
+                        {moduleTab === "resumen" && (
+              <div className="flex flex-col h-full flex-1 space-y-6">
+                <div className="grid gap-6 md:grid-cols-3">
+                  <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 flex items-center gap-6">
+                    <div className="p-5 bg-blue-50 text-blue-600 rounded-2xl">
+                      <Users size={32} />
+                    </div>
+                    <div>
+                      <p className="text-base text-slate-500 font-medium">Total Habitantes</p>
+                      <h4 className="text-4xl font-bold text-slate-800">{stats.totalHabitantes}</h4>
+                    </div>
+                  </div>
+                  <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 flex items-center gap-6">
+                    <div className="p-5 bg-indigo-50 text-indigo-600 rounded-2xl">
+                      <Home size={32} />
+                    </div>
+                    <div>
+                      <p className="text-base text-slate-500 font-medium">Total Familias</p>
+                      <h4 className="text-4xl font-bold text-slate-800">{stats.totalFamilias}</h4>
+                    </div>
+                  </div>
+                  <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 flex items-center gap-6">
+                    <div className="p-5 bg-red-50 text-red-600 rounded-2xl">
+                      <HeartPulse size={32} />
+                    </div>
+                    <div>
+                      <p className="text-base text-slate-500 font-medium">Casos Sociales</p>
+                      <h4 className="text-4xl font-bold text-slate-800">{habitantesActuales.filter(h => h.requiere_ayuda).length}</h4>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid gap-6 md:grid-cols-2 flex-1">
+                  <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col">
+                    <h3 className="text-lg font-semibold text-slate-800 mb-4 shrink-0">Distribución por Edades</h3>
+                    <div className="flex-1 w-full min-h-[300px]">
+                      <ResponsiveContainer>
+                        <PieChart>
+                          <Pie
+                            data={[
+                              { name: 'Niños (0-12)', value: habitantesActuales.filter(h => h.edad <= 12).length },
+                              { name: 'Adolescentes (13-17)', value: habitantesActuales.filter(h => h.edad > 12 && h.edad <= 17).length },
+                              { name: 'Adultos (18-59)', value: habitantesActuales.filter(h => h.edad > 17 && h.edad <= 59).length },
+                              { name: 'Tercera Edad (60+)', value: habitantesActuales.filter(h => h.edad >= 60).length },
+                            ].filter(d => d.value > 0)}
+                            cx="50%"
+                            cy="50%"
+                            outerRadius={140}
+                            fill="#8884d8"
+                            dataKey="value"
+                            label={({name, percent}) => `${name} (${(percent * 100).toFixed(0)}%)`}
+                          >
+                            <Cell fill="#06b6d4" />
+                            <Cell fill="#3b82f6" />
+                            <Cell fill="#0f2847" />
+                            <Cell fill="#64748b" />
+                          </Pie>
+                          <RechartsTooltip />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+
+                  <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col">
+                    <h3 className="text-lg font-semibold text-slate-800 mb-4 shrink-0">Habitantes por Calle</h3>
+                    <div className="flex-1 w-full min-h-[300px]">
+                      <ResponsiveContainer>
+                        <BarChart data={
+                          calles.map(calle => ({
+                            name: calle,
+                            Habitantes: habitantesActuales.filter(h => h.calle === calle).length
+                          })).filter(d => d.Habitantes > 0)
+                        }>
+                          <XAxis dataKey="name" fontSize={10} tick={{fill: '#64748b'}} />
+                          <YAxis fontSize={12} tick={{fill: '#64748b'}} />
+                          <RechartsTooltip cursor={{fill: '#f1f5f9'}} />
+                          <Bar dataKey="Habitantes" radius={[4, 4, 0, 0]}>
+                            {calles.map((entry, index) => {
+                              const colors = ['#06b6d4', '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#f43f5e', '#14b8a6', '#84cc16'];
+                              return <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />;
+                            })}
+                          </Bar>
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
-          </div>
-          <div className="mb-8 flex flex-wrap gap-4">
-            {panelTabs.map((tab) => {
-              const TabIcon = tab.icon;
-              return (
-                <button
-                  key={tab.key}
-                  type="button"
-                  onClick={() => setModuleTab(tab.key)}
-                  className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium ${
-                    moduleTab === tab.key ? "bg-indigo-600 text-white" : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                  }`}
-                >
-                  <TabIcon size={16} /> {tab.label}
-                </button>
-              );
-            })}
-          </div>
+            
+            {moduleTab === "casos_sociales" && (
+              <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                <CasosSociales 
+                  activeConsejo={activeConsejo}
+                  db={db}
+                  setDb={setDb}
+                  sessionUser={sessionUser}
+                  inputClass={inputClass}
+                />
+              </div>
+            )}
+            
+            {moduleTab === "servicios" && (
+              <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                <Jornadas 
+                  sessionUser={sessionUser}
+                  activeConsejo={activeConsejo}
+                  db={db}
+                  setDb={setDb}
+                  inputClass={inputClass}
+                />
+              </div>
+            )}
 
-          {moduleTab === "admin" && sessionUser?.isAdmin && (
-            <div className="mb-8 space-y-3">
-              {adminMsg.text && (
-                <div
-                  className={`rounded-xl px-4 py-2 text-sm ${
-                    adminMsg.type === "error" ? "bg-red-50 text-red-700" : "bg-emerald-50 text-emerald-700"
-                  }`}
-                >
-                  {adminMsg.text}
-                </div>
-              )}
-              <AdminVoceros consejos={consejos} calles={calles} inputClass={inputClass} onMessage={setAdminMsg} />
-            </div>
-          )}
+            {moduleTab === "votaciones" && (
+              <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                <Votaciones 
+                  sessionUser={sessionUser}
+                  inputClass={inputClass}
+                  onMessage={setHabitanteMsg}
+                  calles={calles}
+                />
+              </div>
+            )}
 
-          {moduleTab === "habitantes" && (
-            <div className="space-y-8">
-              {habitanteMsg.text && (
-                <div
-                  className={`rounded-xl px-4 py-2 text-sm ${
-                    habitanteMsg.type === "error"
-                      ? "bg-red-50 text-red-700"
-                      : "bg-emerald-50 text-emerald-700"
-                  }`}
-                >
-                  {habitanteMsg.text}
-                </div>
-              )}
-              <form onSubmit={handleRegistrar} className="grid gap-6 md:grid-cols-2">
-                <input
-                  className={inputClass}
-                  placeholder="Nombre"
-                  value={habitanteForm.nombre}
-                  onChange={(e) => setHabitanteForm((p) => ({ ...p, nombre: e.target.value }))}
+            {moduleTab === "cuadernillo" && sessionUser?.isAdmin && (
+              <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col flex-1 min-h-0 print:block print:p-0 print:border-none print:shadow-none print:bg-transparent">
+                <CuadernilloElectoral 
+                  activeConsejo={activeConsejo}
+                  db={db}
                 />
-                <input
-                  className={inputClass}
-                  placeholder="Apellido"
-                  value={habitanteForm.apellido}
-                  onChange={(e) => setHabitanteForm((p) => ({ ...p, apellido: e.target.value }))}
-                />
-                <input
-                  className={inputClass}
-                  placeholder="Cédula"
-                  value={habitanteForm.cedula}
-                  onChange={(e) => setHabitanteForm((p) => ({ ...p, cedula: e.target.value }))}
-                />
-                <input
-                  className={inputClass}
-                  placeholder="Teléfono"
-                  value={habitanteForm.telefono}
-                  onChange={(e) => setHabitanteForm((p) => ({ ...p, telefono: e.target.value }))}
-                />
-                <input
-                  className={inputClass}
-                  type="date"
-                  value={habitanteForm.nacimiento}
-                  onChange={(e) => setHabitanteForm((p) => ({ ...p, nacimiento: e.target.value }))}
-                />
-                <input
-                  className={`${inputClass} bg-slate-100`}
-                  readOnly
-                  value={calcAge(habitanteForm.nacimiento) === "" ? "Edad" : `${calcAge(habitanteForm.nacimiento)} años`}
-                />
-                <select
-                  className={inputClass}
-                  value={habitanteCalleEfectiva}
-                  disabled={Boolean(sessionUser && !sessionUser.isAdmin)}
-                  onChange={(e) => setHabitanteForm((p) => ({ ...p, calle: e.target.value }))}
-                >
-                  {calles.map((calle) => (
-                    <option key={calle}>{calle}</option>
-                  ))}
-                </select>
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    type="submit"
-                    className="rounded-xl bg-indigo-600 px-4 py-2 font-medium text-white hover:bg-indigo-700"
+              </div>
+            )}
+
+            {moduleTab === "admin" && sessionUser?.isAdmin && (
+              <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-3">
+                {adminMsg.text && (
+                  <div className={`rounded-xl px-4 py-3 text-sm font-medium ${adminMsg.type === "error" ? "bg-red-50 text-red-700 border border-red-100" : "bg-emerald-50 text-emerald-700 border border-emerald-100"}`}>
+                    {adminMsg.text}
+                  </div>
+                )}
+                <AdminVoceros consejos={consejos} calles={calles} inputClass={inputClass} onMessage={setAdminMsg} />
+              </div>
+            )}
+
+            {moduleTab === "habitantes" && (
+              <div className="space-y-6">
+                <div className="flex flex-wrap gap-4 mb-2">
+                  <button 
+                    onClick={() => { setHabitanteForm(initialForm); setEditingHabitanteId(null); setHabitanteMsg({ type: "", text: "" }); setShowFormModal(true); }}
+                    className="bg-slate-900 hover:bg-slate-800 text-white px-5 py-2.5 rounded-xl font-medium shadow-sm transition-colors"
                   >
-                    {editingHabitanteId ? "Actualizar" : "Registrar"}
+                    Registrar Nuevo Habitante
                   </button>
-                  {editingHabitanteId && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setHabitanteForm(initialForm);
-                        setEditingHabitanteId(null);
-                        setHabitanteMsg({ type: "", text: "" });
-                      }}
-                      className="rounded-xl border border-slate-300 px-4 py-2 font-medium text-slate-700 hover:bg-slate-100"
+                  {sessionUser?.isAdmin && activeConsejo && (
+                    <button 
+                      onClick={() => setShowExcelUpload(!showExcelUpload)}
+                      className="bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 px-5 py-2.5 rounded-xl font-medium transition-colors"
                     >
-                      Cancelar
+                      {showExcelUpload ? "Ocultar Carga de Excel" : "Carga Masiva por Excel"}
                     </button>
                   )}
                 </div>
-              </form>
-              <TablaHabitantes
-                rows={habitantesActuales}
-                onEdit={handleEditHabitante}
-                onDelete={handleDeleteHabitante}
-              />
-            </div>
-          )}
 
-          {moduleTab === "buscar" && (
-            <div className="space-y-5">
-              <div className="grid gap-4 md:grid-cols-3">
-                <input
-                  className={inputClass}
-                  type="number"
-                  placeholder="Edad mínima"
-                  value={searchFilters.min}
-                  onChange={(e) => setSearchFilters((p) => ({ ...p, min: e.target.value }))}
-                />
-                <input
-                  className={inputClass}
-                  type="number"
-                  placeholder="Edad máxima"
-                  value={searchFilters.max}
-                  onChange={(e) => setSearchFilters((p) => ({ ...p, max: e.target.value }))}
-                />
-                <select
-                  className={inputClass}
-                  value={searchFilters.calle}
-                  onChange={(e) => setSearchFilters((p) => ({ ...p, calle: e.target.value }))}
-                >
-                  <option>Todas</option>
-                  {calles.map((calle) => (
-                    <option key={calle}>{calle}</option>
-                  ))}
-                </select>
-              </div>
-              <TablaHabitantes
-                rows={habitantesFiltrados}
-                onEdit={handleEditHabitante}
-                onDelete={handleDeleteHabitante}
-              />
-            </div>
-          )}
+                {/* Solo admin: carga masiva Excel después de seleccionar consejo. */}
+                {sessionUser?.isAdmin && activeConsejo && showExcelUpload && (
+                  <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 animate-in slide-in-from-top-2 duration-300">
+                    <ExcelHabitantesUpload
+                      consejo={activeConsejo}
+                      calles={calles}
+                      inputClass={inputClass}
+                      onUpload={async (payload) => {
+                        if (payload.mode === "bulk") {
+                          try {
+                            const res = await api.createHabitantesBulk({ consejoNombre: activeConsejo, familias: payload.familias });
+                            if (res.ok) {
+                              setHabitanteMsg({ type: "success", text: `¡Censo procesado! ${res.total} personas insertadas en ${activeConsejo}.` });
+                              cargarDatosConsejo(activeConsejo);
+                            } else {
+                              setHabitanteMsg({ type: "error", text: res.message || "Error procesando el censo." });
+                            }
+                          } catch (err) {
+                            setHabitanteMsg({ type: "error", text: `Error: ${err.message || "desconocido al enviar censo masivo."}` });
+                          }
+                          return;
+                        }
 
-          {moduleTab === "servicios" && (
-            <div className="space-y-5">
-              <div className="flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  onClick={() => setServiceTab("gas")}
-                  className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm ${
-                    serviceTab === "gas" ? "bg-indigo-600 text-white" : "bg-slate-100"
-                  }`}
-                >
-                  <Droplets size={16} /> Gas
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setServiceTab("proteinas")}
-                  className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm ${
-                    serviceTab === "proteinas" ? "bg-indigo-600 text-white" : "bg-slate-100"
-                  }`}
-                >
-                  <UtensilsCrossed size={16} /> Proteínas
-                </button>
-              </div>
+                        // Lógica para modo Simple (Array)
+                        let ok = 0, fail = 0;
+                        for (const h of payload) {
+                          try {
+                            const res = await api.createHabitante({
+                              consejoNombre: activeConsejo,
+                              ...h,
+                              edad: h.nacimiento ? calcAge(h.nacimiento) : undefined,
+                            });
+                            if (res.ok) ok++;
+                            else fail++;
+                          } catch (e) {
+                            fail++;
+                          }
+                        }
+                        cargarDatosConsejo(activeConsejo);
+                        setHabitanteMsg({
+                          type: fail === 0 ? "success" : "error",
+                          text: `Carga simple finalizada: ${ok} registrados, ${fail} errores.`,
+                        });
+                      }}
+                    />
+                  </div>
+                )}
 
-              {serviceTab === "gas" && (
-                <>
-                  <FormularioPagoGas
-                    data={serviciosForm.gas}
-                    setData={(changes) => setServiciosForm((p) => ({ ...p, gas: { ...p.gas, ...changes } }))}
-                    onSearch={() => buscarHabitanteServicio("gas")}
-                    onSubmit={() => registrarPago("gas")}
-                  />
-                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                    <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-                      <h4 className="font-semibold text-indigo-900">Pagos de Gas</h4>
-                      <span className="rounded-full bg-emerald-100 px-3 py-1 text-sm font-semibold text-emerald-700">
-                        Total Gas: Bs {pagosGas.reduce((acc, p) => acc + Number(p.monto), 0).toFixed(2)}
-                      </span>
-                    </div>
-                    <div className="overflow-x-auto">
-                      <table className="min-w-full overflow-hidden rounded-xl">
-                        <thead className="bg-slate-200 text-left text-sm">
-                          <tr>
-                            <th className="px-3 py-2">Habitante</th>
-                            <th className="px-3 py-2">Cédula</th>
-                            <th className="px-3 py-2">Detalle</th>
-                            <th className="px-3 py-2">Monto (Bs)</th>
-                            <th className="px-3 py-2">Fecha</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {pagosGas.length > 0 ? (
-                            pagosGas.map((p, i) => (
-                              <tr
-                                key={p.id}
-                                className={`${i % 2 === 0 ? "bg-white" : "bg-slate-50"} hover:bg-blue-50`}
+                {/* Modal Formulario */}
+                {showFormModal && (
+                  <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+                      <div className="flex justify-between items-center p-6 border-b border-slate-100 bg-slate-50 sticky top-0 z-10">
+                        <h3 className="text-xl font-bold text-slate-800">
+                          {editingHabitanteId ? "Actualizar Habitante" : "Registrar Nuevo Habitante"}
+                        </h3>
+                        <button type="button" onClick={() => setShowFormModal(false)} className="text-slate-400 hover:text-slate-600 bg-slate-200 p-1 rounded-lg">
+                          <X size={20} />
+                        </button>
+                      </div>
+                      <div className="p-6">
+                        <form onSubmit={handleRegistrar} className="grid gap-5 md:grid-cols-2">
+                          <div>
+                            <label className="mb-1.5 ml-1 block text-xs font-semibold text-slate-500 uppercase tracking-wider">Nombre</label>
+                            <input
+                              className={inputClass}
+                              placeholder="Ej. Juan"
+                              value={habitanteForm.nombre}
+                              onChange={(e) => setHabitanteForm((p) => ({ ...p, nombre: e.target.value }))}
+                            />
+                          </div>
+                          <div>
+                            <label className="mb-1.5 ml-1 block text-xs font-semibold text-slate-500 uppercase tracking-wider">Apellido</label>
+                            <input
+                              className={inputClass}
+                              placeholder="Ej. Pérez"
+                              value={habitanteForm.apellido}
+                              onChange={(e) => setHabitanteForm((p) => ({ ...p, apellido: e.target.value }))}
+                            />
+                          </div>
+                          <div>
+                            <label className="mb-1.5 ml-1 block text-xs font-semibold text-slate-500 uppercase tracking-wider">Cédula</label>
+                            <input
+                              className={inputClass}
+                              placeholder="Ej. 12345678"
+                              value={habitanteForm.cedula}
+                              onChange={(e) => setHabitanteForm((p) => ({ ...p, cedula: e.target.value }))}
+                            />
+                          </div>
+                          <div>
+                            <label className="mb-1.5 ml-1 block text-xs font-semibold text-slate-500 uppercase tracking-wider">Teléfono</label>
+                            <input
+                              className={inputClass}
+                              placeholder="Ej. 04121234567"
+                              value={habitanteForm.telefono}
+                              onChange={(e) => setHabitanteForm((p) => ({ ...p, telefono: e.target.value }))}
+                            />
+                          </div>
+                          <div>
+                            <label className="mb-1.5 ml-1 block text-xs font-semibold text-slate-500 uppercase tracking-wider">Nacimiento</label>
+                            <input
+                              className={inputClass}
+                              type="date"
+                              value={habitanteForm.nacimiento || ""}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                setHabitanteForm((p) => ({ ...p, nacimiento: val, edad: val ? calcAge(val) : p.edad }));
+                              }}
+                            />
+                          </div>
+                          <div>
+                            <label className="mb-1.5 ml-1 block text-xs font-semibold text-slate-500 uppercase tracking-wider">Edad Estimada</label>
+                            <input
+                              className={inputClass}
+                              type="number"
+                              min="0"
+                              placeholder="Ej. 35"
+                              value={habitanteForm.edad !== undefined ? habitanteForm.edad : ""}
+                              onChange={(e) => setHabitanteForm((p) => ({ ...p, edad: e.target.value }))}
+                            />
+                          </div>
+                          <div className="md:col-span-2">
+                            <label className="mb-1.5 ml-1 block text-xs font-semibold text-slate-500 uppercase tracking-wider">Calle</label>
+                            <select
+                              className={inputClass}
+                              value={habitanteCalleEfectiva}
+                              disabled={Boolean(sessionUser && !sessionUser.isAdmin)}
+                              onChange={(e) => setHabitanteForm((p) => ({ ...p, calle: e.target.value }))}
+                            >
+                              {calles.map((calle) => (
+                                <option key={calle}>{calle}</option>
+                              ))}
+                            </select>
+                          </div>
+                          
+                          <div className="md:col-span-2 mt-2 bg-slate-50/50 p-4 rounded-xl border border-slate-100">
+                            <div className="flex items-center gap-3 mb-2">
+                              <input
+                                type="checkbox"
+                                id="requiereAyuda"
+                                className="w-5 h-5 text-cyan-600 bg-white border-slate-300 rounded focus:ring-cyan-500 focus:ring-2 cursor-pointer"
+                                checked={habitanteForm.requiere_ayuda || false}
+                                onChange={(e) => setHabitanteForm((p) => ({ ...p, requiere_ayuda: e.target.checked, condicion_especial: e.target.checked ? "Embarazo" : "Ninguna" }))}
+                              />
+                              <label htmlFor="requiereAyuda" className="text-sm font-bold text-slate-700 cursor-pointer flex items-center gap-2">
+                                <HeartPulse size={18} className="text-red-500" />
+                                ¿Requiere atención prioritaria o es un Caso Social?
+                              </label>
+                            </div>
+
+                            {habitanteForm.requiere_ayuda && (
+                              <div className="mt-3 pl-8">
+                                <label className="mb-1.5 block text-xs font-semibold text-slate-500 uppercase tracking-wider">Especificar Condición Especial</label>
+                                <div className="flex gap-3">
+                                  <select
+                                    className={`${inputClass} w-[60%]`}
+                                    value={habitanteForm.condicion_especial || "Otro"}
+                                    onChange={(e) => setHabitanteForm((p) => ({ ...p, condicion_especial: e.target.value }))}
+                                  >
+                                    {condicionesEspeciales.filter(c => c !== "Ninguna").map((cond) => (
+                                      <option key={cond} value={cond}>{cond}</option>
+                                    ))}
+                                  </select>
+                                  <select
+                                    className={`${inputClass} w-[40%] font-medium ${habitanteForm.prioridad_caso === 'Alta' ? 'text-red-600 bg-red-50 border-red-200' : habitanteForm.prioridad_caso === 'Media' ? 'text-amber-600 bg-amber-50 border-amber-200' : 'text-emerald-600 bg-emerald-50 border-emerald-200'}`}
+                                    value={habitanteForm.prioridad_caso || "Media"}
+                                    onChange={(e) => setHabitanteForm((p) => ({ ...p, prioridad_caso: e.target.value }))}
+                                  >
+                                    <option value="Alta" className="text-red-600">Prioridad Alta</option>
+                                    <option value="Media" className="text-amber-600">Prioridad Media</option>
+                                    <option value="Baja" className="text-emerald-600">Prioridad Baja</option>
+                                  </select>
+                                </div>
+                                
+                                {habitanteForm.condicion_especial === "Otro" && (
+                                  <div className="mt-3 animate-fade-in">
+                                    <input
+                                      type="text"
+                                      placeholder="Especifique la condición..."
+                                      className={inputClass}
+                                      value={habitanteForm.condicion_especial_otro || ""}
+                                      onChange={(e) => setHabitanteForm((p) => ({ ...p, condicion_especial_otro: e.target.value }))}
+                                      required
+                                    />
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                          <div className="md:col-span-2 flex gap-3 pt-2">
+                            <button
+                              type="submit"
+                              className="flex-1 rounded-xl bg-slate-900 px-4 py-3 font-medium text-white hover:bg-slate-800 transition-colors shadow-sm focus:ring-2 focus:ring-slate-900/20"
+                            >
+                              {editingHabitanteId ? "Guardar Cambios" : "Registrar Habitante"}
+                            </button>
+                            {editingHabitanteId && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setHabitanteForm(initialForm);
+                                  setEditingHabitanteId(null);
+                                  setHabitanteMsg({ type: "", text: "" });
+                                  setShowFormModal(false);
+                                }}
+                                className="flex-1 rounded-xl border border-slate-300 px-4 py-3 font-medium text-slate-700 hover:bg-slate-50 transition-colors"
                               >
-                                <td className="px-3 py-2">{p.habitante}</td>
-                                <td className="px-3 py-2">{p.cedula}</td>
-                                <td className="px-3 py-2">{p.detalle}</td>
-                                <td className="px-3 py-2">{Number(p.monto).toFixed(2)}</td>
-                                <td className="px-3 py-2">{p.fecha}</td>
-                              </tr>
-                            ))
-                          ) : (
-                            <tr>
-                              <td className="px-3 py-4 text-sm text-slate-500" colSpan={5}>
-                                Sin pagos registrados.
-                              </td>
-                            </tr>
-                          )}
-                        </tbody>
-                      </table>
+                                Cancelar
+                              </button>
+                            )}
+                          </div>
+                        </form>
+                      </div>
                     </div>
                   </div>
-                </>
-              )}
+                )}
 
-              {serviceTab === "proteinas" && (
-                <>
-                  <FormularioPagoProteinas
-                    data={serviciosForm.proteinas}
-                    setData={(changes) =>
-                      setServiciosForm((p) => ({ ...p, proteinas: { ...p.proteinas, ...changes } }))
-                    }
-                    onSearch={() => buscarHabitanteServicio("proteinas")}
-                    onSubmit={() => registrarPago("proteinas")}
-                  />
-                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                    <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-                      <h4 className="font-semibold text-indigo-900">Pagos de Proteínas</h4>
-                      <span className="rounded-full bg-emerald-100 px-3 py-1 text-sm font-semibold text-emerald-700">
-                        Total Proteínas: Bs {pagosProteinas.reduce((acc, p) => acc + Number(p.monto), 0).toFixed(2)}
-                      </span>
-                    </div>
-                    <div className="overflow-x-auto">
-                      <table className="min-w-full overflow-hidden rounded-xl">
-                        <thead className="bg-slate-200 text-left text-sm">
-                          <tr>
-                            <th className="px-3 py-2">Habitante</th>
-                            <th className="px-3 py-2">Cédula</th>
-                            <th className="px-3 py-2">Detalle</th>
-                            <th className="px-3 py-2">Monto (Bs)</th>
-                            <th className="px-3 py-2">Fecha</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {pagosProteinas.length > 0 ? (
-                            pagosProteinas.map((p, i) => (
-                              <tr
-                                key={p.id}
-                                className={`${i % 2 === 0 ? "bg-white" : "bg-slate-50"} hover:bg-blue-50`}
-                              >
-                                <td className="px-3 py-2">{p.habitante}</td>
-                                <td className="px-3 py-2">{p.cedula}</td>
-                                <td className="px-3 py-2">{p.detalle}</td>
-                                <td className="px-3 py-2">{Number(p.monto).toFixed(2)}</td>
-                                <td className="px-3 py-2">{p.fecha}</td>
-                              </tr>
-                            ))
-                          ) : (
-                            <tr>
-                              <td className="px-3 py-4 text-sm text-slate-500" colSpan={5}>
-                                Sin pagos registrados.
-                              </td>
-                            </tr>
-                          )}
-                        </tbody>
-                      </table>
+                <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                  <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+                    <h3 className="text-lg font-semibold text-slate-800">
+                      Directorio de Habitantes
+                    </h3>
+                    <div className="relative max-w-sm w-full">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                      <input
+                        className={`${inputClass} pl-10`}
+                        placeholder="Buscar por nombre o cédula..."
+                        value={habitanteSearch}
+                        onChange={(e) => setHabitanteSearch(e.target.value)}
+                      />
                     </div>
                   </div>
-                </>
-              )}
-            </div>
-          )}
-        </section>
+                  
+                  <TablaHabitantes
+                    rows={habitantesActuales.filter(h => 
+                      !habitanteSearch || 
+                      `${h.nombre} ${h.apellido} ${h.cedula}`.toLowerCase().includes(habitanteSearch.toLowerCase())
+                    )}
+                    onEdit={handleEditHabitante}
+                    onDelete={handleDeleteHabitante}
+                    onManageFamily={sessionUser?.isAdmin ? setFamilyManagerJefe : undefined}
+                    isSearching={!!habitanteSearch}
+                    allRows={habitantesActuales}
+                  />
+                </div>
+
+                {familyManagerJefe && (
+                  <FamiliaManagerModal 
+                    jefe={familyManagerJefe}
+                    allHabitantes={habitantesActualesOriginal}
+                    onClose={() => setFamilyManagerJefe(null)}
+                    onSave={async (jefeId, deps) => {
+                      try {
+                        await api.saveGrupoFamiliar(jefeId, deps);
+                        await cargarDatosConsejo(activeConsejo);
+                        setFamilyManagerJefe(null);
+                        setHabitanteMsg({ type: "success", text: "El grupo familiar se ha guardado exitosamente." });
+                      } catch (e) {
+                        setHabitanteMsg({ type: "error", text: "Error guardando la familia: " + e.message });
+                      }
+                    }}
+                    onDisolve={async (jefeId) => {
+                      try {
+                        await api.disolverGrupoFamiliar(jefeId);
+                        await cargarDatosConsejo(activeConsejo);
+                        setFamilyManagerJefe(null);
+                        setHabitanteMsg({ type: "success", text: "El grupo familiar se ha disuelto." });
+                      } catch (e) {
+                        setHabitanteMsg({ type: "error", text: "Error disolviendo: " + e.message });
+                      }
+                    }}
+                  />
+                )}
+              </div>
+            )}
+
+            {moduleTab === "buscar" && (
+              <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-6">
+                <div className="flex items-center gap-2 mb-2 pb-4 border-b border-slate-100">
+                  <div className="p-2 bg-cyan-50 rounded-lg text-cyan-600">
+                    <Search size={20} />
+                  </div>
+                  <h3 className="text-lg font-semibold text-slate-800">Búsqueda Avanzada</h3>
+                </div>
+                
+                <div className="grid gap-5 md:grid-cols-3 bg-slate-50/50 p-4 rounded-xl border border-slate-100">
+                  <div>
+                    <label className="mb-1.5 ml-1 block text-xs font-semibold text-slate-500 uppercase tracking-wider">Edad mínima</label>
+                    <input
+                      className={inputClass}
+                      type="number"
+                      placeholder="0"
+                      value={searchFilters.min}
+                      onChange={(e) => setSearchFilters((p) => ({ ...p, min: e.target.value }))}
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1.5 ml-1 block text-xs font-semibold text-slate-500 uppercase tracking-wider">Edad máxima</label>
+                    <input
+                      className={inputClass}
+                      type="number"
+                      placeholder="100"
+                      value={searchFilters.max}
+                      onChange={(e) => setSearchFilters((p) => ({ ...p, max: e.target.value }))}
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1.5 ml-1 block text-xs font-semibold text-slate-500 uppercase tracking-wider">Filtrar por Calle</label>
+                    <select
+                      className={inputClass}
+                      value={searchFilters.calle}
+                      onChange={(e) => setSearchFilters((p) => ({ ...p, calle: e.target.value }))}
+                    >
+                      <option>Todas</option>
+                      {calles.map((calle) => (
+                        <option key={calle}>{calle}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                
+                <TablaHabitantes
+                  rows={habitantesFiltrados}
+                  onEdit={handleEditHabitante}
+                  onDelete={handleDeleteHabitante}
+                  isSearching={true}
+                  allRows={habitantesActuales}
+                />
+              </div>
+            )}
+
+          </div>
+        </div>
       </main>
-    </div>
-  );
-}
 
-const payField =
-  "box-border h-10 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-800 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-[#143c6e] focus:ring-2 focus:ring-[#143c6e]/15";
-const payFieldMonto =
-  "box-border h-10 w-full rounded-md border border-amber-500/40 bg-amber-50/40 px-3 pr-12 text-sm font-medium text-slate-900 shadow-sm ring-1 ring-amber-500/15 outline-none transition focus:border-amber-600 focus:ring-2 focus:ring-amber-500/20";
-const payLabel = "mb-1 block text-xs font-medium text-slate-600";
-const payBtnSearch =
-  "inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-md border border-slate-300 bg-slate-100 px-4 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-200";
-const payBtnConfirm =
-  "inline-flex h-10 max-w-[220px] items-center justify-center rounded-md bg-[#143c6e] px-6 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-600 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500";
-
-function HabitanteCard({ habitante }) {
-  if (!habitante) {
-    return (
-      <div className="rounded-md border border-dashed border-slate-200 bg-slate-50/60 px-4 py-8 text-center shadow-sm">
-        <User className="mx-auto mb-2 h-8 w-8 text-slate-300" aria-hidden />
-        <p className="text-sm text-slate-500">
-          Busque por nombre o cédula para vincular este pago a un habitante registrado.
-        </p>
-      </div>
-    );
-  }
-  return (
-    <div className="rounded-md border border-slate-200 bg-slate-50/80 p-4 shadow-sm">
-      <p className="mb-3 text-xs font-medium uppercase tracking-wide text-slate-500">Habitante seleccionado</p>
-      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
-        <div className="flex items-start gap-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-[#143c6e]/10 text-[#143c6e]">
-            <User className="h-4 w-4" aria-hidden />
+      {/* Global Toast Notification */}
+      {habitanteMsg.text && (
+        <div className="fixed bottom-6 right-6 z-[100] animate-fade-in-up">
+          <div className={`flex items-center gap-3 px-6 py-4 rounded-xl shadow-xl border ${
+            habitanteMsg.type === "error" 
+              ? "bg-red-50 border-red-100 text-red-700" 
+              : "bg-emerald-50 border-emerald-100 text-emerald-700"
+          }`}>
+            <div className={`flex items-center justify-center w-8 h-8 rounded-full ${
+              habitanteMsg.type === "error" ? "bg-red-100" : "bg-emerald-100"
+            }`}>
+              {habitanteMsg.type === "error" ? <AlertCircle size={18} /> : <CheckCircle2 size={18} />}
+            </div>
+            <p className="font-medium">{habitanteMsg.text}</p>
           </div>
-          <div>
-            <p className="text-base font-semibold text-slate-800">
-              {habitante.nombre} {habitante.apellido}
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirm && (
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-fade-in">
+          <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden p-6 text-center animate-scale-in">
+            <div className="mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
+              <Trash2 className="text-red-600" size={32} />
+            </div>
+            <h3 className="text-xl font-bold text-slate-800 mb-2">¿Eliminar Habitante?</h3>
+            <p className="text-slate-500 mb-8">
+              Estás a punto de eliminar a <span className="font-semibold text-slate-700">{deleteConfirm.nombre} {deleteConfirm.apellido}</span>. Esta acción no se puede deshacer.
             </p>
-            <p className="text-xs text-slate-500">Cédula {habitante.cedula}</p>
+            <div className="flex gap-3 justify-center">
+              <button
+                onClick={() => setDeleteConfirm(null)}
+                className="px-6 py-2.5 text-slate-600 font-medium hover:bg-slate-100 rounded-xl transition"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={confirmDeleteHabitante}
+                className="px-6 py-2.5 bg-red-600 text-white font-medium hover:bg-red-700 rounded-xl transition shadow-sm"
+              >
+                Sí, eliminar
+              </button>
+            </div>
           </div>
         </div>
-        <div className="mt-2 flex flex-col gap-1.5 text-sm text-slate-600 sm:mt-0 sm:text-right">
-          <span className="inline-flex items-center gap-1.5 sm:justify-end">
-            <MapPin className="h-3.5 w-3.5 shrink-0 text-slate-400" aria-hidden />
-            {habitante.calle}
-          </span>
-          {habitante.telefono ? (
-            <span className="inline-flex items-center gap-1.5 sm:justify-end">
-              <Phone className="h-3.5 w-3.5 shrink-0 text-slate-400" aria-hidden />
-              {habitante.telefono}
-            </span>
-          ) : null}
-          <span className="text-xs text-slate-500">
-            Edad: {habitante.edad != null && habitante.edad !== "" ? `${habitante.edad} años` : "—"}
-          </span>
-        </div>
-      </div>
+      )}
     </div>
   );
 }
 
-function TablaHabitantes({ rows, onEdit, onDelete }) {
+function TablaHabitantes({ rows, onEdit, onDelete, onManageFamily, isSearching, allRows }) {
+  const [expanded, setExpanded] = useState({});
+
+  const toggleExpand = (id) => {
+    setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  // Mapear hijos globalmente para evitar fallos si el filtro principal los recorta
+  const childrenMap = useMemo(() => {
+    const map = {};
+    (allRows || []).forEach((r) => {
+      if (r.jefe_familia_id) {
+        if (!map[r.jefe_familia_id]) map[r.jefe_familia_id] = [];
+        map[r.jefe_familia_id].push(r);
+      }
+    });
+    return map;
+  }, [allRows]);
+
+  // Si no está buscando, filtramos para que las "Roots" sean solo jefes/solteros
+  const displayRows = isSearching ? rows : rows.filter((r) => !r.jefe_familia_id);
+
+  const renderActions = (r) => (
+    <div className="flex justify-end gap-2">
+      {onManageFamily && !r.jefe_familia_id && (
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); onManageFamily(r); }}
+          className={`rounded-lg p-1.5 transition ${
+            r.es_jefe_familia
+              ? "text-indigo-600 bg-indigo-50 hover:bg-indigo-100"
+              : "text-slate-500 hover:bg-indigo-50 hover:text-indigo-600"
+          }`}
+          title={r.es_jefe_familia ? "Modificar Grupo Familiar" : "Convertir en Jefe de Familia"}
+        >
+          <Users size={16} />
+        </button>
+      )}
+      {onEdit && (
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); onEdit(r); }}
+          className="rounded-lg p-1.5 text-slate-600 transition hover:bg-blue-100 hover:text-blue-700"
+          title="Editar"
+        >
+          <Pencil size={16} />
+        </button>
+      )}
+      {onDelete && (
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); onDelete(r); }}
+          className="rounded-lg p-1.5 text-slate-600 transition hover:bg-red-100 hover:text-red-700"
+          title="Eliminar"
+        >
+          <Trash2 size={16} />
+        </button>
+      )}
+    </div>
+  );
+
   return (
-    <div className="overflow-x-auto">
-      <table className="min-w-full overflow-hidden rounded-xl">
-        <thead className="bg-slate-200 text-left text-sm">
+    <div className="overflow-x-auto overflow-y-auto max-h-[600px] border border-slate-200 rounded-xl relative shadow-sm">
+      <table className="min-w-full">
+        <thead className="bg-slate-200 text-left text-sm sticky top-0 z-10 shadow-sm">
           <tr>
             <th className="px-3 py-2">Nombre</th>
             <th className="px-3 py-2">Apellido</th>
@@ -928,264 +1232,95 @@ function TablaHabitantes({ rows, onEdit, onDelete }) {
             <th className="px-3 py-2">Teléfono</th>
             <th className="px-3 py-2">Edad</th>
             <th className="px-3 py-2">Calle</th>
-            {(onEdit || onDelete) && (
+            {(onEdit || onDelete || onManageFamily) && (
               <th className="px-3 py-2 text-right">Acciones</th>
             )}
           </tr>
         </thead>
         <tbody>
-          {rows.length > 0 ? (
-            rows.map((r, i) => (
-              <tr key={r.id} className={`${i % 2 === 0 ? "bg-white" : "bg-slate-50"} hover:bg-blue-50`}>
-                <td className="px-3 py-2">{r.nombre}</td>
-                <td className="px-3 py-2">{r.apellido}</td>
-                <td className="px-3 py-2">{r.cedula}</td>
-                <td className="px-3 py-2">{r.telefono}</td>
-                <td className="px-3 py-2">{r.edad}</td>
-                <td className="px-3 py-2">{r.calle}</td>
-                {(onEdit || onDelete) && (
-                  <td className="px-3 py-2 text-right">
-                    <div className="flex justify-end gap-2">
-                      {onEdit && (
-                        <button
-                          type="button"
-                          onClick={() => onEdit(r)}
-                          className="rounded-lg p-1.5 text-slate-600 transition hover:bg-blue-100 hover:text-blue-700"
-                          title="Editar"
-                        >
-                          <Pencil size={16} />
-                        </button>
+          {displayRows.length > 0 ? (
+            displayRows.map((r, i) => {
+              const children = childrenMap[r.id] || [];
+              const hasChildren = children.length > 0;
+              const isExpanded = expanded[r.id];
+              const isDependentFromSearch = isSearching && r.jefe_familia_id;
+
+              return (
+                <Fragment key={r.id}>
+                  {/* Fila Principal */}
+                  <tr
+                    onClick={() => {
+                      if (!isSearching && (r.es_jefe_familia || hasChildren)) toggleExpand(r.id);
+                    }}
+                    className={`
+                      ${isDependentFromSearch ? "bg-slate-50/70" : i % 2 === 0 ? "bg-white" : "bg-slate-50"}
+                      hover:bg-blue-50 transition-colors
+                      ${!isSearching && (r.es_jefe_familia || hasChildren) ? "cursor-pointer" : ""}
+                    `}
+                  >
+                    <td className={`px-3 py-2 ${isDependentFromSearch ? "pl-8" : ""}`}>
+                      <div className="flex items-center gap-1.5">
+                        {!isSearching && (r.es_jefe_familia || hasChildren) && (
+                           <span className="text-slate-400">
+                             {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                           </span>
+                        )}
+                        {isDependentFromSearch && (
+                          <span className="text-slate-300 font-bold" title="Dependiente">↳</span>
+                        )}
+                        {r.es_jefe_familia && (
+                          <Home size={16} className="text-[#0f2847] flex-shrink-0 mb-0.5" title="Jefe de Familia" />
+                        )}
+                        <span className={!isSearching && r.es_jefe_familia ? "font-bold text-[#0f2847]" : "font-medium text-slate-700"}>
+                          {r.nombre}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-3 py-2 font-medium text-slate-700">{r.apellido}</td>
+                    <td className="px-3 py-2">{r.cedula}</td>
+                    <td className="px-3 py-2">{r.telefono}</td>
+                    <td className="px-3 py-2">{r.edad}</td>
+                    <td className="px-3 py-2">{r.calle}</td>
+                    {(onEdit || onDelete || onManageFamily) && (
+                      <td className="px-3 py-2 text-right">
+                        {renderActions(r)}
+                      </td>
+                    )}
+                  </tr>
+
+                  {/* Filas Hijos (Solo si no estamos buscando modo lista y está expandido) */}
+                  {!isSearching && isExpanded && children.map((child) => (
+                    <tr key={child.id} className="bg-slate-50/90 hover:bg-slate-100 transition-colors border-l-4 border-l-blue-200">
+                      <td className="px-3 py-2 pl-12 text-sm text-slate-600">
+                        <div className="flex items-center gap-2">
+                           <span className="text-slate-300 font-bold">↳</span>
+                           {child.nombre}
+                        </div>
+                      </td>
+                      <td className="px-3 py-2 text-sm text-slate-600">{child.apellido}</td>
+                      <td className="px-3 py-2 text-sm text-slate-600">{child.cedula}</td>
+                      <td className="px-3 py-2 text-sm text-slate-600">{child.telefono}</td>
+                      <td className="px-3 py-2 text-sm text-slate-600">{child.edad}</td>
+                      <td className="px-3 py-2 text-sm text-slate-600">{child.calle}</td>
+                      {(onEdit || onDelete || onManageFamily) && (
+                        <td className="px-3 py-2 text-right">
+                          {renderActions(child)}
+                        </td>
                       )}
-                      {onDelete && (
-                        <button
-                          type="button"
-                          onClick={() => onDelete(r)}
-                          className="rounded-lg p-1.5 text-slate-600 transition hover:bg-red-100 hover:text-red-700"
-                          title="Eliminar"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      )}
-                    </div>
-                  </td>
-                )}
-              </tr>
-            ))
+                    </tr>
+                  ))}
+                </Fragment>
+              );
+            })
           ) : (
             <tr>
-              <td className="px-3 py-4 text-sm text-slate-500" colSpan={(onEdit || onDelete) ? 7 : 6}>
+              <td className="px-3 py-4 text-center text-sm text-slate-500" colSpan={(onEdit || onDelete || onManageFamily) ? 7 : 6}>
                 Sin registros para mostrar.
               </td>
             </tr>
           )}
         </tbody>
       </table>
-    </div>
-  );
-}
-
-function FormularioPagoGas({ data, setData, onSearch, onSubmit }) {
-  const rosca = Number(data.roscaCantidad) || 0;
-  const presion = Number(data.presionCantidad) || 0;
-  const montoOk = parseMontoFromDigits(data.monto) > 0;
-  const canConfirm = Boolean(data.habitante && data.verificado && montoOk && rosca + presion > 0);
-
-  return (
-    <div className="rounded-md border border-slate-200 bg-white p-5 shadow-sm">
-      <div className="space-y-4">
-        {/* Fila 1 — Buscador */}
-        <div>
-          <label htmlFor="gas-buscar" className={payLabel}>
-            Nombre o cédula
-          </label>
-          <div className="mt-1 flex gap-2">
-            <input
-              id="gas-buscar"
-              className={`${payField} min-w-0 flex-1`}
-              placeholder="Ej. María o V-12345678"
-              value={data.query}
-              onChange={(e) => setData({ query: e.target.value })}
-              onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), onSearch())}
-            />
-            <button type="button" className={payBtnSearch} onClick={onSearch}>
-              <Search className="h-4 w-4" aria-hidden />
-              Buscar
-            </button>
-          </div>
-        </div>
-
-        {/* Fila 2 — Habitante (card o vacío) */}
-        <HabitanteCard habitante={data.habitante} />
-
-        {/* Fila 3 — Detalles del pedido */}
-        <div className="rounded-md border border-slate-100 bg-slate-50/50 p-4 shadow-sm">
-          <h4 className="mb-3 text-sm font-semibold text-indigo-900">Detalles del pedido</h4>
-          <p className="mb-3 text-xs text-slate-500">Indique cuántas bombonas de cada tipo entrega o recoge el habitante.</p>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <label htmlFor="gas-rosca" className={payLabel}>
-                Bombonas tipo Rosca
-              </label>
-              <input
-                id="gas-rosca"
-                className={payField}
-                type="number"
-                min={0}
-                value={data.roscaCantidad === 0 ? "" : data.roscaCantidad}
-                onChange={(e) => setData({ roscaCantidad: e.target.value === "" ? 0 : Number(e.target.value) })}
-                placeholder="0"
-              />
-            </div>
-            <div>
-              <label htmlFor="gas-presion" className={payLabel}>
-                Bombonas tipo Presión
-              </label>
-              <input
-                id="gas-presion"
-                className={payField}
-                type="number"
-                min={0}
-                value={data.presionCantidad === 0 ? "" : data.presionCantidad}
-                onChange={(e) => setData({ presionCantidad: e.target.value === "" ? 0 : Number(e.target.value) })}
-                placeholder="0"
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Fila 4 — Monto, verificación, acción (checkbox alineado al input, no al bloque con ayuda) */}
-        <div className="flex flex-wrap items-end gap-4">
-          <div className="min-w-0 flex-1 basis-full sm:min-w-[200px] sm:flex-1 sm:basis-0 lg:max-w-md">
-            <label htmlFor="gas-monto" className={payLabel}>
-              Monto a pagar (Bs)
-            </label>
-            <div className="relative mt-1">
-              <input
-                id="gas-monto"
-                className={payFieldMonto}
-                type="text"
-                inputMode="numeric"
-                placeholder="0,00"
-                value={formatMonto(data.monto)}
-                onChange={(e) => setData({ monto: e.target.value.replace(/\D/g, "") })}
-                aria-describedby="gas-monto-hint"
-              />
-              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-[#143c6e]">
-                Bs
-              </span>
-            </div>
-          </div>
-          <div className="flex shrink-0 items-end">
-            <label className="flex h-10 cursor-pointer items-center gap-2.5 rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-700 shadow-sm">
-              <input
-                type="checkbox"
-                className="h-4 w-4 rounded border-slate-300 text-[#143c6e] focus:ring-[#143c6e]"
-                checked={data.verificado}
-                onChange={(e) => setData({ verificado: e.target.checked })}
-              />
-              <span className="font-medium text-slate-600">Pago verificado</span>
-            </label>
-          </div>
-          <div className="flex shrink-0 items-end lg:ms-auto">
-            <button type="button" className={payBtnConfirm} disabled={!canConfirm} onClick={onSubmit}>
-              Confirmar pago
-            </button>
-          </div>
-          <p id="gas-monto-hint" className="w-full basis-full text-xs text-slate-500">
-            Monto total del pedido de gas.
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function FormularioPagoProteinas({ data, setData, onSearch, onSubmit }) {
-  const montoOk = parseMontoFromDigits(data.monto) > 0;
-  const combosOk = Number(data.combos) >= 1;
-  const canConfirm = Boolean(data.habitante && data.verificado && montoOk && combosOk);
-
-  return (
-    <div className="rounded-md border border-slate-200 bg-white p-5 shadow-sm">
-      <div className="space-y-4">
-        <div>
-          <label htmlFor="prot-buscar" className={payLabel}>
-            Nombre o cédula
-          </label>
-          <div className="mt-1 flex gap-2">
-            <input
-              id="prot-buscar"
-              className={`${payField} min-w-0 flex-1`}
-              placeholder="Ej. Juan o E-87654321"
-              value={data.query}
-              onChange={(e) => setData({ query: e.target.value })}
-              onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), onSearch())}
-            />
-            <button type="button" className={payBtnSearch} onClick={onSearch}>
-              <Search className="h-4 w-4" aria-hidden />
-              Buscar
-            </button>
-          </div>
-        </div>
-
-        <HabitanteCard habitante={data.habitante} />
-
-        <div className="rounded-md border border-slate-100 bg-slate-50/50 p-4 shadow-sm">
-          <h4 className="mb-3 text-sm font-semibold text-indigo-900">Detalles del pedido</h4>
-          <div>
-            <label htmlFor="prot-combos" className={payLabel}>
-              Cantidad de combos
-            </label>
-            <input
-              id="prot-combos"
-              className={`${payField} mt-1 max-w-xs`}
-              type="number"
-              min={1}
-              value={data.combos}
-              onChange={(e) => setData({ combos: Math.max(1, Number(e.target.value) || 1) })}
-            />
-          </div>
-        </div>
-
-        <div className="flex flex-wrap items-end gap-4">
-          <div className="min-w-0 flex-1 basis-full sm:min-w-[200px] sm:flex-1 sm:basis-0 lg:max-w-md">
-            <label htmlFor="prot-monto" className={payLabel}>
-              Monto a pagar (Bs)
-            </label>
-            <div className="relative mt-1">
-              <input
-                id="prot-monto"
-                className={payFieldMonto}
-                type="text"
-                inputMode="numeric"
-                placeholder="0,00"
-                value={formatMonto(data.monto)}
-                onChange={(e) => setData({ monto: e.target.value.replace(/\D/g, "") })}
-              />
-              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-[#143c6e]">
-                Bs
-              </span>
-            </div>
-          </div>
-          <div className="flex shrink-0 items-end">
-            <label className="flex h-10 cursor-pointer items-center gap-2.5 rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-700 shadow-sm">
-              <input
-                type="checkbox"
-                className="h-4 w-4 rounded border-slate-300 text-[#143c6e] focus:ring-[#143c6e]"
-                checked={data.verificado}
-                onChange={(e) => setData({ verificado: e.target.checked })}
-              />
-              <span className="font-medium text-slate-600">Pago verificado</span>
-            </label>
-          </div>
-          <div className="flex shrink-0 items-end lg:ms-auto">
-            <button type="button" className={payBtnConfirm} disabled={!canConfirm} onClick={onSubmit}>
-              Confirmar pago
-            </button>
-          </div>
-          <p className="w-full basis-full text-xs text-slate-500">Monto total por combos de proteínas.</p>
-        </div>
-      </div>
     </div>
   );
 }
