@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { KeyRound, Pencil, RefreshCw, UserPlus } from "lucide-react";
+import { KeyRound, Pencil, RefreshCw, UserPlus, Trash2 } from "lucide-react";
 import { api } from "./api";
 
 const preguntas1 = [
@@ -73,6 +73,22 @@ export default function AdminVoceros({ consejos, calles, inputClass, onMessage }
   const [resetUser, setResetUser] = useState(null);
   const [resetPw, setResetPw] = useState("");
   const [resetPw2, setResetPw2] = useState("");
+
+  const [deleteConfirmUser, setDeleteConfirmUser] = useState(null);
+
+  async function handleDeleteVocero() {
+    if (!deleteConfirmUser) return;
+    const v = deleteConfirmUser;
+    setDeleteConfirmUser(null);
+    onMessage?.({ type: "", text: "" });
+    try {
+      await api.deleteVocero(v.user_id);
+      onMessage?.({ type: "success", text: `Vocero ${v.nombre} ${v.apellido} eliminado con éxito.` });
+      await load();
+    } catch (err) {
+      onMessage?.({ type: "error", text: err?.message || "Error al eliminar vocero." });
+    }
+  }
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -412,6 +428,16 @@ export default function AdminVoceros({ consejos, calles, inputClass, onMessage }
                           >
                             <KeyRound className="h-4 w-4" />
                           </button>
+                          <button
+                            type="button"
+                            className="rounded-lg p-1.5 text-slate-600 hover:bg-red-100 hover:text-red-600"
+                            title="Eliminar vocero"
+                            onClick={() => {
+                              setDeleteConfirmUser(v);
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
                         </div>
                       )}
                     </td>
@@ -547,6 +573,34 @@ export default function AdminVoceros({ consejos, calles, inputClass, onMessage }
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {deleteConfirmUser && (
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-fade-in">
+          <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden p-6 text-center animate-scale-in">
+            <div className="mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
+              <Trash2 className="text-red-600" size={32} />
+            </div>
+            <h3 className="text-xl font-bold text-slate-800 mb-2">¿Eliminar Vocero?</h3>
+            <p className="text-slate-500 mb-8 text-sm">
+              Estás a punto de eliminar la cuenta del vocero <span className="font-semibold text-slate-700">{deleteConfirmUser.nombre} {deleteConfirmUser.apellido}</span> ({deleteConfirmUser.user_id}). Se borrará de Firestore y de la autenticación de Firebase.
+            </p>
+            <div className="flex gap-3 justify-center">
+              <button
+                onClick={() => setDeleteConfirmUser(null)}
+                className="px-6 py-2.5 text-slate-600 font-medium hover:bg-slate-100 rounded-xl transition"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleDeleteVocero}
+                className="px-6 py-2.5 bg-red-600 text-white font-medium hover:bg-red-700 rounded-xl transition shadow-sm"
+              >
+                Sí, eliminar
+              </button>
+            </div>
           </div>
         </div>
       )}

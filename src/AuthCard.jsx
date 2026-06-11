@@ -564,16 +564,20 @@ export default function AuthCard({ onAuthSuccess }) {
   const isSuccess = globalMessage.type === "success";
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-900 px-4 relative overflow-hidden">
-      <div className="relative w-full max-w-2xl">
-        <div className="rounded-3xl bg-white/95 backdrop-blur-xl p-6 md:p-10 shadow-2xl border border-white/20">
+    <div className="min-h-screen flex items-center justify-center bg-[#090d16] px-4 relative overflow-hidden">
+      {/* Background decoration elements */}
+      <div className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-[#1e3a8a]/20 rounded-full blur-[120px] pointer-events-none"></div>
+      <div className="absolute bottom-1/4 right-1/4 translate-x-1/2 translate-y-1/2 w-96 h-96 bg-[#06b6d4]/10 rounded-full blur-[120px] pointer-events-none"></div>
+      
+      <div className="relative w-full max-w-2xl z-10 animate-fade-in-up">
+        <div className="rounded-3xl bg-white/90 backdrop-blur-xl p-6 md:p-10 shadow-2xl border border-white/40">
           <div className="mb-5 flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-900/10 text-cyan-600 shadow-sm">
                 <ShieldCheck className="h-5 w-5" aria-hidden />
               </div>
               <div>
-                <p className="text-sm font-semibold text-slate-800">Comuna un paso al frente</p>
+                <p className="text-sm font-semibold text-slate-800 font-heading">Comuna un paso al frente</p>
                 <p className="text-xs text-slate-500">Acceso seguro para el equipo</p>
               </div>
             </div>

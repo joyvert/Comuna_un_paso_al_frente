@@ -1,5 +1,5 @@
 import { initializeApp } from "firebase/app";
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, updatePassword, deleteUser } from "firebase/auth";
 import { getFirestore, collection, doc, getDocs, getDoc, setDoc, addDoc, updateDoc, deleteDoc, query, where, writeBatch, serverTimestamp, orderBy } from "firebase/firestore";
 
 const firebaseConfig = {
@@ -49,6 +49,11 @@ export const api = {
       const userDoc = await getDoc(doc(db, "usuarios", userId));
       if (!userDoc.exists()) return errRes("Usuario no encontrado en la base de datos.");
       const data = userDoc.data();
+      
+      // Guardar el passwordHash en Firestore si no existía (compatibilidad retrospectiva)
+      if (!data.passwordHash) {
+        await updateDoc(doc(db, "usuarios", userId), { passwordHash });
+      }
       
       const sessionData = {
         accessToken: await userCred.user.getIdToken(),
@@ -125,6 +130,11 @@ export const api = {
         calle: payload.calle,
         isAdmin: isFirst,
         salt: payload.salt || "firebase_no_salt",
+        passwordHash: payload.passwordHash,
+        pregunta1: payload.pregunta1 || "",
+        pregunta2: payload.pregunta2 || "",
+        respuesta1Hash: payload.respuesta1Hash || "",
+        respuesta2Hash: payload.respuesta2Hash || "",
         createdAt: serverTimestamp()
       });
       return okRes({ message: "Usuario creado exitosamente.", isFirstUser: isFirst });
@@ -133,8 +143,54 @@ export const api = {
     }
   },
 
-  getRecoveryQuestions: async () => errRes("Recuperación no disponible en modo Firebase. El Admin debe reiniciar la cuenta."),
-  resetPassword: async () => errRes("Recuperación no disponible en modo Firebase."),
+  getRecoveryQuestions: async (userId) => {
+    try {
+      const userDoc = await getDoc(doc(db, "usuarios", userId));
+      if (!userDoc.exists()) return errRes("Usuario no encontrado.");
+      const data = userDoc.data();
+      return okRes({
+        pregunta1: data.pregunta1 || "Pregunta 1 no configurada",
+        pregunta2: data.pregunta2 || "Pregunta 2 no configurada",
+        salt: data.salt || "firebase_no_salt"
+      });
+    } catch (e) {
+      errRes(e.message);
+    }
+  },
+
+  resetPassword: async (payload) => {
+    try {
+      const userDoc = await getDoc(doc(db, "usuarios", payload.userId));
+      if (!userDoc.exists()) return errRes("Usuario no encontrado.");
+      const data = userDoc.data();
+      
+      // Validar respuestas
+      if (data.respuesta1Hash !== payload.respuesta1Hash || data.respuesta2Hash !== payload.respuesta2Hash) {
+        return errRes("Respuestas de seguridad incorrectas.");
+      }
+      
+      const currentPasswordHash = data.passwordHash;
+      if (!currentPasswordHash) {
+        return errRes("No se pudo recuperar la credencial de Firebase. El Admin debe reiniciar tu cuenta.");
+      }
+      
+      // Login en secondary Auth
+      const userCred = await signInWithEmailAndPassword(secondaryAuth, getEmail(payload.userId), currentPasswordHash);
+      
+      // Cambiar clave
+      await updatePassword(userCred.user, payload.newPasswordHash);
+      
+      // Guardar en Firestore
+      await updateDoc(doc(db, "usuarios", payload.userId), {
+        salt: payload.newSalt,
+        passwordHash: payload.newPasswordHash
+      });
+      
+      return okRes({ message: "Contraseña restablecida con éxito." });
+    } catch (e) {
+      errRes(e.message);
+    }
+  },
 
   listVoceros: async () => {
     try {
@@ -160,7 +216,58 @@ export const api = {
     } catch (e) { errRes(e.message); }
   },
 
-  adminResetVoceroPassword: async () => errRes("Cambio de contraseña no soportado por cliente en Firebase sin Auth Admin SDK. Borre y recree el usuario."),
+  adminResetVoceroPassword: async (userId, payload) => {
+    try {
+      const userDoc = await getDoc(doc(db, "usuarios", userId));
+      if (!userDoc.exists()) return errRes("Usuario no encontrado.");
+      const data = userDoc.data();
+      
+      const currentPasswordHash = data.passwordHash;
+      if (!currentPasswordHash) {
+        return errRes("El usuario no tiene una contraseña registrada.");
+      }
+      
+      // Iniciar sesión temporal
+      const userCred = await signInWithEmailAndPassword(secondaryAuth, getEmail(userId), currentPasswordHash);
+      
+      // Cambiar clave
+      await updatePassword(userCred.user, payload.newPasswordHash);
+      
+      // Guardar el nuevo hash y salt
+      await updateDoc(doc(db, "usuarios", userId), {
+        salt: payload.newSalt,
+        passwordHash: payload.newPasswordHash
+      });
+      
+      return okRes({ message: "Contraseña restablecida correctamente." });
+    } catch (e) {
+      errRes(e.message);
+    }
+  },
+
+  deleteVocero: async (userId) => {
+    try {
+      const userDoc = await getDoc(doc(db, "usuarios", userId));
+      if (!userDoc.exists()) return errRes("Vocero no encontrado.");
+      const data = userDoc.data();
+      
+      const currentPasswordHash = data.passwordHash;
+      if (currentPasswordHash) {
+        try {
+          const userCred = await signInWithEmailAndPassword(secondaryAuth, getEmail(userId), currentPasswordHash);
+          await deleteUser(userCred.user);
+        } catch (authErr) {
+          console.warn("No se pudo borrar del Auth de Firebase (tal vez ya no existía):", authErr.message);
+        }
+      }
+      
+      // Borrar de Firestore
+      await deleteDoc(doc(db, "usuarios", userId));
+      return okRes({ message: "Vocero eliminado con éxito." });
+    } catch (e) {
+      errRes(e.message);
+    }
+  },
 
   getHabitantes: async (consejoNombre) => {
     try {

@@ -498,22 +498,22 @@ function App() {
       )}
 
       {/* SIDEBAR */}
-      <aside className={`w-72 bg-slate-900 text-slate-300 flex flex-col transition-transform duration-300 shadow-2xl z-50 shrink-0 print:hidden fixed inset-y-0 left-0 md:relative md:translate-x-0 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`}>
-        <div className="p-6 border-b border-slate-800">
+      <aside className={`w-72 sidebar-gradient text-slate-300 flex flex-col transition-transform duration-300 shadow-2xl z-50 shrink-0 print:hidden fixed inset-y-0 left-0 md:relative md:translate-x-0 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`}>
+        <div className="p-6 border-b border-slate-800/50">
           <div className="flex items-center gap-3 text-white mb-6">
             <div className="p-2 bg-cyan-500/20 rounded-lg text-cyan-400">
               <LayoutDashboard size={24} />
             </div>
-            <span className="font-bold text-lg leading-tight tracking-wide">Comuna Un Paso<br/>Al Frente</span>
+            <span className="font-bold text-lg leading-tight tracking-wide font-heading heading-brand">Comuna Un Paso<br/>Al Frente</span>
           </div>
           
           <button 
             type="button"
             onClick={() => { setModuleTab("resumen"); setSidebarOpen(false); }}
-            className={`w-full text-left p-4 rounded-xl border transition-all ${
+            className={`w-full text-left p-4 rounded-xl border transition-all cursor-pointer ${
               moduleTab === "resumen" 
-                ? "bg-cyan-500/20 border-cyan-500/50 shadow-md" 
-                : "bg-slate-800/50 border-slate-700/50 hover:bg-slate-800"
+                ? "bg-cyan-500/20 border-cyan-500/30 shadow-lg" 
+                : "bg-slate-800/30 border-slate-800 hover:bg-slate-800/60"
             }`}
           >
             <p className="text-xs text-slate-400 mb-1">Panel de Control</p>
@@ -572,30 +572,29 @@ function App() {
 
       {/* MAIN CONTENT AREA */}
       <main className="flex-1 flex flex-col h-screen overflow-hidden relative print:overflow-visible print:h-auto print:block">
-        {/* Top Header / Selector de Consejo solo para Admin */}
-        <header className="bg-white border-b border-slate-200 px-6 md:px-8 py-4 md:py-5 flex items-center justify-between z-10 shadow-sm shrink-0 print:hidden">
+        <header className="bg-white/85 backdrop-blur-md border-b border-slate-200/80 px-6 md:px-8 py-4 md:py-5 flex items-center justify-between z-10 shadow-sm shrink-0 print:hidden">
           <div className="flex items-center gap-3">
             <button 
-              className="md:hidden p-2 -ml-2 text-slate-500 hover:bg-slate-100 rounded-xl transition-colors"
+              className="md:hidden p-2 -ml-2 text-slate-500 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
               onClick={() => setSidebarOpen(true)}
             >
               <Menu size={24} />
             </button>
             <div>
-              <h1 className="text-xl md:text-2xl font-bold text-slate-800">
+              <h1 className="text-xl md:text-2xl font-bold text-slate-800 font-heading heading-brand">
                 {moduleTab === "resumen" ? "Resumen" : (panelTabs.find(t => t.key === moduleTab)?.label || "Panel")}
               </h1>
-              <p className="text-xs md:text-sm text-slate-500 mt-0.5 md:mt-1">Gestionando información del consejo comunal</p>
+              <p className="text-xs md:text-sm text-slate-400 mt-0.5 md:mt-1">Gestionando información del consejo comunal</p>
             </div>
           </div>
 
           {sessionUser?.isAdmin && (
-            <div className="flex items-center gap-3 bg-slate-50 p-1.5 rounded-xl border border-slate-200 shadow-sm">
+            <div className="flex items-center gap-3 bg-slate-50 p-1.5 rounded-xl border border-slate-200/80 shadow-inner">
               <label className="text-sm font-semibold text-slate-600 pl-2">Consejo:</label>
               <select 
                 value={activeConsejo}
                 onChange={(e) => setActiveConsejo(e.target.value)}
-                className="bg-white border-none text-slate-800 text-sm rounded-lg focus:ring-0 block p-2 cursor-pointer outline-none font-medium"
+                className="bg-white border-none text-slate-800 text-sm rounded-lg focus:ring-0 block p-2 cursor-pointer outline-none font-semibold shadow-sm"
               >
                 {consejos.map((c) => (
                   <option key={c} value={c}>{c}</option>
@@ -606,46 +605,46 @@ function App() {
         </header>
 
         {/* Scrollable Content */}
-        <div className={`flex-1 p-6 md:p-8 bg-slate-50/50 print:p-0 print:bg-white print:overflow-visible flex flex-col print:block ${
+        <div className={`flex-1 p-6 md:p-8 bg-slate-50/40 print:p-0 print:bg-white print:overflow-visible flex flex-col print:block ${
           moduleTab === "cuadernillo" ? "overflow-hidden" : "overflow-y-auto"
         }`}>
           <div className={`w-full flex-1 flex flex-col print:block ${moduleTab === "cuadernillo" ? "min-h-0" : ""}`}>
             
-                        {moduleTab === "resumen" && (
-              <div className="flex flex-col h-full flex-1 space-y-6">
+            {moduleTab === "resumen" && (
+              <div className="flex flex-col h-full flex-1 space-y-6 animate-fade-in-up">
                 <div className="grid gap-6 md:grid-cols-3">
-                  <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 flex items-center gap-6">
-                    <div className="p-5 bg-blue-50 text-blue-600 rounded-2xl">
+                  <div className="bg-white rounded-2xl border border-slate-100 p-8 flex items-center gap-6 shadow-sm hover-lift transition-all duration-300">
+                    <div className="p-5 bg-indigo-50/80 text-[#3b82f6] rounded-2xl shadow-inner">
                       <Users size={32} />
                     </div>
                     <div>
-                      <p className="text-base text-slate-500 font-medium">Total Habitantes</p>
-                      <h4 className="text-4xl font-bold text-slate-800">{stats.totalHabitantes}</h4>
+                      <p className="text-sm text-slate-400 font-semibold uppercase tracking-wider">Total Habitantes</p>
+                      <h4 className="text-4xl font-extrabold text-slate-800 font-heading mt-1">{stats.totalHabitantes}</h4>
                     </div>
                   </div>
-                  <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 flex items-center gap-6">
-                    <div className="p-5 bg-indigo-50 text-indigo-600 rounded-2xl">
+                  <div className="bg-white rounded-2xl border border-slate-100 p-8 flex items-center gap-6 shadow-sm hover-lift transition-all duration-300">
+                    <div className="p-5 bg-purple-50/80 text-purple-600 rounded-2xl shadow-inner">
                       <Home size={32} />
                     </div>
                     <div>
-                      <p className="text-base text-slate-500 font-medium">Total Familias</p>
-                      <h4 className="text-4xl font-bold text-slate-800">{stats.totalFamilias}</h4>
+                      <p className="text-sm text-slate-400 font-semibold uppercase tracking-wider">Total Familias</p>
+                      <h4 className="text-4xl font-extrabold text-slate-800 font-heading mt-1">{stats.totalFamilias}</h4>
                     </div>
                   </div>
-                  <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 flex items-center gap-6">
-                    <div className="p-5 bg-red-50 text-red-600 rounded-2xl">
+                  <div className="bg-white rounded-2xl border border-slate-100 p-8 flex items-center gap-6 shadow-sm hover-lift transition-all duration-300">
+                    <div className="p-5 bg-rose-50/80 text-rose-600 rounded-2xl shadow-inner">
                       <HeartPulse size={32} />
                     </div>
                     <div>
-                      <p className="text-base text-slate-500 font-medium">Casos Sociales</p>
-                      <h4 className="text-4xl font-bold text-slate-800">{habitantesActuales.filter(h => h.requiere_ayuda).length}</h4>
+                      <p className="text-sm text-slate-400 font-semibold uppercase tracking-wider">Casos Sociales</p>
+                      <h4 className="text-4xl font-extrabold text-slate-800 font-heading mt-1">{habitantesActuales.filter(h => h.requiere_ayuda).length}</h4>
                     </div>
                   </div>
                 </div>
-
+                
                 <div className="grid gap-6 md:grid-cols-2 flex-1">
-                  <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col">
-                    <h3 className="text-lg font-semibold text-slate-800 mb-4 shrink-0">Distribución por Edades</h3>
+                  <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex flex-col hover-lift transition-all">
+                    <h3 className="text-lg font-bold text-slate-800 mb-4 font-heading shrink-0">Distribución por Edades</h3>
                     <div className="flex-1 w-full min-h-[300px]">
                       <ResponsiveContainer>
                         <PieChart>
@@ -658,15 +657,15 @@ function App() {
                             ].filter(d => d.value > 0)}
                             cx="50%"
                             cy="50%"
-                            outerRadius={140}
+                            outerRadius={100}
                             fill="#8884d8"
                             dataKey="value"
                             label={({name, percent}) => `${name} (${(percent * 100).toFixed(0)}%)`}
                           >
                             <Cell fill="#06b6d4" />
+                            <Cell fill="#8b5cf6" />
                             <Cell fill="#3b82f6" />
-                            <Cell fill="#0f2847" />
-                            <Cell fill="#64748b" />
+                            <Cell fill="#ec4899" />
                           </Pie>
                           <RechartsTooltip />
                         </PieChart>
@@ -674,8 +673,8 @@ function App() {
                     </div>
                   </div>
 
-                  <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col">
-                    <h3 className="text-lg font-semibold text-slate-800 mb-4 shrink-0">Habitantes por Calle</h3>
+                  <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex flex-col hover-lift transition-all">
+                    <h3 className="text-lg font-bold text-slate-800 mb-4 font-heading shrink-0">Habitantes por Calle</h3>
                     <div className="flex-1 w-full min-h-[300px]">
                       <ResponsiveContainer>
                         <BarChart data={
@@ -684,12 +683,12 @@ function App() {
                             Habitantes: habitantesActuales.filter(h => h.calle === calle).length
                           })).filter(d => d.Habitantes > 0)
                         }>
-                          <XAxis dataKey="name" fontSize={10} tick={{fill: '#64748b'}} />
-                          <YAxis fontSize={12} tick={{fill: '#64748b'}} />
-                          <RechartsTooltip cursor={{fill: '#f1f5f9'}} />
-                          <Bar dataKey="Habitantes" radius={[4, 4, 0, 0]}>
+                          <XAxis dataKey="name" fontSize={9} tick={{fill: '#64748b'}} />
+                          <YAxis fontSize={11} tick={{fill: '#64748b'}} />
+                          <RechartsTooltip cursor={{fill: '#f8fafc'}} />
+                          <Bar dataKey="Habitantes" radius={[6, 6, 0, 0]}>
                             {calles.map((entry, index) => {
-                              const colors = ['#06b6d4', '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#f43f5e', '#14b8a6', '#84cc16'];
+                              const colors = ['#06b6d4', '#6366f1', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#3b82f6', '#f43f5e', '#14b8a6', '#84cc16'];
                               return <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />;
                             })}
                           </Bar>
@@ -1224,20 +1223,20 @@ function TablaHabitantes({ rows, onEdit, onDelete, onManageFamily, isSearching, 
   return (
     <div className="overflow-x-auto overflow-y-auto max-h-[600px] border border-slate-200 rounded-xl relative shadow-sm">
       <table className="min-w-full">
-        <thead className="bg-slate-200 text-left text-sm sticky top-0 z-10 shadow-sm">
+        <thead className="bg-slate-100/95 backdrop-blur-sm border-b border-slate-200/80 text-left text-xs uppercase tracking-wider text-slate-500 font-bold sticky top-0 z-10 shadow-sm">
           <tr>
-            <th className="px-3 py-2">Nombre</th>
-            <th className="px-3 py-2">Apellido</th>
-            <th className="px-3 py-2">Cédula</th>
-            <th className="px-3 py-2">Teléfono</th>
-            <th className="px-3 py-2">Edad</th>
-            <th className="px-3 py-2">Calle</th>
+            <th className="px-4 py-3">Nombre</th>
+            <th className="px-4 py-3">Apellido</th>
+            <th className="px-4 py-3">Cédula</th>
+            <th className="px-4 py-3">Teléfono</th>
+            <th className="px-4 py-3">Edad</th>
+            <th className="px-4 py-3">Calle</th>
             {(onEdit || onDelete || onManageFamily) && (
-              <th className="px-3 py-2 text-right">Acciones</th>
+              <th className="px-4 py-3 text-right">Acciones</th>
             )}
           </tr>
         </thead>
-        <tbody>
+        <tbody className="divide-y divide-slate-100">
           {displayRows.length > 0 ? (
             displayRows.map((r, i) => {
               const children = childrenMap[r.id] || [];
@@ -1253,36 +1252,36 @@ function TablaHabitantes({ rows, onEdit, onDelete, onManageFamily, isSearching, 
                       if (!isSearching && (r.es_jefe_familia || hasChildren)) toggleExpand(r.id);
                     }}
                     className={`
-                      ${isDependentFromSearch ? "bg-slate-50/70" : i % 2 === 0 ? "bg-white" : "bg-slate-50"}
-                      hover:bg-blue-50 transition-colors
+                      ${isDependentFromSearch ? "bg-slate-50/50" : i % 2 === 0 ? "bg-white" : "bg-slate-50/50"}
+                      hover:bg-slate-100/80 transition-colors duration-150
                       ${!isSearching && (r.es_jefe_familia || hasChildren) ? "cursor-pointer" : ""}
                     `}
                   >
-                    <td className={`px-3 py-2 ${isDependentFromSearch ? "pl-8" : ""}`}>
-                      <div className="flex items-center gap-1.5">
+                    <td className={`px-4 py-3 ${isDependentFromSearch ? "pl-8" : ""}`}>
+                      <div className="flex items-center gap-2">
                         {!isSearching && (r.es_jefe_familia || hasChildren) && (
-                           <span className="text-slate-400">
-                             {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                           <span className="text-slate-400 transition-transform duration-200">
+                             {isExpanded ? <ChevronDown size={15} /> : <ChevronRight size={15} />}
                            </span>
                         )}
                         {isDependentFromSearch && (
-                          <span className="text-slate-300 font-bold" title="Dependiente">↳</span>
+                           <span className="text-slate-300 font-bold" title="Dependiente">↳</span>
                         )}
                         {r.es_jefe_familia && (
-                          <Home size={16} className="text-[#0f2847] flex-shrink-0 mb-0.5" title="Jefe de Familia" />
+                          <Home size={15} className="text-indigo-500 flex-shrink-0 mb-0.5" title="Jefe de Familia" />
                         )}
-                        <span className={!isSearching && r.es_jefe_familia ? "font-bold text-[#0f2847]" : "font-medium text-slate-700"}>
+                        <span className={!isSearching && r.es_jefe_familia ? "font-bold text-[#0f2847]" : "font-semibold text-slate-700"}>
                           {r.nombre}
                         </span>
                       </div>
                     </td>
-                    <td className="px-3 py-2 font-medium text-slate-700">{r.apellido}</td>
-                    <td className="px-3 py-2">{r.cedula}</td>
-                    <td className="px-3 py-2">{r.telefono}</td>
-                    <td className="px-3 py-2">{r.edad}</td>
-                    <td className="px-3 py-2">{r.calle}</td>
+                    <td className="px-4 py-3 font-semibold text-slate-700">{r.apellido}</td>
+                    <td className="px-4 py-3 text-slate-600 font-medium">{r.cedula}</td>
+                    <td className="px-4 py-3 text-slate-600 font-medium">{r.telefono}</td>
+                    <td className="px-4 py-3 text-slate-600 font-medium">{r.edad}</td>
+                    <td className="px-4 py-3 text-slate-600 font-medium">{r.calle}</td>
                     {(onEdit || onDelete || onManageFamily) && (
-                      <td className="px-3 py-2 text-right">
+                      <td className="px-4 py-3 text-right">
                         {renderActions(r)}
                       </td>
                     )}
@@ -1290,20 +1289,20 @@ function TablaHabitantes({ rows, onEdit, onDelete, onManageFamily, isSearching, 
 
                   {/* Filas Hijos (Solo si no estamos buscando modo lista y está expandido) */}
                   {!isSearching && isExpanded && children.map((child) => (
-                    <tr key={child.id} className="bg-slate-50/90 hover:bg-slate-100 transition-colors border-l-4 border-l-blue-200">
-                      <td className="px-3 py-2 pl-12 text-sm text-slate-600">
+                    <tr key={child.id} className="bg-slate-50/90 hover:bg-slate-100 transition-colors border-l-4 border-l-indigo-400 duration-150">
+                      <td className="px-4 py-3 pl-12 text-sm text-slate-600">
                         <div className="flex items-center gap-2">
                            <span className="text-slate-300 font-bold">↳</span>
-                           {child.nombre}
+                           <span className="font-semibold text-slate-600">{child.nombre}</span>
                         </div>
                       </td>
-                      <td className="px-3 py-2 text-sm text-slate-600">{child.apellido}</td>
-                      <td className="px-3 py-2 text-sm text-slate-600">{child.cedula}</td>
-                      <td className="px-3 py-2 text-sm text-slate-600">{child.telefono}</td>
-                      <td className="px-3 py-2 text-sm text-slate-600">{child.edad}</td>
-                      <td className="px-3 py-2 text-sm text-slate-600">{child.calle}</td>
+                      <td className="px-4 py-3 text-sm font-semibold text-slate-600">{child.apellido}</td>
+                      <td className="px-4 py-3 text-sm text-slate-500 font-medium">{child.cedula}</td>
+                      <td className="px-4 py-3 text-sm text-slate-500 font-medium">{child.telefono}</td>
+                      <td className="px-4 py-3 text-sm text-slate-500 font-medium">{child.edad}</td>
+                      <td className="px-4 py-3 text-sm text-slate-500 font-medium">{child.calle}</td>
                       {(onEdit || onDelete || onManageFamily) && (
-                        <td className="px-3 py-2 text-right">
+                        <td className="px-4 py-3 text-right">
                           {renderActions(child)}
                         </td>
                       )}
@@ -1314,7 +1313,7 @@ function TablaHabitantes({ rows, onEdit, onDelete, onManageFamily, isSearching, 
             })
           ) : (
             <tr>
-              <td className="px-3 py-4 text-center text-sm text-slate-500" colSpan={(onEdit || onDelete || onManageFamily) ? 7 : 6}>
+              <td className="px-4 py-6 text-center text-sm text-slate-400 italic" colSpan={(onEdit || onDelete || onManageFamily) ? 7 : 6}>
                 Sin registros para mostrar.
               </td>
             </tr>
