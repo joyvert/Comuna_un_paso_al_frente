@@ -42,8 +42,11 @@ async function hashPasswordWithSalt(password, salt) {
 function passwordStrength(password) {
   const pw = String(password || "");
   const rules = [
-    { label: "Mínimo 8 caracteres", ok: pw.length >= 8 },
+    { label: "Mínimo 10 caracteres", ok: pw.length >= 10 },
+    { label: "Mayúscula", ok: /[A-Z]/.test(pw) },
+    { label: "Minúscula", ok: /[a-z]/.test(pw) },
     { label: "Número", ok: /\d/.test(pw) },
+    { label: "Símbolo", ok: /[^A-Za-z0-9]/.test(pw) },
   ];
   return rules.every((r) => r.ok);
 }
@@ -200,7 +203,7 @@ export default function AdminVoceros({ consejos, calles, inputClass, onMessage }
   return (
     <div className="space-y-10">
       <div>
-        <h4 className="mb-4 flex items-center gap-2 font-semibold text-[#0f2847]">
+        <h4 className="mb-4 flex items-center gap-2 font-semibold text-indigo-900">
           <UserPlus className="h-5 w-5" /> Crear cuenta de vocero
         </h4>
         <form onSubmit={handleCreate} className="grid gap-4 md:grid-cols-2">
@@ -240,56 +243,34 @@ export default function AdminVoceros({ consejos, calles, inputClass, onMessage }
               onChange={(e) => setForm((p) => ({ ...p, usuario: e.target.value }))}
             />
           </div>
-          <div className="flex flex-col">
-            <label className="mb-1 text-xs font-semibold text-slate-700">Consejo Comunal</label>
-            <select
-              className={inputClass}
-              value={form.vocero}
-              onChange={(e) => {
-                const newVal = e.target.value;
-                setForm((p) => ({ 
-                  ...p, 
-                  vocero: newVal,
-                  calle: newVal === "La Esperanza" && !calles.includes(p.calle) ? calles[0] : (newVal !== "La Esperanza" ? "" : p.calle)
-                }));
-              }}
-            >
-              {consejos.map((c) => (
-                <option key={c} value={c}>
-                  Consejo: {c}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="flex flex-col">
-            <label className="mb-1 text-xs font-semibold text-slate-700">Calle</label>
-            {form.vocero === "La Esperanza" ? (
-              <select
-                className={inputClass}
-                value={form.calle}
-                onChange={(e) => setForm((p) => ({ ...p, calle: e.target.value }))}
-              >
-                {calles.map((c) => (
-                  <option key={c} value={c}>
-                    Calle: {c}
-                  </option>
-                ))}
-              </select>
-            ) : (
-              <input
-                className={inputClass}
-                placeholder="Escribe el nombre de la calle"
-                value={form.calle}
-                onChange={(e) => setForm((p) => ({ ...p, calle: e.target.value }))}
-              />
-            )}
-          </div>
+          <select
+            className={inputClass}
+            value={form.vocero}
+            onChange={(e) => setForm((p) => ({ ...p, vocero: e.target.value }))}
+          >
+            {consejos.map((c) => (
+              <option key={c} value={c}>
+                Consejo: {c}
+              </option>
+            ))}
+          </select>
+          <select
+            className={inputClass}
+            value={form.calle}
+            onChange={(e) => setForm((p) => ({ ...p, calle: e.target.value }))}
+          >
+            {calles.map((c) => (
+              <option key={c} value={c}>
+                Calle: {c}
+              </option>
+            ))}
+          </select>
           <div className="flex flex-col">
             <label className="mb-1 text-xs font-semibold text-slate-700">Contraseña inicial</label>
             <input
               className={inputClass}
               type="password"
-              placeholder="Mínimo 8 caracteres y 1 número"
+              placeholder="Contraseña inicial"
               value={form.password}
               onChange={(e) => setForm((p) => ({ ...p, password: e.target.value }))}
             />
@@ -353,7 +334,7 @@ export default function AdminVoceros({ consejos, calles, inputClass, onMessage }
           <button
             type="submit"
             disabled={creating || !canCreate}
-            className="rounded-xl bg-[#0f2847] px-4 py-2 font-medium text-white hover:bg-[#12345f] disabled:opacity-50 md:col-span-2"
+            className="rounded-xl bg-indigo-600 px-4 py-2 font-medium text-white hover:bg-indigo-700 disabled:opacity-50 md:col-span-2"
           >
             {creating ? "Creando…" : "Crear vocero"}
           </button>
@@ -361,7 +342,7 @@ export default function AdminVoceros({ consejos, calles, inputClass, onMessage }
       </div>
 
       <div>
-        <h4 className="mb-4 font-semibold text-[#0f2847]">Voceros registrados</h4>
+        <h4 className="mb-4 font-semibold text-indigo-900">Voceros registrados</h4>
         {loading ? (
           <p className="text-sm text-slate-500">Cargando…</p>
         ) : (
@@ -425,8 +406,8 @@ export default function AdminVoceros({ consejos, calles, inputClass, onMessage }
 
       {editUser && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 p-4">
-          <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl bg-white p-6 shadow-xl">
-            <h5 className="mb-4 font-semibold text-[#0f2847]">Editar vocero</h5>
+          <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-3xl glass-card p-6 md:p-8 shadow-2xl">
+            <h5 className="mb-4 font-semibold text-indigo-900">Editar vocero</h5>
             <form onSubmit={saveEdit} className="space-y-3">
               <div className="flex flex-col">
                 <label className="mb-1 text-xs font-semibold text-slate-700">Nombre</label>
@@ -458,14 +439,7 @@ export default function AdminVoceros({ consejos, calles, inputClass, onMessage }
                 <select
                   className={inputClass}
                   value={editForm.vocero}
-                  onChange={(e) => {
-                    const newVal = e.target.value;
-                    setEditForm((p) => ({ 
-                      ...p, 
-                      vocero: newVal,
-                      calle: newVal === "La Esperanza" && !calles.includes(p.calle) ? calles[0] : (newVal !== "La Esperanza" ? "" : p.calle)
-                    }));
-                  }}
+                  onChange={(e) => setEditForm((p) => ({ ...p, vocero: e.target.value }))}
                 >
                   {consejos.map((c) => (
                     <option key={c} value={c}>
@@ -476,29 +450,20 @@ export default function AdminVoceros({ consejos, calles, inputClass, onMessage }
               </div>
               <div className="flex flex-col">
                 <label className="mb-1 text-xs font-semibold text-slate-700">Calle</label>
-                {editForm.vocero === "La Esperanza" ? (
-                  <select
-                    className={inputClass}
-                    value={editForm.calle}
-                    onChange={(e) => setEditForm((p) => ({ ...p, calle: e.target.value }))}
-                  >
-                    {calles.map((c) => (
-                      <option key={c} value={c}>
-                        {c}
-                      </option>
-                    ))}
-                  </select>
-                ) : (
-                  <input
-                    className={inputClass}
-                    placeholder="Escribe el nombre de la calle"
-                    value={editForm.calle}
-                    onChange={(e) => setEditForm((p) => ({ ...p, calle: e.target.value }))}
-                  />
-                )}
+                <select
+                  className={inputClass}
+                  value={editForm.calle}
+                  onChange={(e) => setEditForm((p) => ({ ...p, calle: e.target.value }))}
+                >
+                  {calles.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </select>
               </div>
               <div className="flex gap-2 pt-2">
-                <button type="submit" className="rounded-xl bg-[#0f2847] px-4 py-2 text-sm text-white">
+                <button type="submit" className="rounded-xl bg-indigo-600 px-4 py-2 text-sm text-white">
                   Guardar
                 </button>
                 <button type="button" className="rounded-xl border px-4 py-2 text-sm" onClick={() => setEditUser(null)}>
@@ -512,12 +477,12 @@ export default function AdminVoceros({ consejos, calles, inputClass, onMessage }
 
       {resetUser && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
-            <h5 className="mb-2 flex items-center gap-2 font-semibold text-[#0f2847]">
+          <div className="w-full max-w-md rounded-3xl glass-card p-6 md:p-8 shadow-2xl">
+            <h5 className="mb-2 flex items-center gap-2 font-semibold text-indigo-900">
               <RefreshCw className="h-4 w-4" /> Nueva contraseña para {resetUser.user_id}
             </h5>
             <p className="mb-4 text-xs text-slate-500">
-              Mínimo 8 caracteres y 1 número.
+              Mínimo 10 caracteres, mayúscula, minúscula, número y símbolo.
             </p>
             <form onSubmit={saveReset} className="space-y-3">
               <input
