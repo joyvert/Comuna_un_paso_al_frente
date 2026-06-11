@@ -565,6 +565,15 @@ export default function AuthCard({ onAuthSuccess }) {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#090d16] px-4 relative overflow-hidden">
+      {/* Background Image with Dark Overlay */}
+      <div 
+        className="absolute inset-0 bg-cover bg-center pointer-events-none transition-all duration-1000"
+        style={{
+          backgroundImage: `url('https://images.unsplash.com/photo-1568605114967-8130f3a36994?auto=format&fit=crop&w=1920&q=80')`,
+        }}
+      />
+      <div className="absolute inset-0 bg-[#090d16]/80 backdrop-blur-sm pointer-events-none" />
+
       {/* Background decoration elements */}
       <div className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-[#1e3a8a]/20 rounded-full blur-[120px] pointer-events-none"></div>
       <div className="absolute bottom-1/4 right-1/4 translate-x-1/2 translate-y-1/2 w-96 h-96 bg-[#06b6d4]/10 rounded-full blur-[120px] pointer-events-none"></div>
