@@ -233,10 +233,16 @@ function App() {
       api.getPagos(consejoNombre),
     ]);
 
-    // Normalizar capitalización de las calles para evitar fallos de renderizado o filtros
+    // Normalizar nombres de las calles para evitar fallos por typos, espacios o mayúsculas
     const normalizedHabitantes = (hab.habitantes || []).map((h) => {
       const call = (h.calle || "").trim();
-      const matched = calles.find((c) => c.toLowerCase() === call.toLowerCase());
+      const lower = call.toLowerCase();
+      let matched = "";
+      if (lower.includes("esperaza") || lower.includes("esperanza")) matched = "Calle principal La Esperanza";
+      else if (lower.includes("fe integral")) matched = "Calle la fe integral";
+      else if (lower.includes("portugueses")) matched = "Los Portugueses";
+      else if (lower.includes("peñas") || lower.includes("penas")) matched = "Los Peñas";
+      else if (lower.includes("acequia")) matched = "La Acequia";
       return { ...h, calle: matched || call };
     });
 
