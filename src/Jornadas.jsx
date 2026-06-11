@@ -257,7 +257,7 @@ export default function Jornadas({ sessionUser, activeConsejo, db, setDb, inputC
             </div>
           </div>
 
-          <div className="flex flex-wrap items-end gap-4">
+          <div className="flex flex-col md:flex-row md:items-end gap-3 md:gap-4">
             <div className="w-full max-w-sm">
               <label className="mb-1 ml-1 block text-xs font-medium text-slate-500">Buscar por nombre o cédula</label>
               <div className="relative">
@@ -273,7 +273,7 @@ export default function Jornadas({ sessionUser, activeConsejo, db, setDb, inputC
             </div>
             
             {sessionUser?.isAdmin && callesDisponibles.length > 0 && (
-              <div className="w-full max-w-[200px]">
+              <div className="w-full md:max-w-[200px]">
                 <label className="mb-1 ml-1 block text-xs font-medium text-slate-500">Filtrar por Calle</label>
                 <select 
                   className={inputClass}
@@ -286,12 +286,13 @@ export default function Jornadas({ sessionUser, activeConsejo, db, setDb, inputC
               </div>
             )}
 
-            <span className="text-sm text-slate-500 ml-auto mb-2">
+            <span className="text-xs sm:text-sm text-slate-500 md:ml-auto mb-1 md:mb-2 font-medium">
               Total habitantes mostrados: {filtrados.length}
             </span>
           </div>
 
-          <div className="overflow-x-auto overflow-y-auto max-h-[600px] border border-slate-200 rounded-xl relative shadow-sm">
+          {/* Desktop Table View */}
+          <div className="hidden md:block overflow-x-auto overflow-y-auto max-h-[600px] border border-slate-200 rounded-xl relative shadow-sm">
             <table className="w-full text-left text-sm text-slate-600">
               <thead className="bg-[#0f2847] text-white sticky top-0 z-10">
                 <tr>
@@ -388,7 +389,118 @@ export default function Jornadas({ sessionUser, activeConsejo, db, setDb, inputC
             </table>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-4 items-center justify-between rounded-xl border border-emerald-200 bg-emerald-50 p-4 mt-4">
+          {/* Mobile Card List View */}
+          <div className="block md:hidden space-y-3 max-h-[500px] overflow-y-auto pr-1">
+            {filtrados.length === 0 ? (
+              <div className="bg-white rounded-xl border border-slate-200 p-6 text-center text-slate-500 text-sm">
+                No se encontraron habitantes.
+              </div>
+            ) : (
+              filtrados.map((h) => {
+                const c = checks[h.id] || {};
+                return (
+                  <div 
+                    key={h.id} 
+                    className={`bg-white rounded-xl border p-4 shadow-sm transition-all duration-200 flex flex-col gap-3.5 ${
+                      c.checked ? 'border-cyan-500 bg-cyan-50/5' : 'border-slate-200'
+                    }`}
+                  >
+                    <div className="flex items-start gap-3 cursor-pointer" onClick={() => handleToggleCheck(h.id)}>
+                      <div className="pt-0.5 shrink-0 select-none">
+                        {c.checked ? (
+                          <CheckSquare className="text-cyan-600" size={22} />
+                        ) : (
+                          <Square className="text-slate-300" size={22} />
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1 select-none">
+                        <div className="font-semibold text-slate-800 text-sm">
+                          {h.nombre} {h.apellido}
+                        </div>
+                        <div className="text-xs text-slate-500 mt-0.5">
+                          V-{h.cedula} • <span className="font-medium text-slate-600">{h.calle}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className={`grid gap-3 ${c.checked ? 'opacity-100' : 'opacity-40 pointer-events-none'}`}>
+                      <div className="w-full h-[1px] bg-slate-100" />
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          {form.servicio === "Gas" ? (
+                            <div className="flex gap-2">
+                              <label className="flex-1 flex flex-col gap-1 text-[10px] font-semibold text-slate-500">
+                                Presión:
+                                <input 
+                                  type="number" 
+                                  className="w-full rounded border border-slate-300 px-2 py-1.5 text-xs outline-none focus:border-cyan-600 bg-white" 
+                                  value={c.presion || ""}
+                                  onChange={(e) => handleChangeField(h.id, 'presion', e.target.value)}
+                                  disabled={!c.checked}
+                                  min="0"
+                                  placeholder="0"
+                                />
+                              </label>
+                              <label className="flex-1 flex flex-col gap-1 text-[10px] font-semibold text-slate-500">
+                                Rosca:
+                                <input 
+                                  type="number" 
+                                  className="w-full rounded border border-slate-300 px-2 py-1.5 text-xs outline-none focus:border-cyan-600 bg-white" 
+                                  value={c.rosca || ""}
+                                  onChange={(e) => handleChangeField(h.id, 'rosca', e.target.value)}
+                                  disabled={!c.checked}
+                                  min="0"
+                                  placeholder="0"
+                                />
+                              </label>
+                            </div>
+                          ) : (
+                            <label className="flex flex-col gap-1 text-[10px] font-semibold text-slate-500">
+                              Combos:
+                              <input 
+                                type="number" 
+                                className="w-full rounded border border-slate-300 px-2 py-1.5 text-xs outline-none focus:border-cyan-600 bg-white" 
+                                value={c.combos !== undefined ? c.combos : 1}
+                                onChange={(e) => handleChangeField(h.id, 'combos', e.target.value)}
+                                disabled={!c.checked}
+                                min="1"
+                              />
+                            </label>
+                          )}
+                        </div>
+                        
+                        <div>
+                          <label className="flex flex-col gap-1 text-[10px] font-semibold text-slate-500">
+                            Monto (Bs):
+                            <div className="relative w-full">
+                              <input 
+                                type="text" 
+                                inputMode="numeric"
+                                placeholder="0,00" 
+                                className="w-full rounded border border-slate-300 pl-2 pr-6 py-1.5 text-xs outline-none focus:border-cyan-600 bg-white font-semibold text-right" 
+                                value={c.monto !== undefined ? c.monto : ""}
+                                onChange={(e) => {
+                                  const formatted = formatATM(e.target.value);
+                                  handleChangeField(h.id, 'monto', formatted);
+                                }}
+                                disabled={!c.checked}
+                              />
+                              <span className="absolute right-1.5 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400 pointer-events-none">
+                                Bs
+                              </span>
+                            </div>
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+
+          {/* Sticky Total and Save Bar */}
+          <div className="sticky bottom-0 md:relative z-20 flex flex-col sm:flex-row gap-4 items-center justify-between rounded-xl border border-emerald-200 bg-emerald-50/95 backdrop-blur shadow-lg md:shadow-none p-4 mt-4">
             <div className="text-emerald-900 font-semibold flex items-center gap-2">
               <span className="text-sm uppercase tracking-wide opacity-80">Monto Total:</span>
               <span className="text-xl">{formatATM(Math.round(totalMonto * 100).toString()) || "0,00"} Bs</span>
@@ -396,7 +508,7 @@ export default function Jornadas({ sessionUser, activeConsejo, db, setDb, inputC
             <button
               onClick={handleGuardarJornada}
               disabled={loading}
-              className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-6 py-3 font-semibold text-white transition hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-6 py-3 font-semibold text-white transition hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
             >
               <Save size={18} />
               {loading ? "Guardando..." : "Guardar Jornada"}
