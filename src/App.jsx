@@ -651,7 +651,7 @@ function App() {
                 <div className="grid gap-6 md:grid-cols-2 flex-1">
                   <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex flex-col hover-lift transition-all">
                     <h3 className="text-lg font-bold text-slate-800 mb-4 font-heading shrink-0">Distribución por Edades</h3>
-                    <div className="flex-1 w-full min-h-[300px]">
+                    <div className="flex-1 w-full min-h-[380px]">
                       <ResponsiveContainer>
                         <PieChart>
                           <Pie
@@ -663,7 +663,7 @@ function App() {
                             ].filter(d => d.value > 0)}
                             cx="50%"
                             cy="50%"
-                            outerRadius={100}
+                            outerRadius={125}
                             fill="#8884d8"
                             dataKey="value"
                             label={({name, percent}) => `${name} (${(percent * 100).toFixed(0)}%)`}
@@ -681,7 +681,7 @@ function App() {
 
                   <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex flex-col hover-lift transition-all">
                     <h3 className="text-lg font-bold text-slate-800 mb-4 font-heading shrink-0">Habitantes por Calle</h3>
-                    <div className="flex-1 w-full min-h-[300px]">
+                    <div className="flex-1 w-full min-h-[380px]">
                       <ResponsiveContainer>
                         <BarChart data={
                           calles.map(calle => ({
