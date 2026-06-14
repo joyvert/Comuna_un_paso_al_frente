@@ -5,10 +5,10 @@ export default function CuadernilloElectoral({ activeConsejo, db }) {
   const habitantes = db[activeConsejo]?.habitantes || [];
 
   const votantes = useMemo(() => {
-    // Filtrar mayores de 15 años
+    // Filtrar de 15 a 100 años
     const validos = habitantes.filter((h) => {
       const edad = Number(h.edad);
-      return !isNaN(edad) && edad >= 15;
+      return !isNaN(edad) && edad >= 15 && edad <= 100;
     });
 
     // Ordenar por cédula (menor a mayor)
@@ -42,6 +42,9 @@ export default function CuadernilloElectoral({ activeConsejo, db }) {
             Cuadernillo Electoral
           </h2>
           <p className="text-sm text-slate-500">Padrón de votantes registrados en {activeConsejo}</p>
+          <div className="mt-2 inline-flex items-center gap-1.5 bg-indigo-50 text-indigo-700 px-3 py-1 rounded-full text-sm font-semibold border border-indigo-100 shadow-sm">
+            Total Votantes (15 a 100 años): {votantes.length}
+          </div>
         </div>
         <button
           onClick={handlePrint}
@@ -84,7 +87,7 @@ export default function CuadernilloElectoral({ activeConsejo, db }) {
               {votantes.length === 0 ? (
                 <tr>
                   <td colSpan="7" className="p-8 text-center text-slate-500">
-                    No hay habitantes mayores de 15 años registrados.
+                    No hay habitantes entre 15 y 100 años registrados.
                   </td>
                 </tr>
               ) : (

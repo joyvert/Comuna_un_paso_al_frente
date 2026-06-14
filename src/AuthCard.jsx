@@ -74,17 +74,17 @@ function passwordStrength(password) {
 
 function TextField({ icon: Icon, label, placeholder, value, onChange, type = "text" }) {
   return (
-    <label className="block">
-      <span className="mb-1 block text-xs font-medium text-slate-600">{label}</span>
-      <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2 shadow-sm">
-        {Icon ? <Icon className="h-4 w-4 text-cyan-600" aria-hidden /> : null}
+    <label className="block relative pt-4 mb-4">
+      <span className="absolute top-0 left-0 text-[10px] sm:text-xs font-semibold text-slate-400 uppercase tracking-wider">{label}</span>
+      <div className="flex items-center gap-2 border-b border-slate-600/50 py-2 focus-within:border-rose-500 transition-colors">
         <input
-          className="w-full bg-transparent outline-none text-sm text-slate-800 placeholder:text-slate-400"
+          className="w-full bg-transparent outline-none text-sm text-slate-200 placeholder:text-slate-600"
           placeholder={placeholder}
           value={value}
           type={type}
           onChange={onChange}
         />
+        {Icon ? <Icon className="h-4 w-4 text-slate-500" aria-hidden /> : null}
       </div>
     </label>
   );
@@ -92,12 +92,11 @@ function TextField({ icon: Icon, label, placeholder, value, onChange, type = "te
 
 function PasswordField({ icon: Icon, label, placeholder, value, onChange, visible, onToggle }) {
   return (
-    <label className="block">
-      <span className="mb-1 block text-xs font-medium text-slate-600">{label}</span>
-      <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2 shadow-sm">
-        {Icon ? <Icon className="h-4 w-4 text-cyan-600" aria-hidden /> : null}
+    <label className="block relative pt-4 mb-4">
+      <span className="absolute top-0 left-0 text-[10px] sm:text-xs font-semibold text-slate-400 uppercase tracking-wider">{label}</span>
+      <div className="flex items-center gap-2 border-b border-slate-600/50 py-2 focus-within:border-rose-500 transition-colors">
         <input
-          className="w-full bg-transparent outline-none text-sm text-slate-800 placeholder:text-slate-400"
+          className="w-full bg-transparent outline-none text-sm text-slate-200 placeholder:text-slate-600"
           placeholder={placeholder}
           value={value}
           type={visible ? "text" : "password"}
@@ -105,7 +104,7 @@ function PasswordField({ icon: Icon, label, placeholder, value, onChange, visibl
         />
         <button
           type="button"
-          className="rounded-lg p-1 text-slate-500 hover:bg-slate-100 hover:text-slate-700"
+          className="rounded-full p-1 text-slate-500 hover:text-slate-300 transition-colors"
           onClick={onToggle}
           aria-label={visible ? "Ocultar contraseña" : "Mostrar contraseña"}
         >
@@ -118,15 +117,15 @@ function PasswordField({ icon: Icon, label, placeholder, value, onChange, visibl
 
 function SelectField({ label, value, onChange, options }) {
   return (
-    <label className="block">
-      <span className="mb-1 block text-xs font-medium text-slate-600">{label}</span>
+    <label className="block relative pt-4 mb-4">
+      <span className="absolute top-0 left-0 text-[10px] sm:text-xs font-semibold text-slate-400 uppercase tracking-wider">{label}</span>
       <select
-        className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2 shadow-sm text-sm text-slate-800 outline-none focus:ring-2 focus:ring-[#143c6e]/15"
+        className="w-full border-b border-slate-600/50 bg-transparent py-2 text-sm text-slate-200 outline-none focus:border-rose-500 transition-colors appearance-none"
         value={value}
         onChange={onChange}
       >
         {options.map((opt) => (
-          <option key={opt} value={opt}>
+          <option key={opt} value={opt} className="bg-[#111424] text-slate-200">
             {opt}
           </option>
         ))}
@@ -564,109 +563,105 @@ export default function AuthCard({ onAuthSuccess }) {
   const isSuccess = globalMessage.type === "success";
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#090d16] px-4 relative overflow-hidden">
-      {/* Background Image with Dark Overlay */}
-      <div 
-        className="absolute inset-0 bg-cover bg-center pointer-events-none transition-all duration-1000"
-        style={{
-          backgroundImage: `url('https://images.unsplash.com/photo-1568605114967-8130f3a36994?auto=format&fit=crop&w=1920&q=80')`,
-        }}
-      />
-      <div className="absolute inset-0 bg-[#090d16]/80 backdrop-blur-sm pointer-events-none" />
-
-      {/* Background decoration elements */}
-      <div className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-[#1e3a8a]/20 rounded-full blur-[120px] pointer-events-none"></div>
-      <div className="absolute bottom-1/4 right-1/4 translate-x-1/2 translate-y-1/2 w-96 h-96 bg-[#06b6d4]/10 rounded-full blur-[120px] pointer-events-none"></div>
+    <div className="min-h-screen w-full flex items-center justify-center p-4 sm:p-6 md:p-8 bg-black text-slate-200 select-none font-sans">
       
-      <div className="relative w-full max-w-2xl z-10 animate-fade-in-up">
-        <div className="rounded-3xl bg-white/90 backdrop-blur-xl p-4 sm:p-6 md:p-10 shadow-2xl border border-white/40">
-          <div className="mb-4 sm:mb-5 flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-900/10 text-cyan-600 shadow-sm">
-                <ShieldCheck className="h-5 w-5" aria-hidden />
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-slate-800 font-heading">Comuna un paso al frente</p>
-                <p className="text-xs text-slate-500">Acceso seguro para el equipo</p>
-              </div>
+      {/* Centered Split Card */}
+      <div className="relative z-10 w-full max-w-[1000px] bg-[#111424] border border-slate-700/50 rounded-2xl shadow-2xl flex flex-col md:flex-row overflow-hidden min-h-[600px] max-h-[95vh]">
+        
+        {/* Left Side: Background Image */}
+        <div 
+          className="w-full md:w-1/2 min-h-[250px] md:min-h-0 relative flex flex-col justify-between p-6 sm:p-10 bg-cover bg-center"
+          style={{
+            backgroundImage: `url('https://images.unsplash.com/photo-1558591710-4b4a1ae0f04d?auto=format&fit=crop&w=1920&q=80')`,
+          }}
+        >
+          {/* Transparent dark gradient overlays over the left image side for readability */}
+          <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent pointer-events-none" />
+
+          {/* Comuna logo/text at top-left of the image */}
+          <div className="relative z-10 flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 backdrop-blur-md text-white shadow-xl">
+              <ShieldCheck className="h-6 w-6" aria-hidden />
             </div>
-            <div className="hidden sm:flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
-              <span className="h-2 w-2 rounded-full bg-emerald-500" aria-hidden />
-              Validación en cliente + preparación para servidor
-            </div>
+            <span className="text-lg sm:text-xl font-bold tracking-wide text-white uppercase font-heading">
+              Comuna un paso al frente
+            </span>
           </div>
 
-          <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-slate-50/80 [perspective:1200px]">
-            {/* Overlay para sensación de flip */}
-            <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300">
-              <div className="absolute -right-20 -top-20 h-40 w-40 rounded-full bg-slate-900/10 blur-2xl" />
+          {/* Bottom text inside the image (only "¿No tienes una cuenta? Regístrate" or register call to action, if mode is login and register is allowed) */}
+          {mode === "login" && allowRegisterUi && (
+            <div className="relative z-10 mt-auto pt-6">
+              <p className="text-sm text-white/85 font-light max-w-xs mb-4">
+                ¿No tienes una cuenta? Regístrate para acceder a todas las funciones de nuestro servicio.
+              </p>
+              <button 
+                onClick={() => {
+                  setGlobalMessage({ type: "info", text: "" });
+                  setMode("register");
+                }}
+                className="px-6 py-2 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md text-white text-sm font-medium border border-white/20 transition-all shadow-lg cursor-pointer"
+              >
+                Regístrate ahora
+              </button>
             </div>
+          )}
+        </div>
 
-            <div
-              className="relative transition-[height] duration-500 ease-in-out"
-              style={{ height: panelHeight || undefined }}
-            >
+        {/* Right Side: Form Content */}
+        <div className="w-full md:w-1/2 flex flex-col justify-center px-6 py-10 sm:px-10 md:px-12 bg-[#111424] overflow-y-auto">
+          <div className="w-full max-w-sm mx-auto relative">
+            {/* Título de Formulario */}
+            <h2 className="text-2xl sm:text-3xl font-light text-white mb-6 sm:mb-8 text-center md:text-left">
+              {mode === "login" ? "Iniciar sesión" : mode === "register" ? "Regístrate" : "Recuperar cuenta"}
+            </h2>
+
+            {globalMessage.text ? (
+              <div
+                className={`mb-6 rounded-lg px-4 py-3 text-sm border-l-4 ${
+                  isError ? "border-rose-500 bg-rose-500/10 text-rose-200" : 
+                  isSuccess ? "border-emerald-500 bg-emerald-500/10 text-emerald-200" : 
+                  "border-blue-500 bg-blue-500/10 text-blue-200"
+                }`}
+              >
+                {globalMessage.text}
+              </div>
+            ) : null}
+
+            {/* Form Content Based on Mode */}
+            <div className="transition-all duration-500 w-full relative">
               {mode === "recover" ? (
-                <div ref={recoveryPanelRef} className="p-4 sm:p-6 md:p-10">
-                  <div className="mb-4 sm:mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-amber-50 text-amber-800 shadow-sm">
-                        <KeyRound className="h-5 w-5" aria-hidden />
-                      </div>
-                      <div>
-                        <h2 className="text-xl sm:text-2xl font-bold text-cyan-600">Recuperar contraseña</h2>
-                        <p className="mt-0.5 sm:mt-1 text-xs sm:text-sm text-slate-600">
-                          {recoverStep === 1
-                            ? "Indica tu correo o cédula para cargar tus preguntas de seguridad."
-                            : "Responde como al registrarte y elige una contraseña nueva."}
-                        </p>
-                      </div>
-                    </div>
-                      <button
-                        type="button"
-                        className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-100"
-                        onClick={() => {
-                          setGlobalMessage({ type: "info", text: "" });
-                          setMode("login");
-                        }}
-                      >
-                        <ArrowLeft className="h-4 w-4" aria-hidden />
-                        Volver al login
-                      </button>
-                  </div>
-
-                  {globalMessage.text ? (
-                    <div
-                      className={[
-                        "mb-5 rounded-xl border px-4 py-3 text-sm",
-                        isError ? "border-red-200 bg-red-50 text-red-700" : "",
-                        isSuccess ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "",
-                        !isError && !isSuccess ? "border-slate-200 bg-slate-50 text-slate-700" : "",
-                      ].join(" ")}
-                    >
-                      {globalMessage.text}
-                    </div>
-                  ) : null}
-
+                <div className="animate-fade-in">
                   {recoverStep === 1 ? (
-                    <form className="space-y-5" autoComplete="off" onSubmit={handleRecoveryStep1}>
+                    <form autoComplete="off" onSubmit={handleRecoveryStep1}>
+                      <p className="text-sm text-slate-400 mb-8 font-light">Indica tu correo o cédula para cargar tus preguntas de seguridad.</p>
                       <TextField
-                        icon={Mail}
-                        label="Correo electrónico o Cédula"
-                        placeholder="El mismo que usas para iniciar sesión"
+                        icon={User}
+                        label="Correo o Cédula"
+                        placeholder="Ej. juan@example.com o V-12345678"
                         value={recoverUserId}
                         onChange={(e) => setRecoverUserId(e.target.value)}
                       />
-                      <button
-                        type="submit"
-                        disabled={loading}
-                        className="w-full rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300"
-                      >
-                        {loading ? "Buscando…" : "Continuar"}
-                      </button>
+                      <div className="mt-10 flex items-center gap-4">
+                        <button
+                          type="submit"
+                          disabled={loading}
+                          className="flex-1 rounded-full bg-rose-600 px-6 py-3.5 text-sm font-bold tracking-wide text-white shadow-lg shadow-rose-600/30 transition hover:bg-rose-500 hover:shadow-rose-500/40 disabled:opacity-50"
+                        >
+                          {loading ? "Buscando…" : "Continuar"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => { setGlobalMessage({ type: "info", text: "" }); setMode("login"); }}
+                          className="text-sm text-slate-400 hover:text-white transition"
+                        >
+                          Cancelar
+                        </button>
+                      </div>
                     </form>
                   ) : (
-                    <form className="space-y-5" autoComplete="off" onSubmit={handleRecoverySubmit}>
+                    <form autoComplete="off" onSubmit={handleRecoverySubmit}>
+                      <p className="text-sm text-slate-400 mb-8 font-light">Responde y elige una contraseña nueva.</p>
                       <TextField
                         label={recoveryMeta?.pregunta1 || "Pregunta 1"}
                         placeholder="Tu respuesta"
@@ -680,359 +675,155 @@ export default function AuthCard({ onAuthSuccess }) {
                         onChange={(e) => setRecoverA2(e.target.value)}
                       />
                       <PasswordField
-                        icon={Lock}
                         label="Nueva contraseña"
-                        placeholder="Mínimo 8 caracteres y 1 número"
+                        placeholder="Mínimo 8 caracteres"
                         value={recoverPw}
                         onChange={(e) => setRecoverPw(e.target.value)}
                         visible={showRecoverPw}
                         onToggle={() => setShowRecoverPw((v) => !v)}
                       />
                       <PasswordField
-                        icon={Lock}
-                        label="Confirmar nueva contraseña"
+                        label="Confirmar contraseña"
                         placeholder="Repite la contraseña"
                         value={recoverPw2}
                         onChange={(e) => setRecoverPw2(e.target.value)}
                         visible={showRecoverPw2}
                         onToggle={() => setShowRecoverPw2((v) => !v)}
                       />
-
-                      <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 shadow-sm">
-                        <div className="flex items-center justify-between gap-3">
-                          <p className="text-xs font-semibold text-slate-600">Fuerza de contraseña</p>
-                          <p className="text-xs font-semibold text-cyan-600">{strengthRecover.strength}</p>
-                        </div>
-                        <div className="mt-2 h-2.5 rounded-full bg-slate-200">
-                          <div
-                            className="h-2.5 rounded-full bg-slate-900"
-                            style={{ width: `${strengthRecover.percent}%` }}
-                            aria-hidden
-                          />
-                        </div>
-                        <div className="mt-2 grid grid-cols-1 gap-1 sm:grid-cols-2">
-                          {strengthRecover.rules.map((r) => (
-                            <div key={r.label} className="flex items-center gap-2 text-xs text-slate-600">
-                              <span
-                                className={[
-                                  "inline-flex h-2 w-2 rounded-full",
-                                  r.ok ? "bg-emerald-500" : "bg-slate-300",
-                                ].join(" ")}
-                                aria-hidden
-                              />
-                              {r.label}
-                            </div>
-                          ))}
-                        </div>
+                      
+                      <div className="mt-10 flex items-center gap-4">
+                        <button
+                          type="submit"
+                          disabled={loading || !canSubmitRecovery}
+                          className="flex-1 rounded-full bg-rose-600 px-6 py-3.5 text-sm font-bold tracking-wide text-white shadow-lg shadow-rose-600/30 transition hover:bg-rose-500 hover:shadow-rose-500/40 disabled:opacity-50"
+                        >
+                          {loading ? "Guardando…" : "Restablecer"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => { resetRecoveryView(); setMode("login"); }}
+                          className="text-sm text-slate-400 hover:text-white transition"
+                        >
+                          Cancelar
+                        </button>
                       </div>
-
-                      <button
-                        type="submit"
-                        disabled={loading || !canSubmitRecovery}
-                        className="w-full rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300"
-                      >
-                        {loading ? "Guardando…" : "Restablecer contraseña"}
-                      </button>
                     </form>
                   )}
                 </div>
-              ) : (
-              <div
-                className={`flex items-start transition-transform duration-700 ease-out [transform-style:preserve-3d] ${
-                  allowRegisterUi ? "w-[200%]" : "w-full"
-                }`}
-                style={allowRegisterUi ? slideStyle : undefined}
-              >
-              {/* Login */}
-              <div
-                ref={loginPanelRef}
-                className={`p-4 sm:p-6 md:p-10 ${allowRegisterUi ? "w-1/2" : "w-full"}`}
-              >
-                <form
-                  className="space-y-4 sm:space-y-5"
-                  autoComplete="off"
-                  onSubmit={handleLogin}
-                >
-                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
-                    <div>
-                      <h2 className="text-xl sm:text-2xl font-bold text-cyan-600">Inicio de Sesión</h2>
-                      <p className="mt-0.5 sm:mt-1 text-xs sm:text-sm text-slate-600">Accede con tu correo o cédula.</p>
-                    </div>
-                    {allowRegisterUi ? (
-                      <button
-                        type="button"
-                        className="rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-1.5 sm:px-3 sm:py-2 text-xs sm:text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-100 self-start sm:self-auto"
-                        onClick={() => {
-                          setGlobalMessage({ type: "info", text: "" });
-                          setMode("register");
-                        }}
-                      >
-                        Registrarte
-                      </button>
-                    ) : (
-                      <p className="max-w-[220px] text-left sm:text-right text-[10px] sm:text-xs text-slate-500 leading-normal">
-                        {regStatus.loading
-                          ? "Comprobando registro…"
-                          : regStatus.error
-                            ? "No se pudo conectar con la API. Comprueba que esté en http://localhost:4000"
-                            : "Las cuentas de vocero las crea el administrador desde el panel."}
-                      </p>
-                    )}
+              ) : mode === "register" ? (
+                <form autoComplete="off" onSubmit={handleRegister} className="animate-fade-in pb-10">
+                  <p className="text-sm text-slate-400 mb-8 font-light">
+                    {regStatus.firstUserPending
+                      ? "Eres el primer usuario: serás administrador del sistema."
+                      : "Crea tu cuenta de vocero en el sistema."}
+                  </p>
+                  
+                  <div className="grid gap-x-4 sm:grid-cols-2">
+                    <TextField label="Nombre" placeholder="Tu nombre" value={registerForm.nombre} onChange={(e) => setRegisterForm((p) => ({ ...p, nombre: e.target.value }))} />
+                    <TextField label="Apellido" placeholder="Tu apellido" value={registerForm.apellido} onChange={(e) => setRegisterForm((p) => ({ ...p, apellido: e.target.value }))} />
+                    <SelectField label="Consejo Comunal" value={registerForm.vocero} onChange={(e) => setRegisterForm((p) => ({ ...p, vocero: e.target.value }))} options={consejos} />
+                    <SelectField label="Calle" value={registerForm.calle} onChange={(e) => setRegisterForm((p) => ({ ...p, calle: e.target.value }))} options={calles} />
+                  </div>
+                  
+                  <TextField label="Correo o Cédula" placeholder="Ej. juan@example.com" value={registerForm.usuario} onChange={(e) => setRegisterForm((p) => ({ ...p, usuario: e.target.value }))} type="text" />
+                  
+                  <div className="grid gap-x-4 sm:grid-cols-2">
+                    <PasswordField label="Contraseña" placeholder="Mín. 8 caracteres" value={registerForm.password} onChange={(e) => setRegisterForm((p) => ({ ...p, password: e.target.value }))} visible={showPassReg} onToggle={() => setShowPassReg((v) => !v)} />
+                    <PasswordField label="Confirmar" placeholder="Repetir" value={registerForm.password2} onChange={(e) => setRegisterForm((p) => ({ ...p, password2: e.target.value }))} visible={showPassReg2} onToggle={() => setShowPassReg2((v) => !v)} />
                   </div>
 
+                  {registerForm.password2 && registerForm.password2 !== registerForm.password && (
+                    <p className="text-xs text-rose-500 mb-4">Las contraseñas no coinciden.</p>
+                  )}
+
+                  <div className="mt-6 mb-8 pt-6 border-t border-slate-800">
+                    <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">Seguridad (Recuperación)</h3>
+                    <div className="grid gap-x-4 sm:grid-cols-2">
+                      <SelectField label="Pregunta 1" value={registerForm.pregunta1} onChange={(e) => setRegisterForm((p) => ({ ...p, pregunta1: e.target.value }))} options={preguntas1} />
+                      <TextField label="Respuesta 1" placeholder="Tu respuesta" value={registerForm.respuesta1} onChange={(e) => setRegisterForm((p) => ({ ...p, respuesta1: e.target.value }))} />
+                      <SelectField label="Pregunta 2" value={registerForm.pregunta2} onChange={(e) => setRegisterForm((p) => ({ ...p, pregunta2: e.target.value }))} options={preguntas2} />
+                      <TextField label="Respuesta 2" placeholder="Tu respuesta" value={registerForm.respuesta2} onChange={(e) => setRegisterForm((p) => ({ ...p, respuesta2: e.target.value }))} />
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-6 mt-10">
+                    <button
+                      type="submit"
+                      disabled={loading || !canRegister}
+                      className="flex-1 rounded-full bg-rose-600 px-6 py-3.5 text-sm font-bold tracking-wide text-white shadow-lg shadow-rose-600/30 transition hover:bg-rose-500 hover:shadow-rose-500/40 disabled:opacity-50"
+                    >
+                      {loading ? "Creando…" : "Registrarme"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setMode("login")}
+                      className="text-sm text-slate-400 hover:text-white transition shrink-0"
+                    >
+                      ¿Ya tienes cuenta?
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <form autoComplete="off" onSubmit={handleLogin} className="animate-fade-in">
                   <TextField
-                    icon={Mail}
-                    label="Correo electrónico o Cédula"
-                    placeholder="Ej. juan@example.com o V-12345678"
+                    icon={User}
+                    label="Correo o Cédula"
+                    placeholder="ej. V-12345678"
                     value={loginForm.usuario}
                     onChange={(e) => setLoginForm((p) => ({ ...p, usuario: e.target.value }))}
-                    type="text"
                   />
-
                   <PasswordField
-                    icon={Lock}
                     label="Contraseña"
-                    placeholder="Tu contraseña"
+                    placeholder="Tu contraseña secreta"
                     value={loginForm.password}
                     onChange={(e) => setLoginForm((p) => ({ ...p, password: e.target.value }))}
                     visible={showLoginPass}
                     onToggle={() => setShowLoginPass((v) => !v)}
                   />
+                  
+                  <div className="flex items-center mt-6">
+                    <label className="flex items-center gap-2 cursor-pointer group">
+                      <div className="w-4 h-4 rounded border border-slate-600 group-hover:border-rose-500 flex items-center justify-center bg-transparent transition-colors">
+                        <div className="w-2 h-2 rounded-sm bg-transparent group-active:bg-rose-500/50"></div>
+                      </div>
+                      <span className="text-xs text-slate-400 group-hover:text-slate-300">Recuérdame</span>
+                    </label>
+                  </div>
 
-                  <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
-                    <button type="button" className="text-cyan-600 font-medium hover:underline" onClick={openRecovery}>
-                      Olvidé mi contraseña
+                  <div className="mt-12 flex items-center justify-between gap-4">
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      className="w-32 rounded-full bg-rose-600 px-6 py-3.5 text-sm font-bold tracking-wide text-white shadow-lg shadow-rose-600/30 transition hover:bg-rose-500 hover:shadow-rose-500/40 disabled:opacity-50"
+                    >
+                      {loading ? "..." : "Entrar"}
                     </button>
-                    {allowRegisterUi ? (
+                    
+                    <div className="flex flex-col gap-1 items-end">
                       <button
                         type="button"
-                        className="text-cyan-600 font-medium hover:underline"
-                        onClick={() => {
-                          setGlobalMessage({ type: "info", text: "" });
-                          setMode("register");
-                        }}
+                        onClick={openRecovery}
+                        className="text-xs font-medium text-slate-400 hover:text-rose-400 transition-colors"
                       >
-                        ¿No tienes cuenta? Regístrate aquí
+                        ¿Olvidaste tu contraseña?
                       </button>
-                    ) : null}
-                  </div>
-
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="mt-2 w-full rounded-xl bg-slate-900 px-4 py-2 sm:py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300"
-                  >
-                    {loading ? "Validando…" : "Iniciar Sesión"}
-                  </button>
-
-                  {globalMessage.text ? (
-                    <div
-                      className={[
-                        "rounded-xl border px-4 py-3 text-sm",
-                        isError ? "border-red-200 bg-red-50 text-red-700" : "",
-                        isSuccess ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "",
-                        !isError && !isSuccess ? "border-slate-200 bg-slate-50 text-slate-700" : "",
-                      ].join(" ")}
-                    >
-                      {globalMessage.text}
+                      {allowRegisterUi && (
+                        <button
+                          type="button"
+                          onClick={() => { setGlobalMessage({ type: "info", text: "" }); setMode("register"); }}
+                          className="text-xs font-medium text-slate-400 hover:text-white transition-colors"
+                        >
+                          Crear una cuenta nueva
+                        </button>
+                      )}
                     </div>
-                  ) : null}
+                  </div>
                 </form>
-              </div>
-
-              {/* Registro: primer usuario en BD o ALLOW_PUBLIC_REGISTER en API */}
-              {allowRegisterUi ? (
-              <div ref={registerPanelRef} className="w-1/2 p-4 sm:p-6 md:p-10">
-                <form
-                  className="space-y-4 sm:space-y-5"
-                  autoComplete="off"
-                  onSubmit={handleRegister}
-                >
-                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
-                    <div>
-                      <h2 className="text-xl sm:text-2xl font-bold text-cyan-600">Registro</h2>
-                      <p className="mt-0.5 sm:mt-1 text-xs sm:text-sm text-slate-600">
-                        {regStatus.firstUserPending
-                          ? "Eres el primer usuario: esta cuenta será administrador del sistema."
-                          : "Crea una cuenta de vocero (solo un administrador autorizado puede abrir el registro público)."}
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      className="rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-1.5 sm:px-3 sm:py-2 text-xs sm:text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-100 self-start sm:self-auto shrink-0"
-                      onClick={() => setMode("login")}
-                    >
-                      Ya tengo cuenta
-                    </button>
-                  </div>
-
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <TextField
-                      icon={User}
-                      label="Nombre"
-                      placeholder="Nombre"
-                      value={registerForm.nombre}
-                      onChange={(e) => setRegisterForm((p) => ({ ...p, nombre: e.target.value }))}
-                    />
-                    <TextField
-                      icon={User}
-                      label="Apellido"
-                      placeholder="Apellido"
-                      value={registerForm.apellido}
-                      onChange={(e) => setRegisterForm((p) => ({ ...p, apellido: e.target.value }))}
-                    />
-                    <SelectField
-                      label="Vocero del Consejo Comunal"
-                      value={registerForm.vocero}
-                      onChange={(e) => setRegisterForm((p) => ({ ...p, vocero: e.target.value }))}
-                      options={consejos}
-                    />
-                    <SelectField
-                      label="Calle"
-                      value={registerForm.calle}
-                      onChange={(e) => setRegisterForm((p) => ({ ...p, calle: e.target.value }))}
-                      options={calles}
-                    />
-                    <TextField
-                      icon={Mail}
-                      label="Correo electrónico o Cédula"
-                      placeholder="Ej. juan@example.com o V-12345678"
-                      value={registerForm.usuario}
-                      onChange={(e) => setRegisterForm((p) => ({ ...p, usuario: e.target.value }))}
-                      type="text"
-                    />
-                  </div>
-
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <PasswordField
-                      icon={Lock}
-                      label="Contraseña"
-                      placeholder="Mínimo 10 caracteres"
-                      value={registerForm.password}
-                      onChange={(e) => setRegisterForm((p) => ({ ...p, password: e.target.value }))}
-                      visible={showPassReg}
-                      onToggle={() => setShowPassReg((v) => !v)}
-                    />
-                    <PasswordField
-                      icon={Lock}
-                      label="Confirmar Contraseña"
-                      placeholder="Repite la contraseña"
-                      value={registerForm.password2}
-                      onChange={(e) => setRegisterForm((p) => ({ ...p, password2: e.target.value }))}
-                      visible={showPassReg2}
-                      onToggle={() => setShowPassReg2((v) => !v)}
-                    />
-                  </div>
-
-                  {/* Fuerza de contraseña */}
-                  <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 shadow-sm">
-                    <div className="flex items-center justify-between gap-3">
-                      <p className="text-xs font-semibold text-slate-600">Fuerza de contraseña</p>
-                      <p className="text-xs font-semibold text-cyan-600">{strength.strength}</p>
-                    </div>
-                    <div className="mt-2 h-2.5 rounded-full bg-slate-200">
-                      <div
-                        className="h-2.5 rounded-full bg-slate-900"
-                        style={{ width: `${strength.percent}%` }}
-                        aria-hidden
-                      />
-                    </div>
-                    <div className="mt-2 grid grid-cols-1 gap-1 sm:grid-cols-2">
-                      {strength.rules.map((r) => (
-                        <div key={r.label} className="flex items-center gap-2 text-xs text-slate-600">
-                          <span
-                            className={[
-                              "inline-flex h-2 w-2 rounded-full",
-                              r.ok ? "bg-emerald-500" : "bg-slate-300",
-                            ].join(" ")}
-                            aria-hidden
-                          />
-                          {r.label}
-                        </div>
-                      ))}
-                    </div>
-                    {registerForm.password2 && registerForm.password2 !== registerForm.password ? (
-                      <p className="mt-2 text-xs font-medium text-red-700">
-                        Las contraseñas no coinciden.
-                      </p>
-                    ) : null}
-                  </div>
-
-                  {/* Seguridad */}
-                  <div className="rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-4 shadow-sm">
-                    <h3 className="text-sm font-semibold text-cyan-600">
-                      Preguntas de Seguridad (para recuperación de cuenta)
-                    </h3>
-                    <div className="mt-3 grid gap-4 sm:grid-cols-2">
-                      <div className="space-y-2">
-                        <SelectField
-                          label="Pregunta 1"
-                          value={registerForm.pregunta1}
-                          onChange={(e) => setRegisterForm((p) => ({ ...p, pregunta1: e.target.value }))}
-                          options={preguntas1}
-                        />
-                        <TextField
-                          label="Respuesta 1"
-                          placeholder="Escribe tu respuesta"
-                          value={registerForm.respuesta1}
-                          onChange={(e) => setRegisterForm((p) => ({ ...p, respuesta1: e.target.value }))}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <SelectField
-                          label="Pregunta 2"
-                          value={registerForm.pregunta2}
-                          onChange={(e) => setRegisterForm((p) => ({ ...p, pregunta2: e.target.value }))}
-                          options={preguntas2}
-                        />
-                        <TextField
-                          label="Respuesta 2"
-                          placeholder="Escribe tu respuesta"
-                          value={registerForm.respuesta2}
-                          onChange={(e) => setRegisterForm((p) => ({ ...p, respuesta2: e.target.value }))}
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <button
-                    type="submit"
-                    disabled={loading || !canRegister}
-                    className="w-full rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300"
-                  >
-                    {loading ? "Creando cuenta…" : "Crear Cuenta"}
-                  </button>
-
-                  <div className="flex justify-center text-xs">
-                    <button
-                      type="button"
-                      className="text-cyan-600 font-medium hover:underline"
-                      onClick={() => setMode("login")}
-                    >
-                      Ya tengo cuenta, Iniciar Sesión
-                    </button>
-                  </div>
-
-                  {globalMessage.text ? (
-                    <div
-                      className={[
-                        "rounded-xl border px-4 py-3 text-sm",
-                        isError ? "border-red-200 bg-red-50 text-red-700" : "",
-                        isSuccess ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "",
-                        !isError && !isSuccess ? "border-slate-200 bg-slate-50 text-slate-700" : "",
-                      ].join(" ")}
-                    >
-                      {globalMessage.text}
-                    </div>
-                  ) : null}
-                </form>
-              </div>
-              ) : null}
-              </div>
               )}
             </div>
           </div>
         </div>
+
       </div>
     </div>
   );
