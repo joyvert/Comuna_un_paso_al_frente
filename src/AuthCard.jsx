@@ -568,19 +568,24 @@ export default function AuthCard({ onAuthSuccess }) {
       {/* Centered Split Card */}
       <div className="relative z-10 w-full max-w-[1000px] bg-[#111424] border border-slate-700/50 rounded-2xl shadow-2xl flex flex-col md:flex-row overflow-hidden min-h-[600px] max-h-[95vh]">
         
-        {/* Left Side: Background Image */}
+        {/* Left Side: Background Video */}
         <div 
-          className="w-full md:w-1/2 min-h-[250px] md:min-h-0 relative flex flex-col justify-between p-6 sm:p-10 bg-cover bg-center"
-          style={{
-            backgroundImage: `url('/comunidad_login.png')`,
-          }}
+          className="w-full md:w-1/2 min-h-[250px] md:min-h-0 relative flex flex-col justify-between p-6 sm:p-10 overflow-hidden"
         >
-          {/* Transparent dark gradient overlays over the left image side for readability */}
-          <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent pointer-events-none" />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent pointer-events-none" />
+          <video
+            autoPlay
+            loop
+            muted
+            playsInline
+            className="absolute inset-0 w-full h-full object-cover z-0"
+            src="/cielo.mov"
+          />
+          {/* Transparent dark gradient overlays over the left video side for readability */}
+          <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent pointer-events-none z-10" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent pointer-events-none z-10" />
 
           {/* Comuna logo/text at top-left of the image */}
-          <div className="relative z-10 flex items-center gap-3">
+          <div className="relative z-20 flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 backdrop-blur-md text-white shadow-xl">
               <ShieldCheck className="h-6 w-6" aria-hidden />
             </div>
@@ -591,7 +596,7 @@ export default function AuthCard({ onAuthSuccess }) {
 
           {/* Bottom text inside the image (only "¿No tienes una cuenta? Regístrate" or register call to action, if mode is login and register is allowed) */}
           {mode === "login" && allowRegisterUi && (
-            <div className="relative z-10 mt-auto pt-6">
+            <div className="relative z-20 mt-auto pt-6">
               <p className="text-sm text-white/85 font-light max-w-xs mb-4">
                 ¿No tienes una cuenta? Regístrate para acceder a todas las funciones de nuestro servicio.
               </p>
