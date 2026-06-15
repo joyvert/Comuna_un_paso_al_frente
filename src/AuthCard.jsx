@@ -572,7 +572,7 @@ export default function AuthCard({ onAuthSuccess }) {
         <div 
           className="w-full md:w-1/2 min-h-[250px] md:min-h-0 relative flex flex-col justify-between p-6 sm:p-10 bg-cover bg-center"
           style={{
-            backgroundImage: `url('https://images.unsplash.com/photo-1558591710-4b4a1ae0f04d?auto=format&fit=crop&w=1920&q=80')`,
+            backgroundImage: `url('/comunidad_login.png')`,
           }}
         >
           {/* Transparent dark gradient overlays over the left image side for readability */}

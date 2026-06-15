@@ -44,3 +44,8 @@ npm run dev
 5. **Registro público opcional**: con `ALLOW_PUBLIC_REGISTER=true` en la API cualquiera puede registrarse (cuentas nuevas **no** son admin salvo que sigan siendo el primer usuario de una BD vacía). Úsalo solo si lo necesitas.
 6. **Voceros**: al iniciar sesión solo ven habitantes y pagos de **su calle** dentro de **su consejo**.
 7. **Restablecer contraseña de un vocero**: desde Administración, icono de llave.
+
+## Enlaces de Producción
+
+- **Frontend (Vercel)**: [https://comuna-un-paso-al-frente.vercel.app/](https://comuna-un-paso-al-frente.vercel.app/)
+- **Backend / API (Render)**: [https://comuna-backend-982q.onrender.com](https://comuna-backend-982q.onrender.com)
