@@ -86,16 +86,16 @@ function ParticleBackground() {
     let height = (canvas.height = window.innerHeight);
 
     const particles = [];
-    const particleCount = Math.min(60, Math.floor((width * height) / 20000));
+    const particleCount = Math.min(380, Math.floor((width * height) / 3500));
 
     class Particle {
       constructor() {
         this.x = Math.random() * width;
         this.y = Math.random() * height;
-        this.vx = (Math.random() - 0.5) * 0.4;
-        this.vy = (Math.random() - 0.5) * 0.4;
-        this.radius = Math.random() * 2 + 1;
-        this.alpha = Math.random() * 0.5 + 0.2;
+        this.vx = (Math.random() - 0.5) * 0.35;
+        this.vy = (Math.random() - 0.5) * 0.35;
+        this.radius = Math.random() * 1.8 + 0.8;
+        this.alpha = Math.random() * 0.4 + 0.25;
         this.color = Math.random() > 0.5 ? "6, 182, 212" : "99, 102, 241"; // Teal or Indigo
       }
 
@@ -111,8 +111,8 @@ function ParticleBackground() {
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
         ctx.fillStyle = `rgba(${this.color}, ${this.alpha})`;
-        ctx.shadowBlur = 10;
-        ctx.shadowColor = `rgba(${this.color}, 0.5)`;
+        ctx.shadowBlur = 8;
+        ctx.shadowColor = `rgba(${this.color}, 0.4)`;
         ctx.fill();
         ctx.shadowBlur = 0;
       }
@@ -132,12 +132,12 @@ function ParticleBackground() {
           const dy = particles[i].y - particles[j].y;
           const dist = Math.sqrt(dx * dx + dy * dy);
 
-          if (dist < 100) {
+          if (dist < 70) {
             ctx.beginPath();
             ctx.moveTo(particles[i].x, particles[i].y);
             ctx.lineTo(particles[j].x, particles[j].y);
-            const alpha = (1 - dist / 100) * 0.15;
-            ctx.strokeStyle = `rgba(99, 102, 241, ${alpha})`;
+            const alpha = (1 - dist / 70) * 0.08;
+            ctx.strokeStyle = `rgba(${particles[i].color}, ${alpha})`;
             ctx.lineWidth = 0.5;
             ctx.stroke();
           }
