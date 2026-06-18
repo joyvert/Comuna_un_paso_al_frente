@@ -265,7 +265,7 @@ export default function Votaciones({ sessionUser, inputClass, onMessage, calles 
       {tab === "votacion" && (
         <div className="space-y-6">
           {sessionUser?.isAdmin && (
-            <div className={`p-4 rounded-xl shadow-sm border flex items-center justify-between ${globalElectionTitle ? 'bg-emerald-50 border-emerald-200' : 'bg-slate-50 border-slate-200'}`}>
+            <div className={`p-4 rounded-xl shadow-sm border flex flex-col sm:flex-row gap-4 sm:items-center justify-between ${globalElectionTitle ? 'bg-emerald-50 border-emerald-200' : 'bg-slate-50 border-slate-200'}`}>
               <div>
                 <h3 className={`font-bold ${globalElectionTitle ? 'text-emerald-800' : 'text-slate-700'}`}>
                   Panel de Control Global Electoral
@@ -277,18 +277,18 @@ export default function Votaciones({ sessionUser, inputClass, onMessage, calles 
                   }
                 </p>
               </div>
-              <div>
+              <div className="shrink-0 flex justify-start sm:justify-end">
                 {globalElectionTitle ? (
                   <button 
                     onClick={handleCloseGlobalElection}
-                    className="bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 font-bold px-4 py-2 rounded-lg transition"
+                    className="w-full sm:w-auto bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 font-bold px-3 py-1.5 text-xs sm:text-sm rounded-lg transition"
                   >
                     Cerrar Jornada Global
                   </button>
                 ) : (
                   <button 
                     onClick={() => { setStartTitulo(""); setShowStartModal(true); }}
-                    className="bg-[#0f2847] text-white hover:bg-[#15345c] font-bold px-4 py-2 rounded-lg transition"
+                    className="w-full sm:w-auto bg-[#0f2847] text-white hover:bg-[#15345c] font-bold px-3 py-1.5 text-xs sm:text-sm rounded-lg transition"
                   >
                     Aperturar Jornada Global
                   </button>
