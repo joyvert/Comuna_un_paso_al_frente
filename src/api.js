@@ -577,7 +577,7 @@ export const api = {
       const session = getSession();
       const q = session.isAdmin
         ? query(collection(db, "historial_votos"))
-        : query(collection(db, "historial_votos"), where("consejo", "==", session.vocero));
+        : query(collection(db, "historial_votos"), where("consejo", "==", session.vocero), where("calle", "==", session.calle));
       const snap = await getDocs(q);
       const historial = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       historial.sort((a, b) => (b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0));
