@@ -20,8 +20,14 @@ export default function Votaciones({ sessionUser, inputClass, onMessage, calles 
   const [adminSettingTitle, setAdminSettingTitle] = useState(false);
   const [showCloseGlobalElectionModal, setShowCloseGlobalElectionModal] = useState(false);
 
+  const [isMobile, setIsMobile] = useState(false);
+
   useEffect(() => {
     loadData();
+    
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
     
     // Polling silencioso cada 12 segundos para actualizar las estadísticas en tiempo real
     const timer = setInterval(async () => {
@@ -40,7 +46,10 @@ export default function Votaciones({ sessionUser, inputClass, onMessage, calles 
       }
     }, 12000);
     
-    return () => clearInterval(timer);
+    return () => {
+      clearInterval(timer);
+      window.removeEventListener("resize", checkMobile);
+    };
   }, []);
 
   async function loadData() {
@@ -332,8 +341,8 @@ export default function Votaciones({ sessionUser, inputClass, onMessage, calles 
         )}
       </div>
 
-      <div className="flex flex-wrap items-end gap-4">
-        <div className="w-full max-w-sm">
+      <div className="flex flex-col md:flex-row md:items-end gap-4">
+        <div className="w-full md:max-w-sm">
           <label className="mb-1 ml-1 block text-xs font-medium text-slate-500">Buscar habitante (nombre/cédula)</label>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
@@ -348,7 +357,7 @@ export default function Votaciones({ sessionUser, inputClass, onMessage, calles 
         </div>
 
         {sessionUser?.isAdmin && callesDisponibles.length > 0 && (
-          <div className="w-full max-w-[200px]">
+          <div className="w-full md:max-w-[200px]">
             <label className="mb-1 ml-1 block text-xs font-medium text-slate-500">Filtrar por Calle</label>
             <select
               className={inputClass}
@@ -365,7 +374,7 @@ export default function Votaciones({ sessionUser, inputClass, onMessage, calles 
           </div>
         )}
 
-        <span className="text-sm text-slate-500 ml-auto mb-2 font-medium flex gap-4 items-center">
+        <div className="text-sm text-slate-500 flex flex-wrap gap-3 items-center mt-2 md:mt-0 md:ml-auto mb-2 font-medium">
           {activeElectionTitle && (
              <span className="bg-blue-50 text-blue-800 px-3 py-1 rounded-md border border-blue-100 flex items-center gap-2 font-bold shadow-sm">
                <Lock size={14} className="text-blue-600" /> Jornada: {activeElectionTitle}
@@ -373,65 +382,131 @@ export default function Votaciones({ sessionUser, inputClass, onMessage, calles 
           )}
           <span>Habitantes listados: {filtrados.length}</span>
           <span className="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100">Han votado: {filtrados.filter(h => h.voto).length}</span>
-        </span>
+        </div>
       </div>
 
       {loading ? (
         <p className="text-slate-500 py-10 text-center">Cargando datos de votación...</p>
       ) : (
         <div className="relative">
-          <div className={`overflow-x-auto overflow-y-auto max-h-[600px] rounded-xl border border-slate-200 bg-white relative shadow-sm transition-all duration-300 ${!activeElectionTitle ? "opacity-30 pointer-events-none select-none blur-[1px]" : ""}`}>
-            <table className="w-full text-left text-sm text-slate-600">
-              <thead className="bg-[#0f2847] text-white sticky top-0 z-10 shadow-md">
-                <tr>
-                  <th className="p-3 w-20 text-center">Voto</th>
-                  <th className="p-3">Habitante (Nombre Completo)</th>
-                  <th className="p-3">Cédula</th>
-                  <th className="p-3">Calle de Residencia</th>
-                  {sessionUser?.isAdmin && <th className="p-3 border-l border-white/20">Consejo Comunal</th>}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {filtrados.length === 0 ? (
-                  <tr>
-                    <td colSpan={sessionUser?.isAdmin ? 5 : 4} className="p-6 text-center text-slate-400">
-                      No se encontraron resultados para la búsqueda actual.
-                    </td>
-                  </tr>
-                ) : (
-                  filtrados.map((h) => (
-                    <tr key={h.id} className={`transition-colors ${h.voto ? "bg-emerald-50/40 hover:bg-emerald-50/70" : "hover:bg-slate-50/80"}`}>
-                      <td className="p-3 text-center">
-                        <button
-                          onClick={() => handleToggleVoto(h)}
-                          type="button"
-                          className={`w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all ${
-                            h.voto
-                              ? "bg-emerald-500 border-emerald-500 text-white shadow-emerald-500/30 shadow-md"
-                              : "bg-white border-slate-300 text-transparent hover:border-emerald-400 hover:bg-emerald-50"
-                          }`}
-                        >
-                          <svg className="w-4 h-4 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                          </svg>
-                        </button>
-                      </td>
-                      <td className={`p-3 font-medium ${h.voto ? "text-emerald-900" : "text-slate-800"}`}>
+          {isMobile ? (
+            <div className={`space-y-3 max-h-[600px] overflow-y-auto pr-1 transition-all duration-300 ${!activeElectionTitle ? "opacity-30 pointer-events-none select-none blur-[1px]" : ""}`}>
+              {filtrados.length === 0 ? (
+                <div className="p-8 text-center text-slate-400 bg-white border border-slate-200 rounded-xl shadow-sm">
+                  No se encontraron resultados para la búsqueda actual.
+                </div>
+              ) : (
+                filtrados.map((h) => (
+                  <div
+                    key={h.id}
+                    onClick={() => handleToggleVoto(h)}
+                    className={`p-4 rounded-xl border transition-all flex items-center justify-between gap-4 cursor-pointer select-none active:scale-[0.98] shadow-sm ${
+                      h.voto
+                        ? "bg-emerald-500/10 border-emerald-500/40 text-emerald-900"
+                        : "bg-white border-slate-200 hover:bg-slate-50 text-slate-800"
+                    }`}
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="font-bold text-slate-800 text-base truncate">
                         {h.nombre} {h.apellido}
+                      </div>
+                      <div className="flex flex-wrap gap-2 mt-2 text-xs">
+                        <span className="bg-slate-100 text-slate-600 px-2 py-0.5 rounded font-mono">
+                          {h.cedula}
+                        </span>
+                        <span className="bg-slate-100 text-slate-600 px-2 py-0.5 rounded truncate max-w-[150px]">
+                          {h.calle}
+                        </span>
+                        {sessionUser?.isAdmin && (
+                          <span className="bg-blue-50 text-blue-700 px-2 py-0.5 rounded font-semibold uppercase tracking-wider text-[10px]">
+                            {h.consejo}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    
+                    {/* Checkbox button */}
+                    <div className="shrink-0">
+                      <div
+                        className={`w-9 h-9 rounded-full border-2 flex items-center justify-center transition-all ${
+                          h.voto
+                            ? "bg-emerald-500 border-emerald-500 text-white shadow-md shadow-emerald-500/30"
+                            : "bg-white border-slate-300 text-transparent"
+                        }`}
+                      >
+                        <svg
+                          className="w-5 h-5 mt-0.5"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                          strokeWidth={3.5}
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M5 13l4 4L19 7"
+                          />
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          ) : (
+            <div className={`overflow-x-auto overflow-y-auto max-h-[600px] rounded-xl border border-slate-200 bg-white relative shadow-sm transition-all duration-300 ${!activeElectionTitle ? "opacity-30 pointer-events-none select-none blur-[1px]" : ""}`}>
+              <table className="w-full text-left text-sm text-slate-600">
+                <thead className="bg-[#0f2847] text-white sticky top-0 z-10 shadow-md">
+                  <tr>
+                    <th className="p-3 w-20 text-center">Voto</th>
+                    <th className="p-3">Habitante (Nombre Completo)</th>
+                    <th className="p-3">Cédula</th>
+                    <th className="p-3">Calle de Residencia</th>
+                    {sessionUser?.isAdmin && <th className="p-3 border-l border-white/20">Consejo Comunal</th>}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {filtrados.length === 0 ? (
+                    <tr>
+                      <td colSpan={sessionUser?.isAdmin ? 5 : 4} className="p-6 text-center text-slate-400">
+                        No se encontraron resultados para la búsqueda actual.
                       </td>
-                      <td className="p-3 text-slate-500">{h.cedula}</td>
-                      <td className="p-3 text-slate-500">{h.calle}</td>
-                      {sessionUser?.isAdmin && (
-                        <td className="p-3 border-l border-slate-100 text-xs text-slate-500 bg-slate-50/50 uppercase tracking-widest font-medium">
-                          {h.consejo}
-                        </td>
-                      )}
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+                  ) : (
+                    filtrados.map((h) => (
+                      <tr key={h.id} className={`transition-colors ${h.voto ? "bg-emerald-50/40 hover:bg-emerald-50/70" : "hover:bg-slate-50/80"}`}>
+                        <td className="p-3 text-center">
+                          <button
+                            onClick={() => handleToggleVoto(h)}
+                            type="button"
+                            className={`w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all ${
+                              h.voto
+                                ? "bg-emerald-500 border-emerald-500 text-white shadow-emerald-500/30 shadow-md"
+                                : "bg-white border-slate-300 text-transparent hover:border-emerald-400 hover:bg-emerald-50"
+                            }`}
+                          >
+                            <svg className="w-4 h-4 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                            </svg>
+                          </button>
+                        </td>
+                        <td className={`p-3 font-medium ${h.voto ? "text-emerald-900" : "text-slate-800"}`}>
+                          {h.nombre} {h.apellido}
+                        </td>
+                        <td className="p-3 text-slate-500">{h.cedula}</td>
+                        <td className="p-3 text-slate-500">{h.calle}</td>
+                        {sessionUser?.isAdmin && (
+                          <td className="p-3 border-l border-slate-100 text-xs text-slate-500 bg-slate-50/50 uppercase tracking-widest font-medium">
+                            {h.consejo}
+                          </td>
+                        )}
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
           
           {/* Overlay de Apertura */}
           {(!activeElectionTitle || activeElectionTitle !== globalElectionTitle) && (
@@ -482,6 +557,43 @@ export default function Votaciones({ sessionUser, inputClass, onMessage, calles 
           </h2>
           {data.historial.length === 0 ? (
             <p className="text-center text-slate-500 py-10 bg-slate-50 rounded-xl border border-slate-100">No hay registros guardados de elecciones pasadas.</p>
+          ) : isMobile ? (
+            <div className="space-y-3">
+              {data.historial.map((h, i) => (
+                <div key={h.id || i} className="bg-slate-50 border border-slate-200 rounded-xl p-4 flex items-center justify-between gap-4">
+                  <div className="flex-1 min-w-0">
+                    <div className="font-bold text-slate-900 text-base">
+                      {h.titulo}
+                    </div>
+                    <div className="text-xs text-slate-500 mt-1">
+                      {new Date(h.created_at).toLocaleString()}
+                    </div>
+                    <div className="flex flex-wrap gap-2 mt-2 text-xs">
+                      <span className="bg-white border border-slate-200 text-slate-600 px-2 py-0.5 rounded">
+                        {h.consejo}
+                      </span>
+                      <span className="bg-white border border-slate-200 text-slate-600 px-2 py-0.5 rounded">
+                        {h.calle}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-3">
+                    <div className="bg-emerald-50 text-emerald-800 border border-emerald-100 rounded-full px-3 py-1 text-center font-bold text-sm shrink-0">
+                      {h.cantidad_votos} votos
+                    </div>
+                    <button
+                      type="button"
+                      title="Eliminar registro"
+                      onClick={() => handleDeleteHistorial(h.id)}
+                      className="text-slate-400 hover:text-red-500 transition-colors p-2 rounded-full hover:bg-red-50"
+                    >
+                      <Trash2 size={18} />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
           ) : (
             <div className="overflow-x-auto rounded-xl border border-slate-200">
               <table className="min-w-full text-left text-sm text-slate-600">
