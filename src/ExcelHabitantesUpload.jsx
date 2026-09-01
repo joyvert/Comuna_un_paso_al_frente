@@ -42,6 +42,7 @@ export default function ExcelHabitantesUpload({ consejo, calles, onUpload, input
             cedula: r[2] || "",
             telefono: r[3] || "",
             nacimiento: r[4] || "",
+            sexo: r[5] ? (String(r[5]).trim().toLowerCase().startsWith("f") ? "Femenino" : "Masculino") : "Masculino",
           }))
           .filter((r) => r.nombre && r.apellido && r.cedula);
         setPreview(parsed);

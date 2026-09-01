@@ -133,6 +133,7 @@ const initialForm = {
   apellido: "",
   cedula: "",
   telefono: "",
+  sexo: "Masculino",
   nacimiento: "",
   edad: "",
   calle: calles[0],
@@ -172,7 +173,7 @@ function App() {
   const [showExcelUpload, setShowExcelUpload] = useState(false);
   const [habitanteMsg, setHabitanteMsg] = useState({ type: "", text: "" });
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [searchFilters, setSearchFilters] = useState({ min: "", max: "", calle: "Todas" });
+  const [searchFilters, setSearchFilters] = useState({ min: "", max: "", calle: "Todas", sexo: "Todos" });
   const [db, setDb] = useState(() =>
     consejos.reduce((acc, consejo) => {
       acc[consejo] = { habitantes: [], pagos: [] };
@@ -380,6 +381,7 @@ function App() {
         apellido: habitanteForm.apellido,
         cedula: habitanteForm.cedula,
         telefono: habitanteForm.telefono,
+        sexo: habitanteForm.sexo || "Masculino",
         edad,
         calle: habitanteCalleEfectiva,
         nacimiento: habitanteForm.nacimiento || null,
@@ -434,6 +436,7 @@ function App() {
       apellido: h.apellido,
       cedula: h.cedula,
       telefono: h.telefono || "",
+      sexo: h.sexo || "Masculino",
       nacimiento: h.nacimiento ? h.nacimiento.slice(0, 10) : "",
       edad: h.edad || "",
       calle: h.calle || calles[0],
@@ -475,6 +478,7 @@ function App() {
   const habitantesFiltrados = useMemo(() => {
     return habitantesActuales.filter((h) => {
       const byStreet = searchFilters.calle === "Todas" || h.calle === searchFilters.calle;
+      const bySexo = searchFilters.sexo === "Todos" || (h.sexo || "Masculino") === searchFilters.sexo;
       
       const isMinActive = searchFilters.min !== "";
       const isMaxActive = searchFilters.max !== "";
@@ -491,7 +495,7 @@ function App() {
         }
       }
       
-      return byStreet && byAge;
+      return byStreet && bySexo && byAge;
     });
   }, [habitantesActuales, searchFilters]);
 
@@ -919,7 +923,18 @@ function App() {
                               onChange={(e) => setHabitanteForm((p) => ({ ...p, edad: e.target.value }))}
                             />
                           </div>
-                          <div className="md:col-span-2">
+                          <div>
+                            <label className="mb-1.5 ml-1 block text-xs font-semibold text-slate-500 uppercase tracking-wider">Sexo</label>
+                            <select
+                              className={inputClass}
+                              value={habitanteForm.sexo || "Masculino"}
+                              onChange={(e) => setHabitanteForm((p) => ({ ...p, sexo: e.target.value }))}
+                            >
+                              <option value="Masculino">Masculino</option>
+                              <option value="Femenino">Femenino</option>
+                            </select>
+                          </div>
+                          <div>
                             <label className="mb-1.5 ml-1 block text-xs font-semibold text-slate-500 uppercase tracking-wider">Calle</label>
                             <select
                               className={inputClass}
@@ -1076,14 +1091,20 @@ function App() {
 
             {moduleTab === "buscar" && (
               <div className="bg-white rounded-xl md:rounded-2xl shadow-sm border border-slate-200 p-3.5 md:p-6 space-y-4 md:space-y-6">
-                <div className="flex items-center gap-2 mb-1.5 md:mb-2 pb-3 md:pb-4 border-b border-slate-100">
-                  <div className="p-2 bg-cyan-50 rounded-lg text-cyan-600">
-                    <Search size={18} />
+                <div className="flex items-center justify-between mb-1.5 md:mb-2 pb-3 md:pb-4 border-b border-slate-100 flex-wrap gap-2">
+                  <div className="flex items-center gap-2">
+                    <div className="p-2 bg-cyan-50 rounded-lg text-cyan-600">
+                      <Search size={18} />
+                    </div>
+                    <h3 className="text-sm md:text-lg font-bold text-slate-800">Búsqueda Avanzada</h3>
                   </div>
-                  <h3 className="text-sm md:text-lg font-bold text-slate-800">Búsqueda Avanzada</h3>
+                  <div className="inline-flex items-center gap-2 bg-cyan-50 text-cyan-700 px-3.5 py-1.5 rounded-full text-xs md:text-sm font-semibold border border-cyan-100 shadow-sm">
+                    <Users size={16} className="text-cyan-600" />
+                    <span>Total encontrados: <strong className="text-cyan-900 text-sm md:text-base ml-0.5">{habitantesFiltrados.length}</strong> {habitantesFiltrados.length === 1 ? "persona" : "personas"}</span>
+                  </div>
                 </div>
                 
-                <div className="grid gap-3 md:gap-5 grid-cols-1 md:grid-cols-3 bg-slate-50/50 p-3 md:p-4 rounded-xl border border-slate-100">
+                <div className="grid gap-3 md:gap-5 grid-cols-1 sm:grid-cols-2 md:grid-cols-4 bg-slate-50/50 p-3 md:p-4 rounded-xl border border-slate-100">
                   <div>
                     <label className="mb-1.5 ml-1 block text-xs font-semibold text-slate-500 uppercase tracking-wider">Edad mínima</label>
                     <input
@@ -1103,6 +1124,18 @@ function App() {
                       value={searchFilters.max}
                       onChange={(e) => setSearchFilters((p) => ({ ...p, max: e.target.value }))}
                     />
+                  </div>
+                  <div>
+                    <label className="mb-1.5 ml-1 block text-xs font-semibold text-slate-500 uppercase tracking-wider">Filtrar por Sexo</label>
+                    <select
+                      className={inputClass}
+                      value={searchFilters.sexo || "Todos"}
+                      onChange={(e) => setSearchFilters((p) => ({ ...p, sexo: e.target.value }))}
+                    >
+                      <option value="Todos">Todos</option>
+                      <option value="Masculino">Masculino</option>
+                      <option value="Femenino">Femenino</option>
+                    </select>
                   </div>
                   <div>
                     <label className="mb-1.5 ml-1 block text-xs font-semibold text-slate-500 uppercase tracking-wider">Filtrar por Calle</label>
@@ -1256,6 +1289,7 @@ function TablaHabitantes({ rows, onEdit, onDelete, onManageFamily, isSearching, 
               <th className="px-4 py-3">Cédula</th>
               <th className="px-4 py-3">Teléfono</th>
               <th className="px-4 py-3">Edad</th>
+              <th className="px-4 py-3">Sexo</th>
               <th className="px-4 py-3">Calle</th>
               {(onEdit || onDelete || onManageFamily) && (
                 <th className="px-4 py-3 text-right">Acciones</th>
@@ -1305,6 +1339,7 @@ function TablaHabitantes({ rows, onEdit, onDelete, onManageFamily, isSearching, 
                       <td className="px-4 py-3 text-slate-600 font-medium">{r.cedula}</td>
                       <td className="px-4 py-3 text-slate-600 font-medium">{r.telefono}</td>
                       <td className="px-4 py-3 text-slate-600 font-medium">{r.edad}</td>
+                      <td className="px-4 py-3 text-slate-600 font-medium">{r.sexo || "Masculino"}</td>
                       <td className="px-4 py-3 text-slate-600 font-medium">{r.calle}</td>
                       {(onEdit || onDelete || onManageFamily) && (
                         <td className="px-4 py-3 text-right">
@@ -1326,6 +1361,7 @@ function TablaHabitantes({ rows, onEdit, onDelete, onManageFamily, isSearching, 
                         <td className="px-4 py-3 text-sm text-slate-500 font-medium">{child.cedula}</td>
                         <td className="px-4 py-3 text-sm text-slate-500 font-medium">{child.telefono}</td>
                         <td className="px-4 py-3 text-sm text-slate-500 font-medium">{child.edad}</td>
+                        <td className="px-4 py-3 text-sm text-slate-500 font-medium">{child.sexo || "Masculino"}</td>
                         <td className="px-4 py-3 text-sm text-slate-500 font-medium">{child.calle}</td>
                         {(onEdit || onDelete || onManageFamily) && (
                           <td className="px-4 py-3 text-right">
@@ -1339,7 +1375,7 @@ function TablaHabitantes({ rows, onEdit, onDelete, onManageFamily, isSearching, 
               })
             ) : (
               <tr>
-                <td className="px-4 py-6 text-center text-sm text-slate-400 italic" colSpan={(onEdit || onDelete || onManageFamily) ? 7 : 6}>
+                <td className="px-4 py-6 text-center text-sm text-slate-400 italic" colSpan={(onEdit || onDelete || onManageFamily) ? 8 : 7}>
                   Sin registros para mostrar.
                 </td>
               </tr>
