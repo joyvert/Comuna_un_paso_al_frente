@@ -175,38 +175,6 @@ function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [searchFilters, setSearchFilters] = useState({ min: "", max: "", calle: "Todas", sexo: "Todos", sinEdad: false });
 
-  const sinEdadCount = useMemo(() => {
-    return habitantesActuales.filter(h => h.edad === "" || h.edad === null || h.edad === undefined).length;
-  }, [habitantesActuales]);
-
-  const habitantesFiltrados = useMemo(() => {
-    return habitantesActuales.filter((h) => {
-      const byStreet = searchFilters.calle === "Todas" || h.calle === searchFilters.calle;
-      const bySexo = searchFilters.sexo === "Todos" || (h.sexo || "Masculino") === searchFilters.sexo;
-      
-      if (searchFilters.sinEdad) {
-        const isMissingAge = h.edad === "" || h.edad === null || h.edad === undefined;
-        return byStreet && bySexo && isMissingAge;
-      }
-
-      const isMinActive = searchFilters.min !== "";
-      const isMaxActive = searchFilters.max !== "";
-      
-      let byAge = true;
-      if (isMinActive || isMaxActive) {
-        const min = isMinActive ? Number(searchFilters.min) : -Infinity;
-        const max = isMaxActive ? Number(searchFilters.max) : Infinity;
-        
-        if (h.edad === "" || h.edad === null || h.edad === undefined) {
-           byAge = false; // No tiene edad, no cumple el filtro numérico
-        } else {
-           byAge = Number(h.edad) >= min && Number(h.edad) <= max;
-        }
-      }
-      
-      return byStreet && bySexo && byAge;
-    });
-  }, [habitantesActuales, searchFilters]);
   const [db, setDb] = useState(() =>
     consejos.reduce((acc, consejo) => {
       acc[consejo] = { habitantes: [], pagos: [] };
@@ -378,6 +346,39 @@ function App() {
 
     return ordenados;
   }, [habitantesActualesOriginal]);
+
+  const sinEdadCount = useMemo(() => {
+    return habitantesActuales.filter(h => h.edad === "" || h.edad === null || h.edad === undefined).length;
+  }, [habitantesActuales]);
+
+  const habitantesFiltrados = useMemo(() => {
+    return habitantesActuales.filter((h) => {
+      const byStreet = searchFilters.calle === "Todas" || h.calle === searchFilters.calle;
+      const bySexo = searchFilters.sexo === "Todos" || (h.sexo || "Masculino") === searchFilters.sexo;
+      
+      if (searchFilters.sinEdad) {
+        const isMissingAge = h.edad === "" || h.edad === null || h.edad === undefined;
+        return byStreet && bySexo && isMissingAge;
+      }
+
+      const isMinActive = searchFilters.min !== "";
+      const isMaxActive = searchFilters.max !== "";
+      
+      let byAge = true;
+      if (isMinActive || isMaxActive) {
+        const min = isMinActive ? Number(searchFilters.min) : -Infinity;
+        const max = isMaxActive ? Number(searchFilters.max) : Infinity;
+        
+        if (h.edad === "" || h.edad === null || h.edad === undefined) {
+           byAge = false; // No tiene edad, no cumple el filtro numérico
+        } else {
+           byAge = Number(h.edad) >= min && Number(h.edad) <= max;
+        }
+      }
+      
+      return byStreet && bySexo && byAge;
+    });
+  }, [habitantesActuales, searchFilters]);
 
 
 
