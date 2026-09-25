@@ -261,7 +261,11 @@ export default function AuthCard({ onAuthSuccess }) {
   const [showRecoverPw, setShowRecoverPw] = useState(false);
   const [showRecoverPw2, setShowRecoverPw2] = useState(false);
 
-  const [loginForm, setLoginForm] = useState({ usuario: "", password: "" });
+  const [rememberMe, setRememberMe] = useState(() => Boolean(localStorage.getItem("comuna_remember_user")));
+  const [loginForm, setLoginForm] = useState(() => ({
+    usuario: localStorage.getItem("comuna_remember_user") || "",
+    password: ""
+  }));
   const [showLoginPass, setShowLoginPass] = useState(false);
 
   const [registerForm, setRegisterForm] = useState({
@@ -458,6 +462,13 @@ export default function AuthCard({ onAuthSuccess }) {
         isAdmin: Boolean(userData.isAdmin || userData.is_admin),
       };
       sessionStorage.setItem(STORAGE_SESSION_KEY, JSON.stringify(session));
+
+      if (rememberMe) {
+        localStorage.setItem("comuna_remember_user", loginForm.usuario.trim());
+      } else {
+        localStorage.removeItem("comuna_remember_user");
+      }
+
       setGlobalMessage({ type: "success", text: "¡Inicio de sesión exitoso!" });
       onAuthSuccess?.();
     } catch (err) {
@@ -895,11 +906,14 @@ export default function AuthCard({ onAuthSuccess }) {
                   />
                   
                   <div className="flex items-center mt-6">
-                    <label className="flex items-center gap-2 cursor-pointer group">
-                      <div className="w-4 h-4 rounded border border-slate-600 group-hover:border-rose-500 flex items-center justify-center bg-transparent transition-colors">
-                        <div className="w-2 h-2 rounded-sm bg-transparent group-active:bg-rose-500/50"></div>
-                      </div>
-                      <span className="text-xs text-slate-400 group-hover:text-slate-300">Recuérdame</span>
+                    <label className="flex items-center gap-2 cursor-pointer select-none group">
+                      <input
+                        type="checkbox"
+                        checked={rememberMe}
+                        onChange={(e) => setRememberMe(e.target.checked)}
+                        className="w-4 h-4 rounded border-slate-600 accent-rose-600 cursor-pointer focus:ring-rose-500 focus:ring-offset-0"
+                      />
+                      <span className="text-xs text-slate-400 group-hover:text-slate-200 transition-colors">Recuérdame</span>
                     </label>
                   </div>
 
