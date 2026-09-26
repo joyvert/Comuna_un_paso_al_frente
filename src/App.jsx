@@ -1473,7 +1473,7 @@ function TablaHabitantes({ rows, onEdit, onDelete, onManageFamily, onViewFicha, 
                     {r.es_jefe_familia && (
                       <Home size={14} className="text-indigo-500 flex-shrink-0" />
                     )}
-                    <span className={`text-slate-800 text-sm ${r.es_jefe_familia ? "font-bold" : "font-semibold"}`}>
+                    <span className={`text-slate-800 text-xs sm:text-sm ${r.es_jefe_familia ? "font-bold" : "font-semibold"}`}>
                       {r.nombre} {r.apellido}
                     </span>
                   </div>
@@ -1506,28 +1506,28 @@ function TablaHabitantes({ rows, onEdit, onDelete, onManageFamily, onViewFicha, 
                 )}
 
                 {/* Cuadrícula de Detalles */}
-                <div className="grid grid-cols-2 gap-x-4 gap-y-2 mt-3 pt-3 border-t border-slate-50 text-xs">
+                <div className="grid grid-cols-2 gap-2 mt-2.5 p-2 bg-slate-50/70 rounded-lg border border-slate-100 text-[10px]">
                   <div>
-                    <span className="text-slate-400 font-semibold text-[8px] uppercase tracking-wider block">Cédula</span>
-                    <span className="text-slate-700 font-bold text-[11px]">{r.cedula || "N/A"}</span>
+                    <span className="text-slate-400 font-semibold block">Cédula</span>
+                    <span className="text-slate-700 font-bold block">{r.cedula || "N/A"}</span>
                   </div>
                   <div>
-                    <span className="text-slate-400 font-semibold text-[8px] uppercase tracking-wider block">Edad</span>
-                    <span className="text-slate-700 font-bold text-[11px]">{r.edad ? `${r.edad} años` : "N/A"}</span>
+                    <span className="text-slate-400 font-semibold block">Edad</span>
+                    <span className="text-slate-700 font-bold block">{r.edad ? `${r.edad} años` : "N/A"}</span>
                   </div>
                   <div>
-                    <span className="text-slate-400 font-semibold text-[8px] uppercase tracking-wider block">Teléfono</span>
+                    <span className="text-slate-400 font-semibold block">Teléfono</span>
                     {r.telefono ? (
-                      <a href={`tel:${r.telefono}`} className="text-cyan-600 font-bold text-[11px] hover:underline inline-flex items-center gap-0.5">
+                      <a href={`tel:${r.telefono}`} className="text-cyan-600 font-bold hover:underline inline-flex items-center gap-0.5">
                         <Phone size={10} /> {r.telefono}
                       </a>
                     ) : (
-                      <span className="text-slate-400 font-semibold text-[11px] italic">Sin teléfono</span>
+                      <span className="text-slate-400 font-medium italic">Sin teléfono</span>
                     )}
                   </div>
                   <div>
-                    <span className="text-slate-400 font-semibold text-[8px] uppercase tracking-wider block">Calle</span>
-                    <span className="text-slate-700 font-bold text-[11px] truncate block" title={r.calle}>
+                    <span className="text-slate-400 font-semibold block">Calle</span>
+                    <span className="text-slate-700 font-bold truncate block" title={r.calle}>
                       {r.calle || "N/A"}
                     </span>
                   </div>
@@ -1558,20 +1558,20 @@ function TablaHabitantes({ rows, onEdit, onDelete, onManageFamily, onViewFicha, 
                             className="bg-white rounded-lg p-2.5 border border-slate-100/80 shadow-xs"
                           >
                             <div className="flex items-center justify-between gap-2">
-                              <span className="font-bold text-slate-700 text-[11px]">{child.nombre} {child.apellido}</span>
+                              <span className="font-bold text-slate-700 text-xs">{child.nombre} {child.apellido}</span>
                               {child.requiere_ayuda && (
-                                <span className="inline-flex items-center gap-0.5 bg-rose-50 text-rose-700 text-[8px] px-1.5 py-0.2 rounded-full font-bold">
+                                <span className="inline-flex items-center gap-0.5 bg-rose-50 text-rose-700 text-[9px] px-1.5 py-0.5 rounded-full font-bold">
                                   Caso
                                 </span>
                               )}
                             </div>
                             <div className="grid grid-cols-2 gap-1 mt-1.5 pt-1.5 border-t border-slate-50 text-[10px]">
                               <div>
-                                <span className="text-slate-400 block text-[8px]">Cédula</span>
+                                <span className="text-slate-400 block text-[9px]">Cédula</span>
                                 <span className="text-slate-600 font-semibold">{child.cedula || "N/A"}</span>
                               </div>
                               <div>
-                                <span className="text-slate-400 block text-[8px]">Edad</span>
+                                <span className="text-slate-400 block text-[9px]">Edad</span>
                                 <span className="text-slate-600 font-semibold">{child.edad ? `${child.edad} años` : "N/A"}</span>
                               </div>
                             </div>

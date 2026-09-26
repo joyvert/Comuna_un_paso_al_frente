@@ -213,26 +213,26 @@ export default function CuadernilloElectoral({ activeConsejo, db }) {
           }
         `}
       </style>
-      <div className="flex justify-between items-center print:hidden mb-6 shrink-0">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 print:hidden mb-4 sm:mb-6 shrink-0">
         <div>
-          <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-            <BookOpen className="text-indigo-500" />
+          <h2 className="text-sm sm:text-base md:text-xl font-bold text-slate-800 flex items-center gap-2 font-heading">
+            <BookOpen className="text-indigo-500" size={18} />
             Cuadernillo Electoral
           </h2>
-          <p className="text-sm text-slate-500">Padrón de votantes registrados en {activeConsejo}</p>
-          <div className="mt-2 inline-flex items-center gap-1.5 bg-indigo-50 text-indigo-700 px-3 py-1 rounded-full text-sm font-semibold border border-indigo-100 shadow-sm">
+          <p className="text-[10px] sm:text-xs text-slate-500">Padrón de votantes registrados en {activeConsejo}</p>
+          <div className="mt-1.5 inline-flex items-center gap-1.5 bg-indigo-50 text-indigo-700 px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-semibold border border-indigo-100 shadow-sm">
             Total Votantes (15 a 100 años): {votantes.length}
           </div>
         </div>
         {/* Dropdown Container */}
-        <div className="relative inline-block text-left" ref={dropdownRef}>
+        <div className="relative inline-block text-left w-full sm:w-auto" ref={dropdownRef}>
           <button
             onClick={() => setIsOpen(!isOpen)}
-            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 active:bg-indigo-800 transition font-medium shadow-sm cursor-pointer select-none"
+            className="w-full sm:w-auto flex items-center justify-center gap-2 px-3.5 py-2 bg-indigo-600 text-white rounded-lg sm:rounded-xl hover:bg-indigo-700 active:bg-indigo-800 transition text-xs sm:text-sm font-semibold shadow-sm cursor-pointer select-none"
           >
-            <Download size={18} />
+            <Download size={15} />
             <span>Descargar / Imprimir</span>
-            <ChevronDown size={16} className={`transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+            <ChevronDown size={14} className={`transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
           </button>
 
           {isOpen && (

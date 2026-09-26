@@ -297,9 +297,9 @@ export default function Votaciones({ sessionUser, inputClass, onMessage, calles 
             </div>
           )}
 
-          <div className="rounded-2xl bg-white p-6 shadow-sm border border-slate-100 flex flex-col md:flex-row gap-6 justify-between items-start md:items-center">
+          <div className="rounded-2xl bg-white p-4 sm:p-6 shadow-sm border border-slate-100 flex flex-col md:flex-row gap-4 sm:gap-6 justify-between items-start md:items-center">
         <div className="flex-1 w-full">
-          <h2 className="mb-4 text-xl font-bold text-[#0f2847]">Estadísticas de Votación</h2>
+          <h2 className="mb-3 sm:mb-4 text-sm sm:text-base md:text-xl font-bold font-heading text-slate-800">Estadísticas de Votación</h2>
           <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
             {sessionUser?.isAdmin && (
               <div className="rounded-xl bg-blue-50 p-4 border border-blue-100 flex flex-col items-center justify-center">

@@ -237,10 +237,10 @@ export default function AdminVoceros({ consejos, calles, inputClass, onMessage }
   }
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-6 sm:space-y-10">
       <div>
-        <h4 className="mb-4 flex items-center gap-2 font-semibold text-[#0f2847]">
-          <UserPlus className="h-5 w-5" /> Crear cuenta de vocero
+        <h4 className="mb-3 sm:mb-4 flex items-center gap-2 text-sm sm:text-base font-bold font-heading text-slate-800">
+          <UserPlus className="h-4 w-4 sm:h-5 sm:w-5 text-indigo-600" /> Crear cuenta de vocero
         </h4>
         <form onSubmit={handleCreate} className="grid gap-4 md:grid-cols-2">
           <div className="flex flex-col">
@@ -418,97 +418,177 @@ export default function AdminVoceros({ consejos, calles, inputClass, onMessage }
       </div>
 
       <div>
-        <div className="flex items-center justify-between mb-4">
-          <h4 className="font-semibold text-[#0f2847]">Usuarios y Voceros Registrados</h4>
-          <span className="text-xs text-slate-500 font-medium">{voceros.length} cuentas registradas</span>
+        <div className="flex items-center justify-between mb-3 sm:mb-4">
+          <h4 className="text-sm sm:text-base font-bold font-heading text-slate-800">Usuarios y Voceros Registrados</h4>
+          <span className="text-[10px] sm:text-xs text-slate-500 font-medium">{voceros.length} cuentas registradas</span>
         </div>
         {loading ? (
-          <p className="text-sm text-slate-500">Cargando…</p>
+          <p className="text-xs text-slate-500">Cargando…</p>
         ) : (
-          <div className="overflow-x-auto border border-slate-200 rounded-xl shadow-xs">
-            <table className="min-w-full text-left text-sm">
-              <thead className="bg-slate-100/90 text-slate-600 font-bold uppercase tracking-wider text-[11px] border-b border-slate-200">
-                <tr>
-                  <th className="px-3 py-2.5">Usuario</th>
-                  <th className="px-3 py-2.5">Nombre</th>
-                  <th className="px-3 py-2.5">Teléfono</th>
-                  <th className="px-3 py-2.5">Consejo</th>
-                  <th className="px-3 py-2.5">Calle</th>
-                  <th className="px-3 py-2.5">Rol</th>
-                  <th className="px-3 py-2.5 text-right">Acciones</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 bg-white">
-                {voceros.map((v) => (
-                  <tr key={v.user_id} className="hover:bg-slate-50 transition-colors">
-                    <td className="px-3 py-2.5 font-mono text-xs font-semibold text-slate-600">@{v.user_id}</td>
-                    <td className="px-3 py-2.5 font-bold text-slate-800">
-                      {v.nombre} {v.apellido}
-                    </td>
-                    <td className="px-3 py-2.5 text-slate-600 text-xs">{v.telefono || "-"}</td>
-                    <td className="px-3 py-2.5 text-slate-700 text-xs font-medium">{v.vocero}</td>
-                    <td className="px-3 py-2.5 text-slate-700 text-xs font-medium">{v.calle}</td>
-                    <td className="px-3 py-2.5">
-                      <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${
-                        v.is_admin 
-                          ? "bg-purple-50 text-purple-700 border-purple-200" 
-                          : "bg-cyan-50 text-cyan-700 border-cyan-200"
-                      }`}>
-                        {v.is_admin ? "🛡️ Administrador" : "👤 Vocero"}
-                      </span>
-                    </td>
-                    <td className="px-3 py-2.5 text-right">
-                      <div className="flex justify-end gap-1.5 items-center">
-                        {/* Botón para cambiar rol (Dar o Quitar Administrador) */}
-                        <button
-                          type="button"
-                          className={`rounded-lg p-1.5 transition cursor-pointer ${
-                            v.is_admin
-                              ? "text-purple-600 bg-purple-50 hover:bg-purple-100"
-                              : "text-slate-500 hover:bg-purple-50 hover:text-purple-700"
-                          }`}
-                          title={v.is_admin ? "Revocar rol de Administrador (hacer Vocero)" : "Hacer Administrador de la Comuna"}
-                          onClick={() => setRoleConfirmUser({ user: v, newIsAdmin: !v.is_admin })}
-                        >
-                          <ShieldCheck className="h-4 w-4" />
-                        </button>
-
-                        <button
-                          type="button"
-                          className="rounded-lg p-1.5 text-slate-600 hover:bg-blue-100 transition cursor-pointer"
-                          title="Editar consejo / calle"
-                          onClick={() => openEdit(v)}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </button>
-                        <button
-                          type="button"
-                          className="rounded-lg p-1.5 text-slate-600 hover:bg-amber-100 transition cursor-pointer"
-                          title="Restablecer contraseña"
-                          onClick={() => {
-                            setResetUser(v);
-                            setResetPw("");
-                            setResetPw2("");
-                          }}
-                        >
-                          <KeyRound className="h-4 w-4" />
-                        </button>
-                        <button
-                          type="button"
-                          className="rounded-lg p-1.5 text-slate-600 hover:bg-red-100 hover:text-red-600 transition cursor-pointer"
-                          title="Eliminar usuario"
-                          onClick={() => {
-                            setDeleteConfirmUser(v);
-                          }}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </td>
+          <div className="space-y-3">
+            {/* Vista Escritorio (Tabla) */}
+            <div className="hidden md:block overflow-x-auto border border-slate-200 rounded-xl shadow-xs">
+              <table className="min-w-full text-left text-xs">
+                <thead className="bg-slate-100/90 text-slate-600 font-bold uppercase tracking-wider text-[11px] border-b border-slate-200">
+                  <tr>
+                    <th className="px-3 py-2.5">Usuario</th>
+                    <th className="px-3 py-2.5">Nombre</th>
+                    <th className="px-3 py-2.5">Teléfono</th>
+                    <th className="px-3 py-2.5">Consejo</th>
+                    <th className="px-3 py-2.5">Calle</th>
+                    <th className="px-3 py-2.5">Rol</th>
+                    <th className="px-3 py-2.5 text-right">Acciones</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-slate-100 bg-white">
+                  {voceros.map((v) => (
+                    <tr key={v.user_id} className="hover:bg-slate-50 transition-colors">
+                      <td className="px-3 py-2.5 font-mono text-xs font-semibold text-slate-600">@{v.user_id}</td>
+                      <td className="px-3 py-2.5 font-bold text-slate-800">
+                        {v.nombre} {v.apellido}
+                      </td>
+                      <td className="px-3 py-2.5 text-slate-600 text-xs">{v.telefono || "-"}</td>
+                      <td className="px-3 py-2.5 text-slate-700 text-xs font-medium">{v.vocero}</td>
+                      <td className="px-3 py-2.5 text-slate-700 text-xs font-medium">{v.calle}</td>
+                      <td className="px-3 py-2.5">
+                        <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${
+                          v.is_admin 
+                            ? "bg-purple-50 text-purple-700 border-purple-200" 
+                            : "bg-cyan-50 text-cyan-700 border-cyan-200"
+                        }`}>
+                          {v.is_admin ? "🛡️ Administrador" : "👤 Vocero"}
+                        </span>
+                      </td>
+                      <td className="px-3 py-2.5 text-right">
+                        <div className="flex justify-end gap-1.5 items-center">
+                          <button
+                            type="button"
+                            className={`rounded-lg p-1.5 transition cursor-pointer ${
+                              v.is_admin
+                                ? "text-purple-600 bg-purple-50 hover:bg-purple-100"
+                                : "text-slate-500 hover:bg-purple-50 hover:text-purple-700"
+                            }`}
+                            title={v.is_admin ? "Revocar rol de Administrador (hacer Vocero)" : "Hacer Administrador de la Comuna"}
+                            onClick={() => setRoleConfirmUser({ user: v, newIsAdmin: !v.is_admin })}
+                          >
+                            <ShieldCheck className="h-4 w-4" />
+                          </button>
+
+                          <button
+                            type="button"
+                            className="rounded-lg p-1.5 text-slate-600 hover:bg-blue-100 transition cursor-pointer"
+                            title="Editar consejo / calle"
+                            onClick={() => openEdit(v)}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </button>
+                          <button
+                            type="button"
+                            className="rounded-lg p-1.5 text-slate-600 hover:bg-amber-100 transition cursor-pointer"
+                            title="Restablecer contraseña"
+                            onClick={() => {
+                              setResetUser(v);
+                              setResetPw("");
+                              setResetPw2("");
+                            }}
+                          >
+                            <KeyRound className="h-4 w-4" />
+                          </button>
+                          <button
+                            type="button"
+                            className="rounded-lg p-1.5 text-slate-600 hover:bg-red-100 hover:text-red-600 transition cursor-pointer"
+                            title="Eliminar usuario"
+                            onClick={() => {
+                              setDeleteConfirmUser(v);
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Vista Móvil (Tarjetas Compactas) */}
+            <div className="block md:hidden space-y-2.5">
+              {voceros.map((v) => (
+                <div key={v.user_id} className="bg-white p-3.5 rounded-xl border border-slate-100 shadow-xs space-y-2.5">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <h5 className="text-xs font-bold text-slate-800 leading-snug">
+                        {v.nombre} {v.apellido}
+                      </h5>
+                      <span className="text-[10px] text-slate-400 font-mono">@{v.user_id}</span>
+                    </div>
+                    <span className={`inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[9px] font-bold border shrink-0 ${
+                      v.is_admin 
+                        ? "bg-purple-50 text-purple-700 border-purple-200" 
+                        : "bg-cyan-50 text-cyan-700 border-cyan-200"
+                    }`}>
+                      {v.is_admin ? "🛡️ Admin" : "👤 Vocero"}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 text-[10px] bg-slate-50/70 p-2 rounded-lg border border-slate-100">
+                    <div>
+                      <span className="text-slate-400 block font-semibold">Consejo</span>
+                      <span className="text-slate-700 font-bold truncate block">{v.vocero || "General"}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 block font-semibold">Calle / Escalera</span>
+                      <span className="text-slate-700 font-bold truncate block">{v.calle || "General"}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between gap-1.5 pt-2 border-t border-slate-100">
+                    <button
+                      type="button"
+                      onClick={() => setRoleConfirmUser({ user: v, newIsAdmin: !v.is_admin })}
+                      className={`flex-1 py-1.5 px-2 rounded-lg text-[10px] font-bold border transition flex items-center justify-center gap-1 cursor-pointer ${
+                        v.is_admin
+                          ? "bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100"
+                          : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
+                      }`}
+                    >
+                      <ShieldCheck size={12} />
+                      <span>{v.is_admin ? "Hacer Vocero" : "Hacer Admin"}</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => openEdit(v)}
+                      className="p-1.5 text-slate-600 bg-slate-50 border border-slate-200 rounded-lg hover:bg-blue-50 hover:text-blue-700 transition cursor-pointer"
+                      title="Editar"
+                    >
+                      <Pencil size={13} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setResetUser(v);
+                        setResetPw("");
+                        setResetPw2("");
+                      }}
+                      className="p-1.5 text-amber-600 bg-amber-50 border border-amber-200 rounded-lg hover:bg-amber-100 transition cursor-pointer"
+                      title="Contraseña"
+                    >
+                      <KeyRound size={13} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setDeleteConfirmUser(v)}
+                      className="p-1.5 text-rose-600 bg-rose-50 border border-rose-200 rounded-lg hover:bg-rose-100 transition cursor-pointer"
+                      title="Eliminar"
+                    >
+                      <Trash2 size={13} />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </div>

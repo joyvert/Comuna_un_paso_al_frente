@@ -64,51 +64,51 @@ export default function CasosSociales({ activeConsejo, db, setDb, sessionUser, i
   };
 
   return (
-    <div className="space-y-6 print:m-0 print:p-0">
-      <div className="flex justify-between items-center print:hidden">
+    <div className="space-y-4 md:space-y-6 print:m-0 print:p-0">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 print:hidden">
         <div>
-          <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-            <HeartPulse className="text-red-500" />
+          <h2 className="text-sm sm:text-base md:text-xl font-bold text-slate-800 flex items-center gap-2 font-heading">
+            <HeartPulse className="text-red-500" size={18} />
             Gestión de Casos Sociales
           </h2>
-          <p className="text-sm text-slate-500">Atención prioritaria y vulnerabilidad en {activeConsejo}</p>
+          <p className="text-[10px] sm:text-xs text-slate-500">Atención prioritaria y vulnerabilidad en {activeConsejo}</p>
         </div>
         <button
           onClick={handlePrint}
-          className="flex items-center gap-2 px-4 py-2 bg-slate-800 text-white rounded-xl hover:bg-slate-700 transition"
+          className="flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 bg-slate-800 text-white rounded-lg sm:rounded-xl hover:bg-slate-700 text-xs sm:text-sm font-semibold transition cursor-pointer"
         >
-          <Printer size={18} />
+          <Printer size={15} />
           Imprimir Reporte
         </button>
       </div>
 
       {msg && (
-        <div className="p-3 bg-cyan-50 text-cyan-700 rounded-xl border border-cyan-100 text-sm font-medium print:hidden">
+        <div className="p-3 bg-cyan-50 text-cyan-700 rounded-xl border border-cyan-100 text-xs sm:text-sm font-medium print:hidden">
           {msg}
         </div>
       )}
 
-      <div className="flex gap-4 border-b border-slate-200 print:hidden mt-4">
+      <div className="flex gap-4 border-b border-slate-200 print:hidden mt-2 sm:mt-4">
         <button
           onClick={() => setTab("activos")}
-          className={`pb-3 text-sm font-bold flex items-center gap-2 border-b-2 transition-colors ${
+          className={`pb-2.5 sm:pb-3 text-xs sm:text-sm font-bold flex items-center gap-1.5 sm:gap-2 border-b-2 transition-colors cursor-pointer ${
             tab === "activos"
               ? "border-cyan-500 text-cyan-600"
               : "border-transparent text-slate-500 hover:text-slate-700"
           }`}
         >
-          <HeartPulse size={18} />
+          <HeartPulse size={15} />
           Casos Activos
         </button>
         <button
           onClick={() => setTab("historial")}
-          className={`pb-3 text-sm font-bold flex items-center gap-2 border-b-2 transition-colors ${
+          className={`pb-2.5 sm:pb-3 text-xs sm:text-sm font-bold flex items-center gap-1.5 sm:gap-2 border-b-2 transition-colors cursor-pointer ${
             tab === "historial"
               ? "border-cyan-500 text-cyan-600"
               : "border-transparent text-slate-500 hover:text-slate-700"
           }`}
         >
-          <History size={18} />
+          <History size={15} />
           Historial Atendidos
         </button>
       </div>

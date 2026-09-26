@@ -56,7 +56,7 @@ export default function FichaHabitanteModal({ habitante, allHabitantes, activeCo
               </div>
               <div>
                 <div className="flex items-center gap-2 flex-wrap">
-                  <h2 className="text-lg sm:text-xl font-bold font-heading text-white leading-tight">
+                  <h2 className="text-sm sm:text-base md:text-xl font-bold font-heading text-white leading-tight">
                     {habitante.nombre} {habitante.apellido}
                   </h2>
                   <span className={`text-[10px] sm:text-xs px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider ${
@@ -65,8 +65,8 @@ export default function FichaHabitanteModal({ habitante, allHabitantes, activeCo
                     {habitante.sexo || "Masculino"}
                   </span>
                 </div>
-                <p className="text-xs sm:text-sm text-slate-300 flex items-center gap-1.5 mt-1 font-medium">
-                  <IdCard size={14} className="text-cyan-400" />
+                <p className="text-[11px] sm:text-sm text-slate-300 flex items-center gap-1.5 mt-1 font-medium">
+                  <IdCard size={13} className="text-cyan-400" />
                   Cédula: <strong className="text-white">{habitante.cedula || "No registrada"}</strong>
                 </p>
               </div>
