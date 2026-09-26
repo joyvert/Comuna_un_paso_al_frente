@@ -611,29 +611,32 @@ function App() {
 
       {/* MAIN CONTENT AREA */}
       <main className="flex-1 flex flex-col h-screen overflow-hidden relative print:overflow-visible print:h-auto print:block">
-        <header className="bg-white/85 backdrop-blur-md border-b border-slate-200/80 px-6 md:px-8 py-4 md:py-5 flex items-center justify-between z-10 shadow-sm shrink-0 print:hidden">
-          <div className="flex items-center gap-3">
+        <header className="bg-white/90 backdrop-blur-md border-b border-slate-200/80 px-3.5 sm:px-6 md:px-8 py-2.5 sm:py-3.5 md:py-4 flex items-center justify-between z-10 shadow-xs shrink-0 print:hidden gap-2">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
             <button 
-              className="md:hidden p-2 -ml-2 text-slate-500 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
+              className="md:hidden p-1.5 -ml-1 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer shrink-0"
               onClick={() => setSidebarOpen(true)}
+              aria-label="Abrir menú"
             >
-              <Menu size={24} />
+              <Menu size={20} />
             </button>
-            <div>
-              <h1 className="text-xl md:text-2xl font-bold text-slate-800 font-heading heading-brand">
+            <div className="min-w-0">
+              <h1 className="text-sm sm:text-base md:text-xl font-bold text-slate-800 font-heading heading-brand truncate leading-tight">
                 {moduleTab === "resumen" ? "Resumen" : (panelTabs.find(t => t.key === moduleTab)?.label || "Panel")}
               </h1>
-              <p className="text-xs md:text-sm text-slate-400 mt-0.5 md:mt-1">Gestionando información del consejo comunal</p>
+              <p className="text-[10px] sm:text-xs text-slate-400 truncate hidden sm:block mt-0.5">
+                Gestionando información del consejo comunal
+              </p>
             </div>
           </div>
 
           {sessionUser?.isAdmin && (
-            <div className="flex items-center gap-3 bg-slate-50 p-1.5 rounded-xl border border-slate-200/80 shadow-inner">
-              <label className="text-sm font-semibold text-slate-600 pl-2">Consejo:</label>
+            <div className="flex items-center gap-1 sm:gap-2 bg-slate-50 px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-lg sm:rounded-xl border border-slate-200/80 shadow-xs shrink-0">
+              <span className="text-[10px] sm:text-xs font-bold text-slate-500 hidden sm:inline pl-1">Consejo:</span>
               <select 
                 value={activeConsejo}
                 onChange={(e) => setActiveConsejo(e.target.value)}
-                className="bg-white border-none text-slate-800 text-sm rounded-lg focus:ring-0 block p-2 cursor-pointer outline-none font-semibold shadow-sm"
+                className="bg-white border border-slate-200/60 text-slate-800 text-[11px] sm:text-xs font-bold rounded-md sm:rounded-lg px-2 py-1 cursor-pointer outline-none shadow-xs max-w-[130px] sm:max-w-none truncate"
               >
                 {consejos.map((c) => (
                   <option key={c} value={c}>{c}</option>
@@ -644,7 +647,7 @@ function App() {
         </header>
 
         {/* Scrollable Content */}
-        <div className={`flex-1 p-6 md:p-8 bg-slate-50/40 print:p-0 print:bg-white print:overflow-visible flex flex-col print:block ${
+        <div className={`flex-1 p-3.5 sm:p-6 md:p-8 bg-slate-50/40 print:p-0 print:bg-white print:overflow-visible flex flex-col print:block ${
           moduleTab === "cuadernillo" ? "overflow-hidden" : "overflow-y-auto"
         }`}>
           <div className={`w-full flex-1 flex flex-col print:block ${moduleTab === "cuadernillo" ? "min-h-0" : ""}`}>

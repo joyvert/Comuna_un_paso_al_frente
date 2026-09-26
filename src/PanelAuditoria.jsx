@@ -71,40 +71,40 @@ export default function PanelAuditoria({ onMessage }) {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       {/* Header del módulo */}
-      <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 p-5 rounded-2xl text-white flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
+      <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 p-3.5 sm:p-5 rounded-xl sm:rounded-2xl text-white flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 shadow-sm">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="p-1.5 bg-cyan-500/20 text-cyan-400 rounded-lg">
-              <ShieldAlert size={18} />
+          <div className="flex items-center gap-2 mb-0.5 sm:mb-1">
+            <span className="p-1 sm:p-1.5 bg-cyan-500/20 text-cyan-400 rounded-md sm:rounded-lg">
+              <ShieldAlert size={16} />
             </span>
-            <h3 className="text-lg font-bold font-heading">Control y Auditoría de Seguridad</h3>
+            <h3 className="text-sm sm:text-base md:text-lg font-bold font-heading">Control y Auditoría</h3>
           </div>
-          <p className="text-xs text-slate-300">
-            Registro cronológico inmutable de acciones realizadas en el sistema (cambios de roles, altas, bajas y modificaciones).
+          <p className="text-[10px] sm:text-xs text-slate-300 line-clamp-2">
+            Registro cronológico de acciones del sistema (roles, altas, bajas y modificaciones).
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0">
           <button
             type="button"
             onClick={loadLogs}
             disabled={loading}
-            className="flex items-center gap-1.5 px-3 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-xs font-semibold transition cursor-pointer disabled:opacity-50"
+            className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-1.5 bg-white/10 hover:bg-white/20 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-semibold transition cursor-pointer disabled:opacity-50"
             title="Recargar registros"
           >
-            <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
+            <RefreshCw size={13} className={loading ? "animate-spin" : ""} />
             <span>Actualizar</span>
           </button>
           <button
             type="button"
             onClick={() => setConfirmPurge(true)}
-            className="flex items-center gap-1.5 px-3 py-2 bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/30 rounded-xl text-xs font-semibold transition cursor-pointer"
+            className="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/30 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-semibold transition cursor-pointer"
             title="Vaciar historial antiguo"
           >
-            <Trash2 size={14} />
-            <span className="hidden sm:inline">Purgar</span>
+            <Trash2 size={13} />
+            <span>Purgar</span>
           </button>
         </div>
       </div>
