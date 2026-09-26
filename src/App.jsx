@@ -1318,16 +1318,6 @@ function TablaHabitantes({ rows, onEdit, onDelete, onManageFamily, onViewFicha, 
           <Users size={16} />
         </button>
       )}
-      {onEdit && (
-        <button
-          type="button"
-          onClick={(e) => { e.stopPropagation(); onEdit(r); }}
-          className="rounded-lg p-1.5 text-slate-600 transition hover:bg-blue-100 hover:text-blue-700 cursor-pointer"
-          title="Editar"
-        >
-          <Pencil size={16} />
-        </button>
-      )}
       {onDelete && (
         <button
           type="button"
@@ -1355,7 +1345,7 @@ function TablaHabitantes({ rows, onEdit, onDelete, onManageFamily, onViewFicha, 
               <th className="px-4 py-3">Edad</th>
               <th className="px-4 py-3">Sexo</th>
               <th className="px-4 py-3">Calle</th>
-              {(onEdit || onDelete || onManageFamily) && (
+              {(onViewFicha || onDelete || onManageFamily) && (
                 <th className="px-4 py-3 text-right">Acciones</th>
               )}
             </tr>
@@ -1405,7 +1395,7 @@ function TablaHabitantes({ rows, onEdit, onDelete, onManageFamily, onViewFicha, 
                       <td className="px-4 py-3 text-slate-600 font-medium">{r.edad}</td>
                       <td className="px-4 py-3 text-slate-600 font-medium">{r.sexo || "Masculino"}</td>
                       <td className="px-4 py-3 text-slate-600 font-medium">{r.calle}</td>
-                      {(onEdit || onDelete || onManageFamily) && (
+                      {(onViewFicha || onDelete || onManageFamily) && (
                         <td className="px-4 py-3 text-right">
                           {renderActions(r)}
                         </td>
@@ -1427,7 +1417,7 @@ function TablaHabitantes({ rows, onEdit, onDelete, onManageFamily, onViewFicha, 
                         <td className="px-4 py-3 text-sm text-slate-500 font-medium">{child.edad}</td>
                         <td className="px-4 py-3 text-sm text-slate-500 font-medium">{child.sexo || "Masculino"}</td>
                         <td className="px-4 py-3 text-sm text-slate-500 font-medium">{child.calle}</td>
-                        {(onEdit || onDelete || onManageFamily) && (
+                        {(onViewFicha || onDelete || onManageFamily) && (
                           <td className="px-4 py-3 text-right">
                             {renderActions(child)}
                           </td>
@@ -1439,7 +1429,7 @@ function TablaHabitantes({ rows, onEdit, onDelete, onManageFamily, onViewFicha, 
               })
             ) : (
               <tr>
-                <td className="px-4 py-6 text-center text-sm text-slate-400 italic" colSpan={(onEdit || onDelete || onManageFamily) ? 8 : 7}>
+                <td className="px-4 py-6 text-center text-sm text-slate-400 italic" colSpan={(onViewFicha || onDelete || onManageFamily) ? 8 : 7}>
                   Sin registros para mostrar.
                 </td>
               </tr>
@@ -1583,27 +1573,18 @@ function TablaHabitantes({ rows, onEdit, onDelete, onManageFamily, onViewFicha, 
                                 <button
                                   type="button"
                                   onClick={(e) => { e.stopPropagation(); onViewFicha(child); }}
-                                  className="px-2 py-0.5 bg-cyan-50 text-cyan-700 hover:text-cyan-800 border border-cyan-100 rounded text-[9px] font-semibold flex items-center gap-0.5"
+                                  className="px-2.5 py-1 bg-cyan-50 text-cyan-700 hover:bg-cyan-100 border border-cyan-200 rounded-lg text-[10px] font-semibold flex items-center gap-1 cursor-pointer"
                                 >
-                                  <IdCard size={9} /> Ficha
-                                </button>
-                              )}
-                              {onEdit && (
-                                <button
-                                  type="button"
-                                  onClick={(e) => { e.stopPropagation(); onEdit(child); }}
-                                  className="px-2 py-0.5 bg-slate-50 text-slate-600 hover:text-blue-700 border border-slate-200 rounded text-[9px] font-semibold flex items-center gap-0.5"
-                                >
-                                  <Pencil size={9} /> Editar
+                                  <IdCard size={11} className="text-cyan-600" /> Ficha
                                 </button>
                               )}
                               {onDelete && (
                                 <button
                                   type="button"
                                   onClick={(e) => { e.stopPropagation(); onDelete(child); }}
-                                  className="px-2 py-0.5 bg-rose-50/50 text-rose-600 hover:text-rose-700 border border-rose-100 rounded text-[9px] font-semibold flex items-center gap-0.5"
+                                  className="px-2 py-1 bg-rose-50/50 text-rose-600 hover:text-rose-700 border border-rose-100 rounded-lg text-[10px] font-semibold flex items-center gap-0.5 cursor-pointer"
                                 >
-                                  <Trash2 size={9} /> Eliminar
+                                  <Trash2 size={10} />
                                 </button>
                               )}
                             </div>
@@ -1615,37 +1596,28 @@ function TablaHabitantes({ rows, onEdit, onDelete, onManageFamily, onViewFicha, 
                 )}
 
                 {/* Acciones principales de la Tarjeta */}
-                <div className="flex justify-between items-center gap-1.5 mt-3 pt-3 border-t border-slate-50">
-                  <div className="flex gap-1.5 w-full">
+                <div className="flex justify-between items-center gap-2 mt-3 pt-3 border-t border-slate-50">
+                  <div className="flex gap-2 w-full">
                     {onViewFicha && (
                       <button
                         type="button"
                         onClick={(e) => { e.stopPropagation(); onViewFicha(r); }}
-                        className="flex-1 py-1.5 text-[10px] font-bold text-cyan-800 hover:text-cyan-900 border border-cyan-200 bg-cyan-50 hover:bg-cyan-100 rounded-lg flex items-center justify-center gap-1 transition"
+                        className="flex-1 py-2 text-xs font-bold text-cyan-800 hover:text-cyan-900 border border-cyan-200 bg-cyan-50 hover:bg-cyan-100 rounded-xl flex items-center justify-center gap-1.5 transition cursor-pointer shadow-xs"
                       >
-                        <IdCard size={12} className="text-cyan-600" /> Ficha
-                      </button>
-                    )}
-                    {onEdit && (
-                      <button
-                        type="button"
-                        onClick={(e) => { e.stopPropagation(); onEdit(r); }}
-                        className="flex-1 py-1.5 text-[10px] font-bold text-slate-700 hover:text-slate-900 border border-slate-200 bg-slate-50 hover:bg-slate-100 rounded-lg flex items-center justify-center gap-1 transition"
-                      >
-                        <Pencil size={11} /> Editar
+                        <IdCard size={15} className="text-cyan-600" /> Ficha Única
                       </button>
                     )}
                     {onManageFamily && !r.jefe_familia_id && (
                       <button
                         type="button"
                         onClick={(e) => { e.stopPropagation(); onManageFamily(r); }}
-                        className={`flex-1 py-1.5 text-[10px] font-bold border rounded-lg flex items-center justify-center gap-1 transition ${
+                        className={`flex-1 py-2 text-xs font-bold border rounded-xl flex items-center justify-center gap-1.5 transition cursor-pointer shadow-xs ${
                           r.es_jefe_familia
                             ? "text-indigo-700 border-indigo-200 bg-indigo-50 hover:bg-indigo-100"
                             : "text-slate-600 border-slate-200 bg-slate-50 hover:bg-slate-100"
                         }`}
                       >
-                        <Users size={11} /> Familia
+                        <Users size={14} /> Familia
                       </button>
                     )}
                   </div>
@@ -1653,10 +1625,10 @@ function TablaHabitantes({ rows, onEdit, onDelete, onManageFamily, onViewFicha, 
                     <button
                       type="button"
                       onClick={(e) => { e.stopPropagation(); onDelete(r); }}
-                      className="p-1.5 text-rose-600 hover:text-rose-700 border border-rose-100 bg-rose-50 hover:bg-rose-100 rounded-lg flex items-center justify-center transition shrink-0"
+                      className="p-2 text-rose-600 hover:text-rose-700 border border-rose-100 bg-rose-50 hover:bg-rose-100 rounded-xl flex items-center justify-center transition shrink-0 cursor-pointer"
                       title="Eliminar"
                     >
-                      <Trash2 size={12} />
+                      <Trash2 size={14} />
                     </button>
                   )}
                 </div>
