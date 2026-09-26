@@ -8,6 +8,7 @@ import Votaciones from "./Votaciones";
 import CuadernilloElectoral from "./CuadernilloElectoral";
 import CasosSociales from "./CasosSociales";
 import FamiliaManagerModal from "./FamiliaManagerModal";
+import FichaHabitanteModal from "./FichaHabitanteModal";
 import { api } from "./api";
 import AOS from "aos";
 import "aos/dist/aos.css";
@@ -39,6 +40,7 @@ import {
   X,
   Menu,
   BookOpen,
+  IdCard,
 } from "lucide-react";
 
 /** Formatea dígitos como monto tipo 1.234,56 (últimos 2 = decimales) */
@@ -151,6 +153,7 @@ function App() {
   // Búsqueda de habitantes locales
   const [habitanteSearch, setHabitanteSearch] = useState("");
   const [familyManagerJefe, setFamilyManagerJefe] = useState(null);
+  const [selectedHabitanteFicha, setSelectedHabitanteFicha] = useState(null);
 
   const [isMobile, setIsMobile] = useState(false);
 
@@ -1066,6 +1069,7 @@ function App() {
                     onEdit={handleEditHabitante}
                     onDelete={handleDeleteHabitante}
                     onManageFamily={sessionUser?.isAdmin ? setFamilyManagerJefe : undefined}
+                    onViewFicha={setSelectedHabitanteFicha}
                     isSearching={!!habitanteSearch}
                     allRows={habitantesActuales}
                   />
@@ -1195,6 +1199,7 @@ function App() {
                   rows={habitantesFiltrados}
                   onEdit={handleEditHabitante}
                   onDelete={handleDeleteHabitante}
+                  onViewFicha={setSelectedHabitanteFicha}
                   isSearching={true}
                   allRows={habitantesActuales}
                 />
@@ -1251,11 +1256,21 @@ function App() {
           </div>
         </div>
       )}
+      {/* Modal Ficha Única del Habitante */}
+      {selectedHabitanteFicha && (
+        <FichaHabitanteModal
+          habitante={selectedHabitanteFicha}
+          allHabitantes={habitantesActualesOriginal}
+          activeConsejo={activeConsejo}
+          onClose={() => setSelectedHabitanteFicha(null)}
+          onEdit={handleEditHabitante}
+        />
+      )}
     </div>
   );
 }
 
-function TablaHabitantes({ rows, onEdit, onDelete, onManageFamily, isSearching, allRows }) {
+function TablaHabitantes({ rows, onEdit, onDelete, onManageFamily, onViewFicha, isSearching, allRows }) {
   const [expanded, setExpanded] = useState({});
 
   const toggleExpand = (id) => {
@@ -1278,12 +1293,22 @@ function TablaHabitantes({ rows, onEdit, onDelete, onManageFamily, isSearching, 
   const displayRows = isSearching ? rows : rows.filter((r) => !r.jefe_familia_id);
 
   const renderActions = (r) => (
-    <div className="flex justify-end gap-2">
+    <div className="flex justify-end gap-1.5 items-center">
+      {onViewFicha && (
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); onViewFicha(r); }}
+          className="rounded-lg p-1.5 text-cyan-600 bg-cyan-50 hover:bg-cyan-100 hover:text-cyan-700 transition cursor-pointer"
+          title="Ver Ficha Única del Habitante"
+        >
+          <IdCard size={16} />
+        </button>
+      )}
       {onManageFamily && !r.jefe_familia_id && (
         <button
           type="button"
           onClick={(e) => { e.stopPropagation(); onManageFamily(r); }}
-          className={`rounded-lg p-1.5 transition ${
+          className={`rounded-lg p-1.5 transition cursor-pointer ${
             r.es_jefe_familia
               ? "text-indigo-600 bg-indigo-50 hover:bg-indigo-100"
               : "text-slate-500 hover:bg-indigo-50 hover:text-indigo-600"
@@ -1297,7 +1322,7 @@ function TablaHabitantes({ rows, onEdit, onDelete, onManageFamily, isSearching, 
         <button
           type="button"
           onClick={(e) => { e.stopPropagation(); onEdit(r); }}
-          className="rounded-lg p-1.5 text-slate-600 transition hover:bg-blue-100 hover:text-blue-700"
+          className="rounded-lg p-1.5 text-slate-600 transition hover:bg-blue-100 hover:text-blue-700 cursor-pointer"
           title="Editar"
         >
           <Pencil size={16} />
@@ -1307,7 +1332,7 @@ function TablaHabitantes({ rows, onEdit, onDelete, onManageFamily, isSearching, 
         <button
           type="button"
           onClick={(e) => { e.stopPropagation(); onDelete(r); }}
-          className="rounded-lg p-1.5 text-slate-600 transition hover:bg-red-100 hover:text-red-700"
+          className="rounded-lg p-1.5 text-slate-600 transition hover:bg-red-100 hover:text-red-700 cursor-pointer"
           title="Eliminar"
         >
           <Trash2 size={16} />
@@ -1554,6 +1579,15 @@ function TablaHabitantes({ rows, onEdit, onDelete, onManageFamily, isSearching, 
                             
                             {/* Acciones para miembros de familia */}
                             <div className="flex justify-end gap-1.5 mt-2 pt-2 border-t border-slate-50">
+                              {onViewFicha && (
+                                <button
+                                  type="button"
+                                  onClick={(e) => { e.stopPropagation(); onViewFicha(child); }}
+                                  className="px-2 py-0.5 bg-cyan-50 text-cyan-700 hover:text-cyan-800 border border-cyan-100 rounded text-[9px] font-semibold flex items-center gap-0.5"
+                                >
+                                  <IdCard size={9} /> Ficha
+                                </button>
+                              )}
                               {onEdit && (
                                 <button
                                   type="button"
@@ -1581,8 +1615,17 @@ function TablaHabitantes({ rows, onEdit, onDelete, onManageFamily, isSearching, 
                 )}
 
                 {/* Acciones principales de la Tarjeta */}
-                <div className="flex justify-between items-center gap-2 mt-3 pt-3 border-t border-slate-50">
-                  <div className="flex gap-2 w-full">
+                <div className="flex justify-between items-center gap-1.5 mt-3 pt-3 border-t border-slate-50">
+                  <div className="flex gap-1.5 w-full">
+                    {onViewFicha && (
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); onViewFicha(r); }}
+                        className="flex-1 py-1.5 text-[10px] font-bold text-cyan-800 hover:text-cyan-900 border border-cyan-200 bg-cyan-50 hover:bg-cyan-100 rounded-lg flex items-center justify-center gap-1 transition"
+                      >
+                        <IdCard size={12} className="text-cyan-600" /> Ficha
+                      </button>
+                    )}
                     {onEdit && (
                       <button
                         type="button"
