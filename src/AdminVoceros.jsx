@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { KeyRound, Pencil, RefreshCw, UserPlus, Trash2 } from "lucide-react";
+import { KeyRound, Pencil, RefreshCw, UserPlus, Trash2, ShieldCheck, ShieldAlert, UserCheck } from "lucide-react";
 import { api } from "./api";
 
 const preguntas1 = [
@@ -59,6 +59,7 @@ export default function AdminVoceros({ consejos, calles, inputClass, onMessage }
     telefono: "",
     vocero: consejos[0],
     calle: calles[0],
+    isAdmin: false,
     password: "",
     password2: "",
     pregunta1: preguntas1[0],
@@ -75,6 +76,24 @@ export default function AdminVoceros({ consejos, calles, inputClass, onMessage }
   const [resetPw2, setResetPw2] = useState("");
 
   const [deleteConfirmUser, setDeleteConfirmUser] = useState(null);
+  const [roleConfirmUser, setRoleConfirmUser] = useState(null);
+
+  async function handleToggleRole() {
+    if (!roleConfirmUser) return;
+    const { user, newIsAdmin } = roleConfirmUser;
+    setRoleConfirmUser(null);
+    onMessage?.({ type: "", text: "" });
+    try {
+      await api.toggleUserAdmin(user.user_id, newIsAdmin);
+      onMessage?.({ 
+        type: "success", 
+        text: `Rol de ${user.nombre} ${user.apellido} actualizado a ${newIsAdmin ? "Administrador" : "Vocero"}.` 
+      });
+      await load();
+    } catch (err) {
+      onMessage?.({ type: "error", text: err?.message || "Error al cambiar rol." });
+    }
+  }
 
   async function handleDeleteVocero() {
     if (!deleteConfirmUser) return;
@@ -83,10 +102,10 @@ export default function AdminVoceros({ consejos, calles, inputClass, onMessage }
     onMessage?.({ type: "", text: "" });
     try {
       await api.deleteVocero(v.user_id);
-      onMessage?.({ type: "success", text: `Vocero ${v.nombre} ${v.apellido} eliminado con éxito.` });
+      onMessage?.({ type: "success", text: `Usuario ${v.nombre} ${v.apellido} eliminado con éxito.` });
       await load();
     } catch (err) {
-      onMessage?.({ type: "error", text: err?.message || "Error al eliminar vocero." });
+      onMessage?.({ type: "error", text: err?.message || "Error al eliminar usuario." });
     }
   }
 
@@ -134,8 +153,10 @@ export default function AdminVoceros({ consejos, calles, inputClass, onMessage }
         userId,
         nombre: form.nombre.trim(),
         apellido: form.apellido.trim(),
+        telefono: form.telefono.trim(),
         vocero: form.vocero,
         calle: form.calle,
+        isAdmin: Boolean(form.isAdmin),
         salt,
         passwordHash,
         pregunta1: form.pregunta1,
@@ -143,13 +164,15 @@ export default function AdminVoceros({ consejos, calles, inputClass, onMessage }
         respuesta1Hash: answer1Hash,
         respuesta2Hash: answer2Hash,
       });
-      onMessage?.({ type: "success", text: "Vocero creado correctamente." });
+      onMessage?.({ type: "success", text: `${form.isAdmin ? "Administrador" : "Vocero"} creado correctamente.` });
       setForm({
         nombre: "",
         apellido: "",
         usuario: "",
+        telefono: "",
         vocero: consejos[0],
         calle: calles[0],
+        isAdmin: false,
         password: "",
         password2: "",
         pregunta1: preguntas1[0],
@@ -366,80 +389,121 @@ export default function AdminVoceros({ consejos, calles, inputClass, onMessage }
               onChange={(e) => setForm((p) => ({ ...p, respuesta2: e.target.value }))}
             />
           </div>
+          <div className="flex flex-col md:col-span-2 bg-indigo-50/70 border border-indigo-100 p-3.5 rounded-xl">
+            <label className="flex items-center gap-2.5 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={form.isAdmin}
+                onChange={(e) => setForm((p) => ({ ...p, isAdmin: e.target.checked }))}
+                className="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500 cursor-pointer"
+              />
+              <div>
+                <span className="text-xs font-bold text-indigo-900 block">
+                  Asignar Rol de Administrador General
+                </span>
+                <span className="text-[11px] text-indigo-700 block">
+                  Los administradores tienen acceso total a todos los consejos comunales, cuadernillo, gestión de roles y auditoría.
+                </span>
+              </div>
+            </label>
+          </div>
           <button
             type="submit"
             disabled={creating || !canCreate}
-            className="rounded-xl bg-[#0f2847] px-4 py-2 font-medium text-white hover:bg-[#12345f] disabled:opacity-50 md:col-span-2"
+            className="rounded-xl bg-[#0f2847] px-4 py-2 font-medium text-white hover:bg-[#12345f] disabled:opacity-50 md:col-span-2 cursor-pointer shadow-sm transition"
           >
-            {creating ? "Creando…" : "Crear vocero"}
+            {creating ? "Creando…" : form.isAdmin ? "Crear Administrador" : "Crear Vocero"}
           </button>
         </form>
       </div>
 
       <div>
-        <h4 className="mb-4 font-semibold text-[#0f2847]">Voceros registrados</h4>
+        <div className="flex items-center justify-between mb-4">
+          <h4 className="font-semibold text-[#0f2847]">Usuarios y Voceros Registrados</h4>
+          <span className="text-xs text-slate-500 font-medium">{voceros.length} cuentas registradas</span>
+        </div>
         {loading ? (
           <p className="text-sm text-slate-500">Cargando…</p>
         ) : (
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto border border-slate-200 rounded-xl shadow-xs">
             <table className="min-w-full text-left text-sm">
-              <thead className="bg-slate-200">
+              <thead className="bg-slate-100/90 text-slate-600 font-bold uppercase tracking-wider text-[11px] border-b border-slate-200">
                 <tr>
-                  <th className="px-3 py-2">Usuario</th>
-                  <th className="px-3 py-2">Nombre</th>
-                  <th className="px-3 py-2">Teléfono</th>
-                  <th className="px-3 py-2">Consejo</th>
-                  <th className="px-3 py-2">Calle</th>
-                  <th className="px-3 py-2">Rol</th>
-                  <th className="px-3 py-2 text-right">Acciones</th>
+                  <th className="px-3 py-2.5">Usuario</th>
+                  <th className="px-3 py-2.5">Nombre</th>
+                  <th className="px-3 py-2.5">Teléfono</th>
+                  <th className="px-3 py-2.5">Consejo</th>
+                  <th className="px-3 py-2.5">Calle</th>
+                  <th className="px-3 py-2.5">Rol</th>
+                  <th className="px-3 py-2.5 text-right">Acciones</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-slate-100 bg-white">
                 {voceros.map((v) => (
-                  <tr key={v.user_id} className="border-b border-slate-100">
-                    <td className="px-3 py-2">{v.user_id}</td>
-                    <td className="px-3 py-2">
+                  <tr key={v.user_id} className="hover:bg-slate-50 transition-colors">
+                    <td className="px-3 py-2.5 font-mono text-xs font-semibold text-slate-600">@{v.user_id}</td>
+                    <td className="px-3 py-2.5 font-bold text-slate-800">
                       {v.nombre} {v.apellido}
                     </td>
-                    <td className="px-3 py-2">{v.telefono || "-"}</td>
-                    <td className="px-3 py-2">{v.vocero}</td>
-                    <td className="px-3 py-2">{v.calle}</td>
-                    <td className="px-3 py-2">{v.is_admin ? "Administrador" : "Vocero"}</td>
-                    <td className="px-3 py-2 text-right">
-                      {!v.is_admin && (
-                        <div className="flex justify-end gap-2">
-                          <button
-                            type="button"
-                            className="rounded-lg p-1.5 text-slate-600 hover:bg-blue-100"
-                            title="Editar consejo / calle"
-                            onClick={() => openEdit(v)}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </button>
-                          <button
-                            type="button"
-                            className="rounded-lg p-1.5 text-slate-600 hover:bg-amber-100"
-                            title="Restablecer contraseña"
-                            onClick={() => {
-                              setResetUser(v);
-                              setResetPw("");
-                              setResetPw2("");
-                            }}
-                          >
-                            <KeyRound className="h-4 w-4" />
-                          </button>
-                          <button
-                            type="button"
-                            className="rounded-lg p-1.5 text-slate-600 hover:bg-red-100 hover:text-red-600"
-                            title="Eliminar vocero"
-                            onClick={() => {
-                              setDeleteConfirmUser(v);
-                            }}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        </div>
-                      )}
+                    <td className="px-3 py-2.5 text-slate-600 text-xs">{v.telefono || "-"}</td>
+                    <td className="px-3 py-2.5 text-slate-700 text-xs font-medium">{v.vocero}</td>
+                    <td className="px-3 py-2.5 text-slate-700 text-xs font-medium">{v.calle}</td>
+                    <td className="px-3 py-2.5">
+                      <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${
+                        v.is_admin 
+                          ? "bg-purple-50 text-purple-700 border-purple-200" 
+                          : "bg-cyan-50 text-cyan-700 border-cyan-200"
+                      }`}>
+                        {v.is_admin ? "🛡️ Administrador" : "👤 Vocero"}
+                      </span>
+                    </td>
+                    <td className="px-3 py-2.5 text-right">
+                      <div className="flex justify-end gap-1.5 items-center">
+                        {/* Botón para cambiar rol (Dar o Quitar Administrador) */}
+                        <button
+                          type="button"
+                          className={`rounded-lg p-1.5 transition cursor-pointer ${
+                            v.is_admin
+                              ? "text-purple-600 bg-purple-50 hover:bg-purple-100"
+                              : "text-slate-500 hover:bg-purple-50 hover:text-purple-700"
+                          }`}
+                          title={v.is_admin ? "Revocar rol de Administrador (hacer Vocero)" : "Hacer Administrador de la Comuna"}
+                          onClick={() => setRoleConfirmUser({ user: v, newIsAdmin: !v.is_admin })}
+                        >
+                          <ShieldCheck className="h-4 w-4" />
+                        </button>
+
+                        <button
+                          type="button"
+                          className="rounded-lg p-1.5 text-slate-600 hover:bg-blue-100 transition cursor-pointer"
+                          title="Editar consejo / calle"
+                          onClick={() => openEdit(v)}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </button>
+                        <button
+                          type="button"
+                          className="rounded-lg p-1.5 text-slate-600 hover:bg-amber-100 transition cursor-pointer"
+                          title="Restablecer contraseña"
+                          onClick={() => {
+                            setResetUser(v);
+                            setResetPw("");
+                            setResetPw2("");
+                          }}
+                        >
+                          <KeyRound className="h-4 w-4" />
+                        </button>
+                        <button
+                          type="button"
+                          className="rounded-lg p-1.5 text-slate-600 hover:bg-red-100 hover:text-red-600 transition cursor-pointer"
+                          title="Eliminar usuario"
+                          onClick={() => {
+                            setDeleteConfirmUser(v);
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -599,6 +663,49 @@ export default function AdminVoceros({ consejos, calles, inputClass, onMessage }
                 className="px-6 py-2.5 bg-red-600 text-white font-medium hover:bg-red-700 rounded-xl transition shadow-sm"
               >
                 Sí, eliminar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {roleConfirmUser && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-fade-in">
+          <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden p-6 text-center animate-scale-in space-y-4">
+            <div className={`mx-auto w-16 h-16 rounded-full flex items-center justify-center ${
+              roleConfirmUser.newIsAdmin ? "bg-purple-100 text-purple-600" : "bg-cyan-100 text-cyan-600"
+            }`}>
+              {roleConfirmUser.newIsAdmin ? <ShieldCheck size={32} /> : <UserCheck size={32} />}
+            </div>
+            <h3 className="text-xl font-bold text-slate-800">
+              {roleConfirmUser.newIsAdmin ? "¿Hacer Administrador?" : "¿Revocar Rol de Administrador?"}
+            </h3>
+            <p className="text-slate-500 text-sm">
+              {roleConfirmUser.newIsAdmin ? (
+                <>
+                  Estás a punto de otorgar permisos de <strong>Administrador General</strong> a <span className="font-semibold text-slate-700">{roleConfirmUser.user.nombre} {roleConfirmUser.user.apellido}</span> (@{roleConfirmUser.user.user_id}). Tendrá acceso a toda la comuna, gestión de usuarios, cuadernillo y auditoría.
+                </>
+              ) : (
+                <>
+                  Estás a punto de cambiar el rol de <span className="font-semibold text-slate-700">{roleConfirmUser.user.nombre} {roleConfirmUser.user.apellido}</span> a <strong>Vocero</strong> de calle. Ya no tendrá acceso a la administración general ni al cuadernillo.
+                </>
+              )}
+            </p>
+            <div className="flex gap-3 justify-center pt-2">
+              <button
+                type="button"
+                onClick={() => setRoleConfirmUser(null)}
+                className="px-5 py-2.5 text-slate-600 font-semibold hover:bg-slate-100 rounded-xl transition cursor-pointer"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={handleToggleRole}
+                className={`px-5 py-2.5 text-white font-semibold rounded-xl transition shadow-sm cursor-pointer ${
+                  roleConfirmUser.newIsAdmin ? "bg-purple-600 hover:bg-purple-700" : "bg-cyan-600 hover:bg-cyan-700"
+                }`}
+              >
+                {roleConfirmUser.newIsAdmin ? "Sí, hacer Administrador" : "Sí, cambiar a Vocero"}
               </button>
             </div>
           </div>

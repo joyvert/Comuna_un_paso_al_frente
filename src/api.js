@@ -123,12 +123,15 @@ export const api = {
       const authInstance = isFirst ? auth : secondaryAuth;
       await createUserWithEmailAndPassword(authInstance, getEmail(payload.userId), payload.passwordHash);
       
+      const userIsAdmin = isFirst || Boolean(payload.isAdmin);
+
       await setDoc(doc(db, "usuarios", payload.userId), {
         nombre: payload.nombre,
         apellido: payload.apellido,
+        telefono: payload.telefono || "",
         vocero: payload.vocero,
         calle: payload.calle,
-        isAdmin: isFirst,
+        isAdmin: userIsAdmin,
         salt: payload.salt || "firebase_no_salt",
         passwordHash: payload.passwordHash,
         pregunta1: payload.pregunta1 || "",
@@ -137,6 +140,13 @@ export const api = {
         respuesta2Hash: payload.respuesta2Hash || "",
         createdAt: serverTimestamp()
       });
+
+      await api.logAuditoria({
+        accion: "CREAR_USUARIO",
+        detalle: `Creó la cuenta de ${payload.nombre} ${payload.apellido} (@${payload.userId}) con rol ${userIsAdmin ? "Administrador" : "Vocero"}`,
+        modulo: "Usuarios"
+      });
+
       return okRes({ message: "Usuario creado exitosamente.", isFirstUser: isFirst });
     } catch (e) {
       errRes(e.message);
@@ -194,9 +204,19 @@ export const api = {
 
   listVoceros: async () => {
     try {
-      const q = query(collection(db, "usuarios"), where("isAdmin", "==", false));
-      const snap = await getDocs(q);
-      return okRes({ voceros: snap.docs.map(d => ({ id: d.id, user_id: d.id, ...d.data() })) });
+      const snap = await getDocs(collection(db, "usuarios"));
+      const voceros = snap.docs.map(d => ({ 
+        id: d.id, 
+        user_id: d.id, 
+        is_admin: Boolean(d.data().isAdmin),
+        ...d.data() 
+      }));
+      voceros.sort((a, b) => {
+        if (a.is_admin && !b.is_admin) return -1;
+        if (!a.is_admin && b.is_admin) return 1;
+        return (a.nombre || "").localeCompare(b.nombre || "");
+      });
+      return okRes({ voceros });
     } catch (e) { errRes(e.message); }
   },
 
@@ -204,13 +224,47 @@ export const api = {
     return api.register(payload); // Utiliza el mismo método con secondaryAuth
   },
 
+  toggleUserAdmin: async (userId, newIsAdmin) => {
+    try {
+      const session = getSession();
+      if (!session.isAdmin) return errRes("Solo un administrador puede modificar roles.");
+
+      const userDoc = await getDoc(doc(db, "usuarios", userId));
+      if (!userDoc.exists()) return errRes("Usuario no encontrado.");
+      const userData = userDoc.data();
+
+      if (!newIsAdmin && session.userId === userId) {
+        const snap = await getDocs(query(collection(db, "usuarios"), where("isAdmin", "==", true)));
+        if (snap.size <= 1) {
+          return errRes("No puedes quitarte el rol de administrador porque eres el único administrador.");
+        }
+      }
+
+      await updateDoc(doc(db, "usuarios", userId), { isAdmin: newIsAdmin });
+
+      await api.logAuditoria({
+        accion: newIsAdmin ? "PROMOVER_ADMIN" : "REVOCAR_ADMIN",
+        detalle: `${newIsAdmin ? "Asignó rol de Administrador" : "Revocó rol de Administrador"} a ${userData.nombre || userId} ${userData.apellido || ""} (@${userId})`,
+        modulo: "Usuarios"
+      });
+
+      return okRes({ message: `Rol actualizado a ${newIsAdmin ? "Administrador" : "Vocero"}.` });
+    } catch (e) { errRes(e.message); }
+  },
+
   updateVocero: async (userId, payload) => {
     try {
       await updateDoc(doc(db, "usuarios", userId), {
         nombre: payload.nombre,
         apellido: payload.apellido,
+        telefono: payload.telefono || "",
         vocero: payload.vocero,
         calle: payload.calle
+      });
+      await api.logAuditoria({
+        accion: "ACTUALIZAR_USUARIO",
+        detalle: `Actualizó datos de ${payload.nombre} ${payload.apellido} (@${userId})`,
+        modulo: "Usuarios"
       });
       return okRes({ message: "Vocero actualizado." });
     } catch (e) { errRes(e.message); }
@@ -302,6 +356,11 @@ export const api = {
         jefe_familia_id: null,
         createdAt: serverTimestamp()
       });
+      await api.logAuditoria({
+        accion: "REGISTRAR_HABITANTE",
+        detalle: `Registró al habitante ${payload.nombre} ${payload.apellido} (C.I. ${payload.cedula || "S/C"}) en ${payload.calle}, ${payload.consejoNombre}`,
+        modulo: "Habitantes"
+      });
       return okRes({ id: docRef.id });
     } catch (e) { errRes(e.message); }
   },
@@ -351,6 +410,11 @@ export const api = {
       if (ops > 0) {
         await batch.commit();
       }
+      await api.logAuditoria({
+        accion: "CARGA_MASIVA",
+        detalle: `Cargó ${count} habitantes en bloque vía Excel para ${payload.consejoNombre}`,
+        modulo: "Habitantes"
+      });
       return okRes({ total: count });
     } catch (e) { errRes(e.message); }
   },
@@ -358,6 +422,11 @@ export const api = {
   updateHabitante: async (id, payload) => {
     try {
       await updateDoc(doc(db, "habitantes", id), payload);
+      await api.logAuditoria({
+        accion: "EDITAR_HABITANTE",
+        detalle: `Actualizó datos del habitante ${payload.nombre || ""} ${payload.apellido || ""} (ID: ${id})`,
+        modulo: "Habitantes"
+      });
       return okRes({ message: "Actualizado" });
     } catch (e) { errRes(e.message); }
   },
@@ -378,6 +447,11 @@ export const api = {
       vsnap.forEach(d => batch.delete(d.ref));
       
       await batch.commit();
+      await api.logAuditoria({
+        accion: "ELIMINAR_HABITANTE",
+        detalle: `Eliminó el registro del habitante ID: ${id}`,
+        modulo: "Habitantes"
+      });
       return okRes({ message: "Eliminado" });
     } catch (e) { errRes(e.message); }
   },
@@ -623,6 +697,63 @@ export const api = {
     try {
       await deleteDoc(doc(db, "historial_votos", id));
       return okRes();
+    } catch (e) { errRes(e.message); }
+  },
+
+  // --- Módulo de Auditoría y Control ---
+  logAuditoria: async ({ accion, detalle, modulo }) => {
+    try {
+      const session = getSession();
+      const userName = [session.nombre, session.apellido].filter(Boolean).join(" ") || session.userId || "Sistema";
+      const userRol = session.isAdmin ? "Administrador" : "Vocero";
+      await addDoc(collection(db, "auditoria"), {
+        accion,
+        detalle,
+        modulo: modulo || "General",
+        usuario_id: session.userId || "sistema",
+        usuario_nombre: userName,
+        usuario_rol: userRol,
+        consejo: session.vocero || "Todos",
+        calle: session.calle || "General",
+        createdAt: serverTimestamp()
+      });
+      return okRes();
+    } catch (e) {
+      // No interrumpir la operación principal si falla el log
+      console.warn("Error registrando auditoría:", e.message);
+      return okRes();
+    }
+  },
+
+  getAuditoria: async (limitCount = 100) => {
+    try {
+      const session = getSession();
+      if (!session.isAdmin) return errRes("Acceso restringido: Solo administradores pueden ver la auditoría.");
+      
+      const snap = await getDocs(collection(db, "auditoria"));
+      const logs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      logs.sort((a, b) => (b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0));
+      return okRes({ logs: logs.slice(0, limitCount) });
+    } catch (e) { errRes(e.message); }
+  },
+
+  limpiarAuditoria: async () => {
+    try {
+      const session = getSession();
+      if (!session.isAdmin) return errRes("Acceso restringido.");
+
+      const snap = await getDocs(collection(db, "auditoria"));
+      const batch = writeBatch(db);
+      snap.forEach(d => batch.delete(d.ref));
+      await batch.commit();
+
+      await api.logAuditoria({
+        accion: "PURGAR_AUDITORIA",
+        detalle: `Vació los registros históricos del registro de auditoría`,
+        modulo: "Auditoría"
+      });
+
+      return okRes({ message: "Historial de auditoría purgado correctamente." });
     } catch (e) { errRes(e.message); }
   }
 };

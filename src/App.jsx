@@ -9,6 +9,7 @@ import CuadernilloElectoral from "./CuadernilloElectoral";
 import CasosSociales from "./CasosSociales";
 import FamiliaManagerModal from "./FamiliaManagerModal";
 import FichaHabitanteModal from "./FichaHabitanteModal";
+import PanelAuditoria from "./PanelAuditoria";
 import { api } from "./api";
 import AOS from "aos";
 import "aos/dist/aos.css";
@@ -28,6 +29,7 @@ import {
   Phone,
   Search,
   ShieldCheck,
+  ShieldAlert,
   Trash2,
   User,
   UserCog,
@@ -317,7 +319,8 @@ function App() {
     { key: "votaciones", label: "Votaciones", icon: Vote },
     ...(sessionUser?.isAdmin ? [
       { key: "cuadernillo", label: "Cuadernillo Electoral", icon: BookOpen },
-      { key: "admin", label: "Administración", icon: UserCog }
+      { key: "admin", label: "Gestión de Voceros y Roles", icon: UserCog },
+      { key: "auditoria", label: "Control y Auditoría", icon: ShieldAlert }
     ] : []),
   ];
 
@@ -795,6 +798,12 @@ function App() {
                   </div>
                 )}
                 <AdminVoceros consejos={consejos} calles={calles} inputClass={inputClass} onMessage={setAdminMsg} />
+              </div>
+            )}
+
+            {moduleTab === "auditoria" && sessionUser?.isAdmin && (
+              <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 md:p-6">
+                <PanelAuditoria onMessage={setHabitanteMsg} />
               </div>
             )}
 
