@@ -1206,9 +1206,6 @@ function App() {
                 
                 <TablaHabitantes
                   rows={habitantesFiltrados}
-                  onEdit={handleEditHabitante}
-                  onDelete={handleDeleteHabitante}
-                  onViewFicha={setSelectedHabitanteFicha}
                   isSearching={true}
                   allRows={habitantesActuales}
                 />
@@ -1604,43 +1601,45 @@ function TablaHabitantes({ rows, onEdit, onDelete, onManageFamily, onViewFicha, 
                   </div>
                 )}
 
-                {/* Acciones principales de la Tarjeta */}
-                <div className="flex justify-between items-center gap-2 mt-3 pt-3 border-t border-slate-50">
-                  <div className="flex gap-2 w-full">
-                    {onViewFicha && (
+                {/* Acciones principales de la Tarjeta (solo si hay acciones habilitadas) */}
+                {(onViewFicha || onDelete || onManageFamily) && (
+                  <div className="flex justify-between items-center gap-2 mt-3 pt-3 border-t border-slate-50">
+                    <div className="flex gap-2 w-full">
+                      {onViewFicha && (
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); onViewFicha(r); }}
+                          className="flex-1 py-2 text-xs font-bold text-cyan-800 hover:text-cyan-900 border border-cyan-200 bg-cyan-50 hover:bg-cyan-100 rounded-xl flex items-center justify-center gap-1.5 transition cursor-pointer shadow-xs"
+                        >
+                          <IdCard size={15} className="text-cyan-600" /> Ficha Única
+                        </button>
+                      )}
+                      {onManageFamily && !r.jefe_familia_id && (
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); onManageFamily(r); }}
+                          className={`flex-1 py-2 text-xs font-bold border rounded-xl flex items-center justify-center gap-1.5 transition cursor-pointer shadow-xs ${
+                            r.es_jefe_familia
+                              ? "text-indigo-700 border-indigo-200 bg-indigo-50 hover:bg-indigo-100"
+                              : "text-slate-600 border-slate-200 bg-slate-50 hover:bg-slate-100"
+                          }`}
+                        >
+                          <Users size={14} /> Familia
+                        </button>
+                      )}
+                    </div>
+                    {onDelete && (
                       <button
                         type="button"
-                        onClick={(e) => { e.stopPropagation(); onViewFicha(r); }}
-                        className="flex-1 py-2 text-xs font-bold text-cyan-800 hover:text-cyan-900 border border-cyan-200 bg-cyan-50 hover:bg-cyan-100 rounded-xl flex items-center justify-center gap-1.5 transition cursor-pointer shadow-xs"
+                        onClick={(e) => { e.stopPropagation(); onDelete(r); }}
+                        className="p-2 text-rose-600 hover:text-rose-700 border border-rose-100 bg-rose-50 hover:bg-rose-100 rounded-xl flex items-center justify-center transition shrink-0 cursor-pointer"
+                        title="Eliminar"
                       >
-                        <IdCard size={15} className="text-cyan-600" /> Ficha Única
-                      </button>
-                    )}
-                    {onManageFamily && !r.jefe_familia_id && (
-                      <button
-                        type="button"
-                        onClick={(e) => { e.stopPropagation(); onManageFamily(r); }}
-                        className={`flex-1 py-2 text-xs font-bold border rounded-xl flex items-center justify-center gap-1.5 transition cursor-pointer shadow-xs ${
-                          r.es_jefe_familia
-                            ? "text-indigo-700 border-indigo-200 bg-indigo-50 hover:bg-indigo-100"
-                            : "text-slate-600 border-slate-200 bg-slate-50 hover:bg-slate-100"
-                        }`}
-                      >
-                        <Users size={14} /> Familia
+                        <Trash2 size={14} />
                       </button>
                     )}
                   </div>
-                  {onDelete && (
-                    <button
-                      type="button"
-                      onClick={(e) => { e.stopPropagation(); onDelete(r); }}
-                      className="p-2 text-rose-600 hover:text-rose-700 border border-rose-100 bg-rose-50 hover:bg-rose-100 rounded-xl flex items-center justify-center transition shrink-0 cursor-pointer"
-                      title="Eliminar"
-                    >
-                      <Trash2 size={14} />
-                    </button>
-                  )}
-                </div>
+                )}
               </div>
             );
           })
