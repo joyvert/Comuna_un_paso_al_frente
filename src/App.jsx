@@ -251,7 +251,7 @@ function App() {
       api.getPagos(consejoNombre),
     ]);
 
-    // Normalizar nombres de las calles para evitar fallos por typos, espacios o mayúsculas
+    // Normalizar nombres de las calles y calcular edad dinámica en tiempo real si tiene fecha de nacimiento
     const normalizedHabitantes = (hab.habitantes || []).map((h) => {
       const call = (h.calle || "").trim();
       const lower = call.toLowerCase();
@@ -261,7 +261,13 @@ function App() {
       else if (lower.includes("portugueses")) matched = "Los Portugueses";
       else if (lower.includes("peñas") || lower.includes("penas")) matched = "Los Peñas";
       else if (lower.includes("acequia")) matched = "La Acequia";
-      return { ...h, calle: matched || call };
+      
+      const dynamicAge = h.nacimiento ? calcAge(h.nacimiento) : h.edad;
+      return { 
+        ...h, 
+        calle: matched || call,
+        edad: (dynamicAge !== "" && dynamicAge !== undefined && !isNaN(dynamicAge)) ? dynamicAge : h.edad
+      };
     });
 
     setDb((prev) => ({
@@ -889,10 +895,11 @@ function App() {
                           <X size={20} />
                         </button>
                       </div>
-                      <div className="p-6">
-                        <form onSubmit={handleRegistrar} className="grid gap-5 md:grid-cols-2">
-                          <div>
-                            <label className="mb-1.5 ml-1 block text-xs font-semibold text-slate-500 uppercase tracking-wider">Nombre</label>
+                      <div className="p-4 sm:p-6">
+                        <form onSubmit={handleRegistrar} className="grid grid-cols-2 gap-3 sm:gap-5">
+                          {/* Nombre y Apellido */}
+                          <div className="flex flex-col">
+                            <label className="mb-1 ml-0.5 block text-xs font-semibold text-slate-500 uppercase tracking-wider">Nombre</label>
                             <input
                               className={inputClass}
                               placeholder="Ej. Juan"
@@ -900,8 +907,8 @@ function App() {
                               onChange={(e) => setHabitanteForm((p) => ({ ...p, nombre: e.target.value }))}
                             />
                           </div>
-                          <div>
-                            <label className="mb-1.5 ml-1 block text-xs font-semibold text-slate-500 uppercase tracking-wider">Apellido</label>
+                          <div className="flex flex-col">
+                            <label className="mb-1 ml-0.5 block text-xs font-semibold text-slate-500 uppercase tracking-wider">Apellido</label>
                             <input
                               className={inputClass}
                               placeholder="Ej. Pérez"
@@ -909,8 +916,10 @@ function App() {
                               onChange={(e) => setHabitanteForm((p) => ({ ...p, apellido: e.target.value }))}
                             />
                           </div>
-                          <div>
-                            <label className="mb-1.5 ml-1 block text-xs font-semibold text-slate-500 uppercase tracking-wider">Cédula</label>
+
+                          {/* Cédula y Teléfono */}
+                          <div className="flex flex-col">
+                            <label className="mb-1 ml-0.5 block text-xs font-semibold text-slate-500 uppercase tracking-wider">Cédula</label>
                             <input
                               className={inputClass}
                               placeholder="Ej. 12345678"
@@ -918,17 +927,21 @@ function App() {
                               onChange={(e) => setHabitanteForm((p) => ({ ...p, cedula: e.target.value }))}
                             />
                           </div>
-                          <div>
-                            <label className="mb-1.5 ml-1 block text-xs font-semibold text-slate-500 uppercase tracking-wider">Teléfono</label>
+                          <div className="flex flex-col">
+                            <label className="mb-1 ml-0.5 block text-xs font-semibold text-slate-500 uppercase tracking-wider">Teléfono</label>
                             <input
                               className={inputClass}
-                              placeholder="Ej. 04121234567"
+                              placeholder="0412..."
                               value={habitanteForm.telefono}
                               onChange={(e) => setHabitanteForm((p) => ({ ...p, telefono: e.target.value }))}
                             />
                           </div>
-                          <div>
-                            <label className="mb-1.5 ml-1 block text-xs font-semibold text-slate-500 uppercase tracking-wider">Nacimiento</label>
+
+                          {/* Nacimiento y Edad Estimada */}
+                          <div className="flex flex-col">
+                            <label className="mb-1 ml-0.5 block text-xs font-semibold text-slate-500 uppercase tracking-wider truncate" title="Fecha de Nacimiento">
+                              Nacimiento
+                            </label>
                             <input
                               className={inputClass}
                               type="date"
@@ -939,19 +952,23 @@ function App() {
                               }}
                             />
                           </div>
-                          <div>
-                            <label className="mb-1.5 ml-1 block text-xs font-semibold text-slate-500 uppercase tracking-wider">Edad Estimada</label>
+                          <div className="flex flex-col">
+                            <label className="mb-1 ml-0.5 block text-xs font-semibold text-slate-500 uppercase tracking-wider truncate" title="Edad Estimada">
+                              Edad
+                            </label>
                             <input
                               className={inputClass}
                               type="number"
                               min="0"
-                              placeholder="Ej. 35"
+                              placeholder="Años"
                               value={habitanteForm.edad !== undefined ? habitanteForm.edad : ""}
                               onChange={(e) => setHabitanteForm((p) => ({ ...p, edad: e.target.value }))}
                             />
                           </div>
-                          <div>
-                            <label className="mb-1.5 ml-1 block text-xs font-semibold text-slate-500 uppercase tracking-wider">Sexo</label>
+
+                          {/* Sexo y Calle */}
+                          <div className="flex flex-col col-span-2 sm:col-span-1">
+                            <label className="mb-1 ml-0.5 block text-xs font-semibold text-slate-500 uppercase tracking-wider">Sexo</label>
                             <select
                               className={inputClass}
                               value={habitanteForm.sexo || "Masculino"}
@@ -961,8 +978,8 @@ function App() {
                               <option value="Femenino">Femenino</option>
                             </select>
                           </div>
-                          <div>
-                            <label className="mb-1.5 ml-1 block text-xs font-semibold text-slate-500 uppercase tracking-wider">Calle</label>
+                          <div className="flex flex-col col-span-2 sm:col-span-1">
+                            <label className="mb-1 ml-0.5 block text-xs font-semibold text-slate-500 uppercase tracking-wider">Calle / Escalera</label>
                             <select
                               className={inputClass}
                               value={habitanteCalleEfectiva}
@@ -975,27 +992,28 @@ function App() {
                             </select>
                           </div>
                           
-                          <div className="md:col-span-2 mt-2 bg-slate-50/50 p-4 rounded-xl border border-slate-100">
-                            <div className="flex items-center gap-3 mb-2">
+                          {/* Sección Caso Social */}
+                          <div className="col-span-2 mt-1 sm:mt-2 bg-slate-50/70 p-3 sm:p-4 rounded-xl border border-slate-100">
+                            <div className="flex items-center gap-2.5">
                               <input
                                 type="checkbox"
                                 id="requiereAyuda"
-                                className="w-5 h-5 text-cyan-600 bg-white border-slate-300 rounded focus:ring-cyan-500 focus:ring-2 cursor-pointer"
+                                className="w-4 h-4 sm:w-5 sm:h-5 text-cyan-600 bg-white border-slate-300 rounded focus:ring-cyan-500 cursor-pointer shrink-0"
                                 checked={habitanteForm.requiere_ayuda || false}
                                 onChange={(e) => setHabitanteForm((p) => ({ ...p, requiere_ayuda: e.target.checked, condicion_especial: e.target.checked ? "Embarazo" : "Ninguna" }))}
                               />
-                              <label htmlFor="requiereAyuda" className="text-sm font-bold text-slate-700 cursor-pointer flex items-center gap-2">
-                                <HeartPulse size={18} className="text-red-500" />
-                                ¿Requiere atención prioritaria o es un Caso Social?
+                              <label htmlFor="requiereAyuda" className="text-xs sm:text-sm font-bold text-slate-700 cursor-pointer flex items-center gap-1.5">
+                                <HeartPulse size={16} className="text-red-500 shrink-0" />
+                                ¿Requiere atención prioritaria o es Caso Social?
                               </label>
                             </div>
 
                             {habitanteForm.requiere_ayuda && (
-                              <div className="mt-3 pl-8">
-                                <label className="mb-1.5 block text-xs font-semibold text-slate-500 uppercase tracking-wider">Especificar Condición Especial</label>
-                                <div className="flex gap-3">
+                              <div className="mt-3 pl-6 sm:pl-7 space-y-2.5">
+                                <label className="block text-[10px] sm:text-xs font-semibold text-slate-500 uppercase tracking-wider">Especificar Condición Especial</label>
+                                <div className="grid grid-cols-2 gap-2 sm:gap-3">
                                   <select
-                                    className={`${inputClass} w-[60%]`}
+                                    className={inputClass}
                                     value={habitanteForm.condicion_especial || "Otro"}
                                     onChange={(e) => setHabitanteForm((p) => ({ ...p, condicion_especial: e.target.value }))}
                                   >
@@ -1004,7 +1022,7 @@ function App() {
                                     ))}
                                   </select>
                                   <select
-                                    className={`${inputClass} w-[40%] font-medium ${habitanteForm.prioridad_caso === 'Alta' ? 'text-red-600 bg-red-50 border-red-200' : habitanteForm.prioridad_caso === 'Media' ? 'text-amber-600 bg-amber-50 border-amber-200' : 'text-emerald-600 bg-emerald-50 border-emerald-200'}`}
+                                    className={`${inputClass} font-medium ${habitanteForm.prioridad_caso === 'Alta' ? 'text-red-600 bg-red-50 border-red-200' : habitanteForm.prioridad_caso === 'Media' ? 'text-amber-600 bg-amber-50 border-amber-200' : 'text-emerald-600 bg-emerald-50 border-emerald-200'}`}
                                     value={habitanteForm.prioridad_caso || "Media"}
                                     onChange={(e) => setHabitanteForm((p) => ({ ...p, prioridad_caso: e.target.value }))}
                                   >
@@ -1015,7 +1033,7 @@ function App() {
                                 </div>
                                 
                                 {habitanteForm.condicion_especial === "Otro" && (
-                                  <div className="mt-3 animate-fade-in">
+                                  <div className="mt-2 animate-fade-in">
                                     <input
                                       type="text"
                                       placeholder="Especifique la condición..."
@@ -1029,10 +1047,12 @@ function App() {
                               </div>
                             )}
                           </div>
-                          <div className="md:col-span-2 flex gap-3 pt-2">
+
+                          {/* Botones de Acción */}
+                          <div className="col-span-2 flex gap-2 sm:gap-3 pt-2">
                             <button
                               type="submit"
-                              className="flex-1 rounded-xl bg-slate-900 px-4 py-3 font-medium text-white hover:bg-slate-800 transition-colors shadow-sm focus:ring-2 focus:ring-slate-900/20"
+                              className="flex-1 rounded-xl bg-slate-900 px-4 py-2.5 sm:py-3 text-xs sm:text-sm font-bold text-white hover:bg-slate-800 transition-colors shadow-sm cursor-pointer"
                             >
                               {editingHabitanteId ? "Guardar Cambios" : "Registrar Habitante"}
                             </button>
@@ -1045,7 +1065,7 @@ function App() {
                                   setHabitanteMsg({ type: "", text: "" });
                                   setShowFormModal(false);
                                 }}
-                                className="flex-1 rounded-xl border border-slate-300 px-4 py-3 font-medium text-slate-700 hover:bg-slate-50 transition-colors"
+                                className="flex-1 rounded-xl border border-slate-300 px-4 py-2.5 sm:py-3 text-xs sm:text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer"
                               >
                                 Cancelar
                               </button>
