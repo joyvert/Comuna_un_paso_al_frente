@@ -242,7 +242,8 @@ export default function AdminVoceros({ consejos, calles, inputClass, onMessage }
         <h4 className="mb-3 sm:mb-4 flex items-center gap-2 text-sm sm:text-base font-bold font-heading text-slate-800">
           <UserPlus className="h-4 w-4 sm:h-5 sm:w-5 text-indigo-600" /> Crear cuenta de vocero
         </h4>
-        <form onSubmit={handleCreate} className="grid gap-4 md:grid-cols-2">
+        <form onSubmit={handleCreate} className="grid grid-cols-2 gap-3 sm:gap-4">
+          {/* Nombre y Apellido (2 cols en móvil y desktop) */}
           <div className="flex flex-col">
             <label className="mb-1 text-xs font-semibold text-slate-700">Nombre</label>
             <input
@@ -261,25 +262,33 @@ export default function AdminVoceros({ consejos, calles, inputClass, onMessage }
               onChange={(e) => setForm((p) => ({ ...p, apellido: e.target.value }))}
             />
           </div>
+
+          {/* Usuario y Teléfono (2 cols en móvil y desktop) */}
           <div className="flex flex-col">
-            <label className="mb-1 text-xs font-semibold text-slate-700">Teléfono (opcional)</label>
+            <label className="mb-1 text-xs font-semibold text-slate-700 truncate" title="Usuario (correo o cédula)">
+              Usuario (cédula)
+            </label>
             <input
               className={inputClass}
-              placeholder="Teléfono (opcional)"
-              value={form.telefono}
-              onChange={(e) => setForm((p) => ({ ...p, telefono: e.target.value }))}
-            />
-          </div>
-          <div className="flex flex-col">
-            <label className="mb-1 text-xs font-semibold text-slate-700">Usuario (correo o cédula)</label>
-            <input
-              className={inputClass}
-              placeholder="Usuario (correo o cédula)"
+              placeholder="Cédula o usuario"
               value={form.usuario}
               onChange={(e) => setForm((p) => ({ ...p, usuario: e.target.value }))}
             />
           </div>
           <div className="flex flex-col">
+            <label className="mb-1 text-xs font-semibold text-slate-700 truncate" title="Teléfono (opcional)">
+              Teléfono (opcional)
+            </label>
+            <input
+              className={inputClass}
+              placeholder="0412..."
+              value={form.telefono}
+              onChange={(e) => setForm((p) => ({ ...p, telefono: e.target.value }))}
+            />
+          </div>
+
+          {/* Consejo Comunal y Calle (Ancho completo para legibilidad en móvil, 2 cols en desktop) */}
+          <div className="flex flex-col col-span-2 md:col-span-1">
             <label className="mb-1 text-xs font-semibold text-slate-700">Consejo Comunal</label>
             <select
               className={inputClass}
@@ -300,8 +309,8 @@ export default function AdminVoceros({ consejos, calles, inputClass, onMessage }
               ))}
             </select>
           </div>
-          <div className="flex flex-col">
-            <label className="mb-1 text-xs font-semibold text-slate-700">Calle</label>
+          <div className="flex flex-col col-span-2 md:col-span-1">
+            <label className="mb-1 text-xs font-semibold text-slate-700">Calle / Escalera</label>
             {form.vocero === "La Esperanza" ? (
               <select
                 className={inputClass}
@@ -323,27 +332,35 @@ export default function AdminVoceros({ consejos, calles, inputClass, onMessage }
               />
             )}
           </div>
+
+          {/* Contraseña y Confirmar (2 cols en móvil y desktop) */}
           <div className="flex flex-col">
-            <label className="mb-1 text-xs font-semibold text-slate-700">Contraseña inicial</label>
+            <label className="mb-1 text-xs font-semibold text-slate-700 truncate" title="Contraseña inicial">
+              Contraseña
+            </label>
             <input
               className={inputClass}
               type="password"
-              placeholder="Mínimo 8 caracteres y 1 número"
+              placeholder="Mín. 8 caract."
               value={form.password}
               onChange={(e) => setForm((p) => ({ ...p, password: e.target.value }))}
             />
           </div>
           <div className="flex flex-col">
-            <label className="mb-1 text-xs font-semibold text-slate-700">Confirmar contraseña</label>
+            <label className="mb-1 text-xs font-semibold text-slate-700 truncate" title="Confirmar contraseña">
+              Confirmar clave
+            </label>
             <input
               className={inputClass}
               type="password"
-              placeholder="Confirmar contraseña"
+              placeholder="Repetir clave"
               value={form.password2}
               onChange={(e) => setForm((p) => ({ ...p, password2: e.target.value }))}
             />
           </div>
-          <div className="flex flex-col">
+
+          {/* Preguntas de Seguridad en bloques limpios */}
+          <div className="flex flex-col col-span-2 md:col-span-1">
             <label className="mb-1 text-xs font-semibold text-slate-700">Pregunta de seguridad 1</label>
             <select
               className={inputClass}
@@ -357,16 +374,17 @@ export default function AdminVoceros({ consejos, calles, inputClass, onMessage }
               ))}
             </select>
           </div>
-          <div className="flex flex-col">
+          <div className="flex flex-col col-span-2 md:col-span-1">
             <label className="mb-1 text-xs font-semibold text-slate-700">Respuesta 1</label>
             <input
               className={inputClass}
-              placeholder="Respuesta 1"
+              placeholder="Respuesta a pregunta 1"
               value={form.respuesta1}
               onChange={(e) => setForm((p) => ({ ...p, respuesta1: e.target.value }))}
             />
           </div>
-          <div className="flex flex-col">
+
+          <div className="flex flex-col col-span-2 md:col-span-1">
             <label className="mb-1 text-xs font-semibold text-slate-700">Pregunta de seguridad 2</label>
             <select
               className={inputClass}
@@ -380,37 +398,41 @@ export default function AdminVoceros({ consejos, calles, inputClass, onMessage }
               ))}
             </select>
           </div>
-          <div className="flex flex-col">
+          <div className="flex flex-col col-span-2 md:col-span-1">
             <label className="mb-1 text-xs font-semibold text-slate-700">Respuesta 2</label>
             <input
               className={inputClass}
-              placeholder="Respuesta 2"
+              placeholder="Respuesta a pregunta 2"
               value={form.respuesta2}
               onChange={(e) => setForm((p) => ({ ...p, respuesta2: e.target.value }))}
             />
           </div>
-          <div className="flex flex-col md:col-span-2 bg-indigo-50/70 border border-indigo-100 p-3.5 rounded-xl">
+
+          {/* Permiso de Administrador */}
+          <div className="flex flex-col col-span-2 bg-indigo-50/70 border border-indigo-100 p-3 sm:p-3.5 rounded-xl">
             <label className="flex items-center gap-2.5 cursor-pointer">
               <input
                 type="checkbox"
                 checked={form.isAdmin}
                 onChange={(e) => setForm((p) => ({ ...p, isAdmin: e.target.checked }))}
-                className="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500 cursor-pointer"
+                className="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500 cursor-pointer shrink-0"
               />
               <div>
-                <span className="text-xs font-bold text-indigo-900 block">
+                <span className="text-xs font-bold text-indigo-900 block leading-tight">
                   Asignar Rol de Administrador General
                 </span>
-                <span className="text-[11px] text-indigo-700 block">
-                  Los administradores tienen acceso total a todos los consejos comunales, cuadernillo, gestión de roles y auditoría.
+                <span className="text-[10px] sm:text-[11px] text-indigo-700 block mt-0.5">
+                  Acceso total a todos los consejos, cuadernillo, gestión de roles y auditoría.
                 </span>
               </div>
             </label>
           </div>
+
+          {/* Botón de Creación */}
           <button
             type="submit"
             disabled={creating || !canCreate}
-            className="rounded-xl bg-[#0f2847] px-4 py-2 font-medium text-white hover:bg-[#12345f] disabled:opacity-50 md:col-span-2 cursor-pointer shadow-sm transition"
+            className="rounded-xl bg-[#0f2847] px-4 py-2.5 text-xs sm:text-sm font-bold text-white hover:bg-[#12345f] disabled:opacity-50 col-span-2 cursor-pointer shadow-sm transition"
           >
             {creating ? "Creando…" : form.isAdmin ? "Crear Administrador" : "Crear Vocero"}
           </button>
