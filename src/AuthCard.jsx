@@ -92,11 +92,11 @@ function ParticleBackground() {
       constructor() {
         this.x = Math.random() * width;
         this.y = Math.random() * height;
-        this.vx = (Math.random() - 0.5) * 0.24;
-        this.vy = (Math.random() - 0.5) * 0.24;
-        this.radius = Math.random() * 1.4 + 0.4;
-        this.alpha = Math.random() * 0.45 + 0.25;
-        this.color = Math.random() > 0.5 ? "6, 182, 212" : "99, 102, 241"; // Teal or Indigo
+        this.vx = (Math.random() - 0.5) * 0.28;
+        this.vy = (Math.random() - 0.5) * 0.28;
+        this.radius = Math.random() * 1.6 + 0.6;
+        this.alpha = Math.random() * 0.5 + 0.3;
+        this.color = Math.random() > 0.5 ? "14, 165, 233" : "99, 102, 241"; // Sky blue or Indigo
       }
 
       update() {
@@ -111,8 +111,8 @@ function ParticleBackground() {
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
         ctx.fillStyle = `rgba(${this.color}, ${this.alpha})`;
-        ctx.shadowBlur = 6;
-        ctx.shadowColor = `rgba(${this.color}, 0.35)`;
+        ctx.shadowBlur = 4;
+        ctx.shadowColor = `rgba(${this.color}, 0.25)`;
         ctx.fill();
         ctx.shadowBlur = 0;
       }
@@ -132,13 +132,13 @@ function ParticleBackground() {
           const dy = particles[i].y - particles[j].y;
           const dist = Math.sqrt(dx * dx + dy * dy);
 
-          if (dist < 50) {
+          if (dist < 60) {
             ctx.beginPath();
             ctx.moveTo(particles[i].x, particles[i].y);
             ctx.lineTo(particles[j].x, particles[j].y);
-            const alpha = (1 - dist / 50) * 0.08;
+            const alpha = (1 - dist / 60) * 0.12;
             ctx.strokeStyle = `rgba(${particles[i].color}, ${alpha})`;
-            ctx.lineWidth = 0.5;
+            ctx.lineWidth = 0.6;
             ctx.stroke();
           }
         }
@@ -172,7 +172,7 @@ function ParticleBackground() {
   return (
     <canvas
       ref={canvasRef}
-      className="absolute inset-0 w-full h-full bg-[#030303] pointer-events-none z-0"
+      className="absolute inset-0 w-full h-full bg-gradient-to-br from-slate-50 via-white to-blue-50/40 pointer-events-none z-0"
     />
   );
 }
@@ -180,16 +180,16 @@ function ParticleBackground() {
 function TextField({ icon: Icon, label, placeholder, value, onChange, type = "text" }) {
   return (
     <label className="block relative pt-4 mb-4">
-      <span className="absolute top-0 left-0 text-[10px] sm:text-xs font-semibold text-slate-400 uppercase tracking-wider">{label}</span>
-      <div className="flex items-center gap-2 border-b border-slate-600/50 py-2 focus-within:border-rose-500 transition-colors">
+      <span className="absolute top-0 left-0 text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider">{label}</span>
+      <div className="flex items-center gap-2 border-b-2 border-slate-200 py-2 focus-within:border-cyan-600 transition-colors">
         <input
-          className="w-full bg-transparent outline-none text-sm text-slate-200 placeholder:text-slate-600"
+          className="w-full bg-transparent outline-none text-sm text-slate-800 placeholder:text-slate-400 font-medium"
           placeholder={placeholder}
           value={value}
           type={type}
           onChange={onChange}
         />
-        {Icon ? <Icon className="h-4 w-4 text-slate-500" aria-hidden /> : null}
+        {Icon ? <Icon className="h-4 w-4 text-slate-400" aria-hidden /> : null}
       </div>
     </label>
   );
@@ -198,10 +198,10 @@ function TextField({ icon: Icon, label, placeholder, value, onChange, type = "te
 function PasswordField({ icon: Icon, label, placeholder, value, onChange, visible, onToggle }) {
   return (
     <label className="block relative pt-4 mb-4">
-      <span className="absolute top-0 left-0 text-[10px] sm:text-xs font-semibold text-slate-400 uppercase tracking-wider">{label}</span>
-      <div className="flex items-center gap-2 border-b border-slate-600/50 py-2 focus-within:border-rose-500 transition-colors">
+      <span className="absolute top-0 left-0 text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider">{label}</span>
+      <div className="flex items-center gap-2 border-b-2 border-slate-200 py-2 focus-within:border-cyan-600 transition-colors">
         <input
-          className="w-full bg-transparent outline-none text-sm text-slate-200 placeholder:text-slate-600"
+          className="w-full bg-transparent outline-none text-sm text-slate-800 placeholder:text-slate-400 font-medium"
           placeholder={placeholder}
           value={value}
           type={visible ? "text" : "password"}
@@ -209,7 +209,7 @@ function PasswordField({ icon: Icon, label, placeholder, value, onChange, visibl
         />
         <button
           type="button"
-          className="rounded-full p-1 text-slate-500 hover:text-slate-300 transition-colors"
+          className="rounded-full p-1 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
           onClick={onToggle}
           aria-label={visible ? "Ocultar contraseña" : "Mostrar contraseña"}
         >
@@ -223,14 +223,14 @@ function PasswordField({ icon: Icon, label, placeholder, value, onChange, visibl
 function SelectField({ label, value, onChange, options }) {
   return (
     <label className="block relative pt-4 mb-4">
-      <span className="absolute top-0 left-0 text-[10px] sm:text-xs font-semibold text-slate-400 uppercase tracking-wider">{label}</span>
+      <span className="absolute top-0 left-0 text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider">{label}</span>
       <select
-        className="w-full border-b border-slate-600/50 bg-transparent py-2 text-sm text-slate-200 outline-none focus:border-rose-500 transition-colors appearance-none"
+        className="w-full border-b-2 border-slate-200 bg-transparent py-2 text-sm text-slate-800 font-medium outline-none focus:border-cyan-600 transition-colors appearance-none cursor-pointer"
         value={value}
         onChange={onChange}
       >
         {options.map((opt) => (
-          <option key={opt} value={opt} className="bg-[#111424] text-slate-200">
+          <option key={opt} value={opt} className="bg-white text-slate-800">
             {opt}
           </option>
         ))}
@@ -679,17 +679,17 @@ export default function AuthCard({ onAuthSuccess }) {
   const isSuccess = globalMessage.type === "success";
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center p-4 sm:p-6 md:p-8 bg-black text-slate-200 select-none font-sans relative overflow-hidden">
+    <div className="min-h-screen w-full flex items-center justify-center p-4 sm:p-6 md:p-8 bg-slate-100 text-slate-800 select-none font-sans relative overflow-hidden">
       
       {/* Dynamic Particle Canvas Background */}
       <ParticleBackground />
 
       {/* Centered Split Card */}
-      <div className="relative z-10 w-full max-w-[1000px] bg-[#111424] border border-slate-700/50 rounded-2xl shadow-2xl flex flex-col md:flex-row overflow-hidden min-h-[600px] max-h-[95vh]">
+      <div className="relative z-10 w-full max-w-[1000px] bg-white border border-slate-200/90 rounded-3xl shadow-2xl shadow-slate-300/60 flex flex-col md:flex-row overflow-hidden min-h-[600px] max-h-[95vh]">
         
         {/* Left Side: Background Video */}
         <div 
-          className="w-full md:w-1/2 min-h-[250px] md:min-h-0 relative flex flex-col justify-between p-6 sm:p-10 overflow-hidden"
+          className="w-full md:w-1/2 min-h-[240px] md:min-h-0 relative flex flex-col justify-between p-6 sm:p-10 overflow-hidden"
         >
           <video
             autoPlay
@@ -699,24 +699,24 @@ export default function AuthCard({ onAuthSuccess }) {
             className="absolute inset-0 w-full h-full object-cover z-0"
             src="/cielo.mov"
           />
-          {/* Transparent dark gradient overlays over the left video side for readability */}
-          <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent pointer-events-none z-10" />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent pointer-events-none z-10" />
+          {/* Soft contrast overlays over the left video side */}
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-900/60 via-slate-900/40 to-transparent pointer-events-none z-10" />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-900/70 via-transparent to-transparent pointer-events-none z-10" />
 
           {/* Comuna logo/text at top-left of the image */}
           <div className="relative z-20 flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 backdrop-blur-md text-white shadow-xl">
-              <ShieldCheck className="h-6 w-6" aria-hidden />
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20 backdrop-blur-md text-white shadow-xl border border-white/20">
+              <ShieldCheck className="h-6 w-6 text-cyan-300" aria-hidden />
             </div>
-            <span className="text-lg sm:text-xl font-bold tracking-wide text-white uppercase font-heading">
+            <span className="text-lg sm:text-xl font-bold tracking-wide text-white uppercase font-heading drop-shadow-md">
               Comuna un paso al frente
             </span>
           </div>
 
-          {/* Bottom text inside the image (only "¿No tienes una cuenta? Regístrate" or register call to action, if mode is login and register is allowed) */}
+          {/* Bottom text inside the image */}
           {mode === "login" && allowRegisterUi && (
             <div className="relative z-20 mt-auto pt-6">
-              <p className="text-sm text-white/85 font-light max-w-xs mb-4">
+              <p className="text-sm text-white/90 font-medium max-w-xs mb-4 drop-shadow">
                 ¿No tienes una cuenta? Regístrate para acceder a todas las funciones de nuestro servicio.
               </p>
               <button 
@@ -724,7 +724,7 @@ export default function AuthCard({ onAuthSuccess }) {
                   setGlobalMessage({ type: "info", text: "" });
                   setMode("register");
                 }}
-                className="px-6 py-2 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md text-white text-sm font-medium border border-white/20 transition-all shadow-lg cursor-pointer"
+                className="px-6 py-2.5 rounded-full bg-white/20 hover:bg-white/30 backdrop-blur-md text-white text-sm font-semibold border border-white/30 transition-all shadow-lg cursor-pointer"
               >
                 Regístrate ahora
               </button>
@@ -732,20 +732,23 @@ export default function AuthCard({ onAuthSuccess }) {
           )}
         </div>
 
-        {/* Right Side: Form Content */}
-        <div className="w-full md:w-1/2 flex flex-col justify-center px-6 py-10 sm:px-10 md:px-12 bg-[#111424] overflow-y-auto">
+        {/* Right Side: Form Content (Light, crisp and elegant) */}
+        <div className="w-full md:w-1/2 flex flex-col justify-center px-6 py-10 sm:px-10 md:px-12 bg-white overflow-y-auto">
           <div className="w-full max-w-sm mx-auto relative">
             {/* Título de Formulario */}
-            <h2 className="text-2xl sm:text-3xl font-light text-white mb-6 sm:mb-8 text-center md:text-left">
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-800 mb-2 text-center md:text-left font-heading tracking-tight">
               {mode === "login" ? "Iniciar sesión" : mode === "register" ? "Regístrate" : "Recuperar cuenta"}
             </h2>
+            <p className="text-xs sm:text-sm text-slate-500 mb-6 sm:mb-8 text-center md:text-left">
+              {mode === "login" ? "Ingresa tus credenciales para acceder al panel." : mode === "register" ? "Completa los datos para crear tu cuenta de vocero." : "Sigue los pasos para restablecer tu contraseña."}
+            </p>
 
             {globalMessage.text ? (
               <div
-                className={`mb-6 rounded-lg px-4 py-3 text-sm border-l-4 ${
-                  isError ? "border-rose-500 bg-rose-500/10 text-rose-200" : 
-                  isSuccess ? "border-emerald-500 bg-emerald-500/10 text-emerald-200" : 
-                  "border-blue-500 bg-blue-500/10 text-blue-200"
+                className={`mb-6 rounded-xl px-4 py-3 text-xs sm:text-sm border-l-4 font-medium shadow-xs ${
+                  isError ? "border-rose-500 bg-rose-50 text-rose-700" : 
+                  isSuccess ? "border-emerald-500 bg-emerald-50 text-emerald-700" : 
+                  "border-cyan-500 bg-cyan-50 text-cyan-700"
                 }`}
               >
                 {globalMessage.text}
@@ -758,7 +761,7 @@ export default function AuthCard({ onAuthSuccess }) {
                 <div className="animate-fade-in">
                   {recoverStep === 1 ? (
                     <form autoComplete="off" onSubmit={handleRecoveryStep1}>
-                      <p className="text-sm text-slate-400 mb-8 font-light">Indica tu correo o cédula para cargar tus preguntas de seguridad.</p>
+                      <p className="text-xs sm:text-sm text-slate-500 mb-6 font-normal">Indica tu correo o cédula para cargar tus preguntas de seguridad.</p>
                       <TextField
                         icon={User}
                         label="Correo o Cédula"
@@ -766,18 +769,18 @@ export default function AuthCard({ onAuthSuccess }) {
                         value={recoverUserId}
                         onChange={(e) => setRecoverUserId(e.target.value)}
                       />
-                      <div className="mt-10 flex items-center gap-4">
+                      <div className="mt-8 flex items-center gap-4">
                         <button
                           type="submit"
                           disabled={loading}
-                          className="flex-1 rounded-full bg-rose-600 px-6 py-3.5 text-sm font-bold tracking-wide text-white shadow-lg shadow-rose-600/30 transition hover:bg-rose-500 hover:shadow-rose-500/40 disabled:opacity-50"
+                          className="flex-1 rounded-full bg-gradient-to-r from-rose-500 to-rose-600 px-6 py-3 text-sm font-bold tracking-wide text-white shadow-lg shadow-rose-500/25 transition hover:brightness-110 disabled:opacity-50 cursor-pointer"
                         >
                           {loading ? "Buscando…" : "Continuar"}
                         </button>
                         <button
                           type="button"
                           onClick={() => { setGlobalMessage({ type: "info", text: "" }); setMode("login"); }}
-                          className="text-sm text-slate-400 hover:text-white transition"
+                          className="text-xs sm:text-sm font-semibold text-slate-500 hover:text-slate-800 transition cursor-pointer"
                         >
                           Cancelar
                         </button>
@@ -785,7 +788,7 @@ export default function AuthCard({ onAuthSuccess }) {
                     </form>
                   ) : (
                     <form autoComplete="off" onSubmit={handleRecoverySubmit}>
-                      <p className="text-sm text-slate-400 mb-8 font-light">Responde y elige una contraseña nueva.</p>
+                      <p className="text-xs sm:text-sm text-slate-500 mb-6 font-normal">Responde y elige una contraseña nueva.</p>
                       <TextField
                         label={recoveryMeta?.pregunta1 || "Pregunta 1"}
                         placeholder="Tu respuesta"
@@ -815,18 +818,18 @@ export default function AuthCard({ onAuthSuccess }) {
                         onToggle={() => setShowRecoverPw2((v) => !v)}
                       />
                       
-                      <div className="mt-10 flex items-center gap-4">
+                      <div className="mt-8 flex items-center gap-4">
                         <button
                           type="submit"
                           disabled={loading || !canSubmitRecovery}
-                          className="flex-1 rounded-full bg-rose-600 px-6 py-3.5 text-sm font-bold tracking-wide text-white shadow-lg shadow-rose-600/30 transition hover:bg-rose-500 hover:shadow-rose-500/40 disabled:opacity-50"
+                          className="flex-1 rounded-full bg-gradient-to-r from-rose-500 to-rose-600 px-6 py-3 text-sm font-bold tracking-wide text-white shadow-lg shadow-rose-500/25 transition hover:brightness-110 disabled:opacity-50 cursor-pointer"
                         >
                           {loading ? "Guardando…" : "Restablecer"}
                         </button>
                         <button
                           type="button"
                           onClick={() => { resetRecoveryView(); setMode("login"); }}
-                          className="text-sm text-slate-400 hover:text-white transition"
+                          className="text-xs sm:text-sm font-semibold text-slate-500 hover:text-slate-800 transition cursor-pointer"
                         >
                           Cancelar
                         </button>
@@ -835,8 +838,8 @@ export default function AuthCard({ onAuthSuccess }) {
                   )}
                 </div>
               ) : mode === "register" ? (
-                <form autoComplete="off" onSubmit={handleRegister} className="animate-fade-in pb-10">
-                  <p className="text-sm text-slate-400 mb-8 font-light">
+                <form autoComplete="off" onSubmit={handleRegister} className="animate-fade-in pb-6">
+                  <p className="text-xs sm:text-sm text-slate-500 mb-6 font-normal">
                     {regStatus.firstUserPending
                       ? "Eres el primer usuario: serás administrador del sistema."
                       : "Crea tu cuenta de vocero en el sistema."}
@@ -857,11 +860,11 @@ export default function AuthCard({ onAuthSuccess }) {
                   </div>
 
                   {registerForm.password2 && registerForm.password2 !== registerForm.password && (
-                    <p className="text-xs text-rose-500 mb-4">Las contraseñas no coinciden.</p>
+                    <p className="text-xs text-rose-600 font-semibold mb-4">Las contraseñas no coinciden.</p>
                   )}
 
-                  <div className="mt-6 mb-8 pt-6 border-t border-slate-800">
-                    <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">Seguridad (Recuperación)</h3>
+                  <div className="mt-4 mb-6 pt-4 border-t border-slate-100">
+                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Seguridad (Recuperación)</h3>
                     <div className="grid gap-x-4 sm:grid-cols-2">
                       <SelectField label="Pregunta 1" value={registerForm.pregunta1} onChange={(e) => setRegisterForm((p) => ({ ...p, pregunta1: e.target.value }))} options={preguntas1} />
                       <TextField label="Respuesta 1" placeholder="Tu respuesta" value={registerForm.respuesta1} onChange={(e) => setRegisterForm((p) => ({ ...p, respuesta1: e.target.value }))} />
@@ -870,18 +873,18 @@ export default function AuthCard({ onAuthSuccess }) {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-6 mt-10">
+                  <div className="flex items-center gap-4 mt-8">
                     <button
                       type="submit"
                       disabled={loading || !canRegister}
-                      className="flex-1 rounded-full bg-rose-600 px-6 py-3.5 text-sm font-bold tracking-wide text-white shadow-lg shadow-rose-600/30 transition hover:bg-rose-500 hover:shadow-rose-500/40 disabled:opacity-50"
+                      className="flex-1 rounded-full bg-gradient-to-r from-rose-500 to-rose-600 px-6 py-3 text-sm font-bold tracking-wide text-white shadow-lg shadow-rose-500/25 transition hover:brightness-110 disabled:opacity-50 cursor-pointer"
                     >
                       {loading ? "Creando…" : "Registrarme"}
                     </button>
                     <button
                       type="button"
                       onClick={() => setMode("login")}
-                      className="text-sm text-slate-400 hover:text-white transition shrink-0"
+                      className="text-xs sm:text-sm font-semibold text-slate-500 hover:text-slate-800 transition shrink-0 cursor-pointer"
                     >
                       ¿Ya tienes cuenta?
                     </button>
@@ -905,23 +908,23 @@ export default function AuthCard({ onAuthSuccess }) {
                     onToggle={() => setShowLoginPass((v) => !v)}
                   />
                   
-                  <div className="flex items-center mt-6">
+                  <div className="flex items-center mt-5">
                     <label className="flex items-center gap-2 cursor-pointer select-none group">
                       <input
                         type="checkbox"
                         checked={rememberMe}
                         onChange={(e) => setRememberMe(e.target.checked)}
-                        className="w-4 h-4 rounded border-slate-600 accent-rose-600 cursor-pointer focus:ring-rose-500 focus:ring-offset-0"
+                        className="w-4 h-4 rounded border-slate-300 text-rose-600 focus:ring-rose-500 cursor-pointer"
                       />
-                      <span className="text-xs text-slate-400 group-hover:text-slate-200 transition-colors">Recuérdame</span>
+                      <span className="text-xs font-semibold text-slate-600 group-hover:text-slate-900 transition-colors">Recuérdame</span>
                     </label>
                   </div>
 
-                  <div className="mt-12 flex items-center justify-between gap-4">
+                  <div className="mt-10 flex items-center justify-between gap-4">
                     <button
                       type="submit"
                       disabled={loading}
-                      className="w-32 rounded-full bg-rose-600 px-6 py-3.5 text-sm font-bold tracking-wide text-white shadow-lg shadow-rose-600/30 transition hover:bg-rose-500 hover:shadow-rose-500/40 disabled:opacity-50"
+                      className="w-36 rounded-full bg-gradient-to-r from-rose-500 to-rose-600 px-6 py-3 text-sm font-bold tracking-wide text-white shadow-lg shadow-rose-500/30 transition hover:brightness-110 active:scale-95 disabled:opacity-50 cursor-pointer"
                     >
                       {loading ? "..." : "Entrar"}
                     </button>
@@ -930,7 +933,7 @@ export default function AuthCard({ onAuthSuccess }) {
                       <button
                         type="button"
                         onClick={openRecovery}
-                        className="text-xs font-medium text-slate-400 hover:text-rose-400 transition-colors"
+                        className="text-xs font-semibold text-slate-500 hover:text-rose-600 transition-colors cursor-pointer"
                       >
                         ¿Olvidaste tu contraseña?
                       </button>
@@ -938,7 +941,7 @@ export default function AuthCard({ onAuthSuccess }) {
                         <button
                           type="button"
                           onClick={() => { setGlobalMessage({ type: "info", text: "" }); setMode("register"); }}
-                          className="text-xs font-medium text-slate-400 hover:text-white transition-colors"
+                          className="text-xs font-semibold text-cyan-600 hover:text-cyan-700 transition-colors cursor-pointer"
                         >
                           Crear una cuenta nueva
                         </button>
