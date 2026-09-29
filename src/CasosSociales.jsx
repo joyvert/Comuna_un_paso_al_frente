@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { Pencil, Save, X, Printer, HeartPulse, History } from "lucide-react";
+import { Pencil, Save, X, Printer, HeartPulse, History, MessageCircle, Phone } from "lucide-react";
 import { api } from "./api";
+import { formatWhatsAppUrl } from "./whatsappHelper";
 
 export default function CasosSociales({ activeConsejo, db, setDb, sessionUser, inputClass }) {
   const [editingId, setEditingId] = useState(null);
@@ -179,7 +180,27 @@ export default function CasosSociales({ activeConsejo, db, setDb, sessionUser, i
                     const isEditing = editingId === c.id;
                     return (
                       <tr key={c.id} className="hover:bg-slate-50 transition-colors">
-                        <td className="p-4 font-medium text-slate-800">{c.nombre} {c.apellido}</td>
+                        <td className="p-4 font-medium text-slate-800">
+                          <div>{c.nombre} {c.apellido}</div>
+                          {c.telefono && (
+                            <div className="flex items-center gap-1.5 mt-1">
+                              <a href={`tel:${c.telefono}`} className="text-xs text-slate-500 hover:text-cyan-700 flex items-center gap-1">
+                                <Phone size={11} /> {c.telefono}
+                              </a>
+                              {formatWhatsAppUrl(c.telefono) && (
+                                <a
+                                  href={formatWhatsAppUrl(c.telefono, `Hola ${c.nombre}, nos comunicamos desde el Consejo Comunal ${activeConsejo} sobre su caso social.`)}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-0.5 bg-emerald-50 text-emerald-600 hover:bg-emerald-500 hover:text-white px-1.5 py-0.5 rounded text-[10px] font-bold transition"
+                                  title="Contactar vía WhatsApp"
+                                >
+                                  <MessageCircle size={10} /> WA
+                                </a>
+                              )}
+                            </div>
+                          )}
+                        </td>
                         <td className="p-4 text-slate-500">
                           {c.cedula}
                           <br />

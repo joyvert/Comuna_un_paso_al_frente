@@ -755,5 +755,112 @@ export const api = {
 
       return okRes({ message: "Historial de auditoría purgado correctamente." });
     } catch (e) { errRes(e.message); }
+  },
+
+  // --- Módulo de Respaldo y Restauración de Base de Datos ---
+  exportDatabaseBackup: async () => {
+    try {
+      const session = getSession();
+      if (!session.isAdmin) return errRes("Acceso restringido: Solo administradores pueden exportar respaldos.");
+
+      const colecciones = [
+        "habitantes",
+        "usuarios",
+        "jornadas",
+        "pagos",
+        "votos",
+        "historial_votos",
+        "auditoria"
+      ];
+
+      const backupData = {
+        metadata: {
+          sistema: "Comuna Un Paso Al Frente",
+          version: "2.0",
+          fecha_exportacion: new Date().toISOString(),
+          exportado_por: session.userId || "admin",
+          nombre_operador: [session.nombre, session.apellido].filter(Boolean).join(" ") || "Administrador"
+        },
+        data: {}
+      };
+
+      for (const colName of colecciones) {
+        const snap = await getDocs(collection(db, colName));
+        backupData.data[colName] = snap.docs.map(docSnap => {
+          const docData = docSnap.data();
+          // Convertir serverTimestamps si existen para que sean serializables en JSON limpio
+          const parsedDoc = { id: docSnap.id, ...docData };
+          Object.keys(parsedDoc).forEach(key => {
+            if (parsedDoc[key] && typeof parsedDoc[key].toDate === "function") {
+              parsedDoc[key] = parsedDoc[key].toDate().toISOString();
+            }
+          });
+          return parsedDoc;
+        });
+      }
+
+      await api.logAuditoria({
+        accion: "EXPORTAR_RESPALDO",
+        detalle: `Generó un archivo de respaldo completo JSON del sistema (${Object.keys(backupData.data).reduce((acc, k) => acc + backupData.data[k].length, 0)} registros)`,
+        modulo: "Seguridad y Respaldo"
+      });
+
+      return okRes({ backup: backupData });
+    } catch (e) {
+      errRes(e.message);
+    }
+  },
+
+  restoreDatabaseBackup: async (backupJson) => {
+    try {
+      const session = getSession();
+      if (!session.isAdmin) return errRes("Acceso restringido: Solo administradores pueden restaurar respaldos.");
+
+      if (!backupJson || !backupJson.data || typeof backupJson.data !== "object") {
+        return errRes("El archivo no tiene el formato de respaldo válido de la Comuna.");
+      }
+
+      let totalRestaurados = 0;
+      const permitidas = ["habitantes", "usuarios", "jornadas", "pagos", "historial_votos"];
+
+      for (const colName of permitidas) {
+        const items = backupJson.data[colName];
+        if (!Array.isArray(items) || items.length === 0) continue;
+
+        let batch = writeBatch(db);
+        let count = 0;
+
+        for (const item of items) {
+          const docId = item.id;
+          const docBody = { ...item };
+          delete docBody.id;
+
+          const docRef = docId ? doc(db, colName, docId) : doc(collection(db, colName));
+          batch.set(docRef, { ...docBody, updatedAt: serverTimestamp() }, { merge: true });
+          count++;
+          totalRestaurados++;
+
+          if (count >= 400) {
+            await batch.commit();
+            batch = writeBatch(db);
+            count = 0;
+          }
+        }
+
+        if (count > 0) {
+          await batch.commit();
+        }
+      }
+
+      await api.logAuditoria({
+        accion: "RESTAURAR_RESPALDO",
+        detalle: `Restauró datos desde archivo de respaldo JSON (${totalRestaurados} registros procesados)`,
+        modulo: "Seguridad y Respaldo"
+      });
+
+      return okRes({ total: totalRestaurados, message: `Respaldo restaurado exitosamente. Se sincronizaron ${totalRestaurados} registros.` });
+    } catch (e) {
+      errRes(e.message);
+    }
   }
 };

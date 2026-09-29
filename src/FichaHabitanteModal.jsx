@@ -13,8 +13,10 @@ import {
   Home, 
   IdCard, 
   CheckCircle2, 
-  AlertCircle 
+  AlertCircle,
+  MessageCircle
 } from "lucide-react";
+import { formatWhatsAppUrl } from "./whatsappHelper";
 
 export default function FichaHabitanteModal({ habitante, allHabitantes, activeConsejo, onClose, onEdit }) {
   if (!habitante) return null;
@@ -168,16 +170,30 @@ export default function FichaHabitanteModal({ habitante, allHabitantes, activeCo
                 </span>
               </div>
               <div className="bg-slate-50 p-2.5 sm:p-3 rounded-xl border border-slate-100 col-span-2 sm:col-span-1">
-                <span className="text-slate-400 text-[10px] sm:text-xs font-semibold uppercase block">Teléfono</span>
+                <span className="text-slate-400 text-[10px] sm:text-xs font-semibold uppercase block">Teléfono / WhatsApp</span>
                 {habitante.telefono ? (
-                  <a 
-                    href={`tel:${habitante.telefono}`} 
-                    className="font-bold text-cyan-600 hover:text-cyan-700 text-sm sm:text-base flex items-center gap-1 mt-0.5"
-                  >
-                    <Phone size={14} /> {habitante.telefono}
-                  </a>
+                  <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                    <a 
+                      href={`tel:${habitante.telefono}`} 
+                      className="font-bold text-cyan-700 hover:text-cyan-800 text-xs sm:text-sm flex items-center gap-1"
+                      title="Llamar"
+                    >
+                      <Phone size={13} /> {habitante.telefono}
+                    </a>
+                    {formatWhatsAppUrl(habitante.telefono) && (
+                      <a
+                        href={formatWhatsAppUrl(habitante.telefono, `Hola ${habitante.nombre}, le escribimos desde el Consejo Comunal ${activeConsejo || habitante.consejo || ""}.`)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 bg-emerald-500 hover:bg-emerald-600 text-white text-[11px] font-bold px-2 py-0.5 rounded-lg shadow-xs transition cursor-pointer"
+                        title="Abrir chat de WhatsApp"
+                      >
+                        <MessageCircle size={12} /> WhatsApp
+                      </a>
+                    )}
+                  </div>
                 ) : (
-                  <span className="font-semibold text-slate-400 italic">Sin número</span>
+                  <span className="font-semibold text-slate-400 italic text-xs">Sin número</span>
                 )}
               </div>
               <div className="bg-slate-50 p-2.5 sm:p-3 rounded-xl border border-slate-100 col-span-2 sm:col-span-2">

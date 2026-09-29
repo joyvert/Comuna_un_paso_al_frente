@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { KeyRound, Pencil, RefreshCw, UserPlus, Trash2, ShieldCheck, ShieldAlert, UserCheck } from "lucide-react";
+import { KeyRound, Pencil, RefreshCw, UserPlus, Trash2, ShieldCheck, ShieldAlert, UserCheck, MessageCircle, Phone } from "lucide-react";
 import { api } from "./api";
+import { formatWhatsAppUrl } from "./whatsappHelper";
 
 const preguntas1 = [
   "Nombre de tu primera mascota",
@@ -469,7 +470,26 @@ export default function AdminVoceros({ consejos, calles, inputClass, onMessage }
                       <td className="px-3 py-2.5 font-bold text-slate-800">
                         {v.nombre} {v.apellido}
                       </td>
-                      <td className="px-3 py-2.5 text-slate-600 text-xs">{v.telefono || "-"}</td>
+                      <td className="px-3 py-2.5 text-slate-600 text-xs">
+                        {v.telefono ? (
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span>{v.telefono}</span>
+                            {formatWhatsAppUrl(v.telefono) && (
+                              <a
+                                href={formatWhatsAppUrl(v.telefono, `Hola ${v.nombre}, le escribimos desde la Coordinación de la Comuna.`)}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="p-1 rounded bg-emerald-50 text-emerald-600 hover:bg-emerald-500 hover:text-white transition cursor-pointer"
+                                title="Enviar WhatsApp al Vocero"
+                              >
+                                <MessageCircle size={12} />
+                              </a>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-slate-400 italic">-</span>
+                        )}
+                      </td>
                       <td className="px-3 py-2.5 text-slate-700 text-xs font-medium">{v.vocero}</td>
                       <td className="px-3 py-2.5 text-slate-700 text-xs font-medium">{v.calle}</td>
                       <td className="px-3 py-2.5">
@@ -563,6 +583,24 @@ export default function AdminVoceros({ consejos, calles, inputClass, onMessage }
                       <span className="text-slate-400 block font-semibold">Calle / Escalera</span>
                       <span className="text-slate-700 font-bold truncate block">{v.calle || "General"}</span>
                     </div>
+                    {v.telefono && (
+                      <div className="col-span-2 pt-1 border-t border-slate-100 flex items-center justify-between">
+                        <span className="text-slate-500 font-medium flex items-center gap-1">
+                          <Phone size={10} /> {v.telefono}
+                        </span>
+                        {formatWhatsAppUrl(v.telefono) && (
+                          <a
+                            href={formatWhatsAppUrl(v.telefono, `Hola ${v.nombre}, le escribimos desde la Coordinación de la Comuna.`)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="bg-emerald-500 hover:bg-emerald-600 text-white rounded px-1.5 py-0.5 font-bold inline-flex items-center gap-0.5 text-[9px]"
+                            title="Chat WhatsApp"
+                          >
+                            <MessageCircle size={9} /> WhatsApp
+                          </a>
+                        )}
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex items-center justify-between gap-1.5 pt-2 border-t border-slate-100">

@@ -10,6 +10,7 @@ import CasosSociales from "./CasosSociales";
 import FamiliaManagerModal from "./FamiliaManagerModal";
 import FichaHabitanteModal from "./FichaHabitanteModal";
 import PanelAuditoria from "./PanelAuditoria";
+import RespaldoBaseDatos from "./RespaldoBaseDatos";
 import { api } from "./api";
 import AOS from "aos";
 import "aos/dist/aos.css";
@@ -43,7 +44,10 @@ import {
   Menu,
   BookOpen,
   IdCard,
+  MessageCircle,
+  Database,
 } from "lucide-react";
+import { formatWhatsAppUrl } from "./whatsappHelper";
 
 /** Formatea dígitos como monto tipo 1.234,56 (últimos 2 = decimales) */
 function formatMonto(val) {
@@ -327,7 +331,8 @@ function App() {
     ...(sessionUser?.isAdmin ? [
       { key: "cuadernillo", label: "Cuadernillo Electoral", icon: BookOpen },
       { key: "admin", label: "Gestión de Voceros y Roles", icon: UserCog },
-      { key: "auditoria", label: "Control y Auditoría", icon: ShieldAlert }
+      { key: "auditoria", label: "Control y Auditoría", icon: ShieldAlert },
+      { key: "respaldo", label: "Respaldo y Seguridad", icon: Database }
     ] : []),
   ];
 
@@ -832,6 +837,15 @@ function App() {
             {moduleTab === "auditoria" && sessionUser?.isAdmin && (
               <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 md:p-6">
                 <PanelAuditoria onMessage={setHabitanteMsg} />
+              </div>
+            )}
+
+            {moduleTab === "respaldo" && sessionUser?.isAdmin && (
+              <div className="p-1 sm:p-2">
+                <RespaldoBaseDatos 
+                  onMessage={setHabitanteMsg}
+                  onRefreshData={() => cargarDatosConsejo(activeConsejo)}
+                />
               </div>
             )}
 
@@ -1547,7 +1561,21 @@ function TablaHabitantes({ rows, onEdit, onDelete, onManageFamily, onViewFicha, 
                       </td>
                       <td className="px-4 py-3 font-medium">
                         {r.telefono ? (
-                          <span className="text-slate-600">{r.telefono}</span>
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="text-slate-600">{r.telefono}</span>
+                            {formatWhatsAppUrl(r.telefono) && (
+                              <a
+                                href={formatWhatsAppUrl(r.telefono, `Hola ${r.nombre}, le escribimos del Consejo Comunal ${activeConsejo}.`)}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="p-1 rounded bg-emerald-50 text-emerald-600 hover:bg-emerald-500 hover:text-white transition cursor-pointer"
+                                title="Enviar mensaje por WhatsApp"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <MessageCircle size={13} />
+                              </a>
+                            )}
+                          </div>
                         ) : (
                           <span className="text-slate-400 italic text-[11px]">Sin teléfono</span>
                         )}
@@ -1578,8 +1606,27 @@ function TablaHabitantes({ rows, onEdit, onDelete, onManageFamily, onViewFicha, 
                           </div>
                         </td>
                         <td className="px-4 py-3 text-sm font-semibold text-slate-600">{child.apellido}</td>
-                        <td className="px-4 py-3 text-sm text-slate-500 font-medium">{child.cedula}</td>
-                        <td className="px-4 py-3 text-sm text-slate-500 font-medium">{child.telefono}</td>
+                        <td className="px-4 py-3 text-sm text-slate-500 font-medium">
+                          {child.telefono ? (
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span>{child.telefono}</span>
+                              {formatWhatsAppUrl(child.telefono) && (
+                                <a
+                                  href={formatWhatsAppUrl(child.telefono, `Hola ${child.nombre}, le escribimos del Consejo Comunal ${activeConsejo}.`)}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="p-1 rounded bg-emerald-50 text-emerald-600 hover:bg-emerald-500 hover:text-white transition cursor-pointer"
+                                  title="Enviar WhatsApp"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  <MessageCircle size={12} />
+                                </a>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-slate-400 italic text-[11px]">-</span>
+                          )}
+                        </td>
                         <td className="px-4 py-3 text-sm text-slate-500 font-medium">{child.edad}</td>
                         <td className="px-4 py-3 text-sm text-slate-500 font-medium">{child.sexo || "Masculino"}</td>
                         <td className="px-4 py-3 text-sm text-slate-500 font-medium">{child.calle}</td>
@@ -1686,11 +1733,24 @@ function TablaHabitantes({ rows, onEdit, onDelete, onManageFamily, onViewFicha, 
                     )}
                   </div>
                   <div>
-                    <span className="text-slate-400 font-semibold block">Teléfono</span>
+                    <span className="text-slate-400 font-semibold block">Teléfono / WhatsApp</span>
                     {r.telefono ? (
-                      <a href={`tel:${r.telefono}`} className="text-cyan-600 font-bold hover:underline inline-flex items-center gap-0.5">
-                        <Phone size={10} /> {r.telefono}
-                      </a>
+                      <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
+                        <a href={`tel:${r.telefono}`} className="text-cyan-600 font-bold hover:underline inline-flex items-center gap-0.5 text-[10px]">
+                          <Phone size={10} /> {r.telefono}
+                        </a>
+                        {formatWhatsAppUrl(r.telefono) && (
+                          <a
+                            href={formatWhatsAppUrl(r.telefono, `Hola ${r.nombre}, le escribimos del Consejo Comunal ${activeConsejo}.`)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="bg-emerald-500 hover:bg-emerald-600 text-white rounded p-0.5 px-1 font-bold inline-flex items-center gap-0.5 text-[9px]"
+                            title="Chat WhatsApp"
+                          >
+                            <MessageCircle size={9} /> WA
+                          </a>
+                        )}
+                      </div>
                     ) : (
                       <span className="text-amber-600 font-bold block text-[9px] bg-amber-50 px-1 py-0.5 rounded border border-amber-100 w-fit">⚠️ Sin Teléfono</span>
                     )}
