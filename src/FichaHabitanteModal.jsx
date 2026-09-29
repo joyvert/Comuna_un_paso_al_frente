@@ -118,11 +118,35 @@ export default function FichaHabitanteModal({ habitante, allHabitantes, activeCo
                 <HeartPulse size={12} /> Caso Social Prioritario
               </span>
             )}
+            {(!habitante.cedula || !habitante.telefono || !habitante.edad) && (
+              <span className="inline-flex items-center gap-1 bg-amber-400/25 text-amber-200 px-2.5 py-1 rounded-full font-semibold border border-amber-400/40">
+                <AlertCircle size={12} className="text-amber-300" /> Censo Incompleto
+              </span>
+            )}
           </div>
         </div>
 
         {/* Cuerpo del expediente */}
         <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 sm:space-y-5 bg-slate-50/50">
+          {(!habitante.cedula || !habitante.telefono || !habitante.edad) && (
+            <div className="p-3 bg-amber-50 border border-amber-200/80 rounded-xl text-amber-900 text-xs flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <AlertCircle size={16} className="text-amber-600 shrink-0" />
+                <span>
+                  <strong>Atención:</strong> Faltan datos por censar ({[!habitante.cedula && "cédula", !habitante.telefono && "teléfono", !habitante.edad && "edad/nacimiento"].filter(Boolean).join(", ")}).
+                </span>
+              </div>
+              {onEdit && (
+                <button
+                  type="button"
+                  onClick={() => onEdit(habitante)}
+                  className="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-bold text-[11px] transition shrink-0 cursor-pointer"
+                >
+                  Completar Datos
+                </button>
+              )}
+            </div>
+          )}
           
           {/* Tarjeta de Información General */}
           <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-xs">

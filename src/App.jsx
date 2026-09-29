@@ -154,6 +154,7 @@ const initialForm = {
 function App() {
   // Búsqueda de habitantes locales
   const [habitanteSearch, setHabitanteSearch] = useState("");
+  const [filterCenso, setFilterCenso] = useState("todos"); // 'todos' | 'incompletos' | 'sin_telefono' | 'sin_cedula' | 'sin_edad'
   const [familyManagerJefe, setFamilyManagerJefe] = useState(null);
   const [selectedHabitanteFicha, setSelectedHabitanteFicha] = useState(null);
 
@@ -359,9 +360,27 @@ function App() {
     return ordenados;
   }, [habitantesActualesOriginal]);
 
-  const sinEdadCount = useMemo(() => {
-    return habitantesActuales.filter(h => h.edad === "" || h.edad === null || h.edad === undefined).length;
+  const censoStats = useMemo(() => {
+    let sinTelefono = 0;
+    let sinCedula = 0;
+    let sinEdad = 0;
+    let incompletos = 0;
+
+    habitantesActuales.forEach(h => {
+      const faltaTel = !h.telefono || !String(h.telefono).trim();
+      const faltaCed = !h.cedula || !String(h.cedula).trim();
+      const faltaEdad = h.edad === "" || h.edad === null || h.edad === undefined;
+      
+      if (faltaTel) sinTelefono++;
+      if (faltaCed) sinCedula++;
+      if (faltaEdad) sinEdad++;
+      if (faltaTel || faltaCed || faltaEdad) incompletos++;
+    });
+
+    return { sinTelefono, sinCedula, sinEdad, incompletos };
   }, [habitantesActuales]);
+
+  const sinEdadCount = censoStats.sinEdad;
 
   const habitantesFiltrados = useMemo(() => {
     return habitantesActuales.filter((h) => {
@@ -1077,11 +1096,17 @@ function App() {
                   </div>
                 )}
 
-                <div className="bg-white rounded-xl md:rounded-2xl shadow-sm border border-slate-200 p-3.5 md:p-6">
-                  <div className="mb-4 md:mb-6 flex flex-col md:flex-row md:items-center justify-between gap-3 md:gap-4 border-b border-slate-100 pb-3 md:pb-4">
-                    <h3 className="text-sm md:text-lg font-bold text-slate-800">
-                      Directorio de Habitantes
-                    </h3>
+                <div className="bg-white rounded-xl md:rounded-2xl shadow-sm border border-slate-200 p-3.5 md:p-6 space-y-3.5 md:space-y-4">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 md:gap-4 border-b border-slate-100 pb-3 md:pb-4">
+                    <div>
+                      <h3 className="text-sm md:text-lg font-bold text-slate-800">
+                        Directorio de Habitantes
+                      </h3>
+                      <p className="text-[10px] sm:text-xs text-slate-400">
+                        Censo y padrón vecinal de {activeConsejo}
+                      </p>
+                    </div>
+
                     <div className="relative max-w-sm w-full">
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
                       <input
@@ -1092,17 +1117,111 @@ function App() {
                       />
                     </div>
                   </div>
+
+                  {/* Barra de Validación de Censo y Datos Faltantes */}
+                  <div className="bg-slate-50/80 p-2.5 sm:p-3 rounded-xl border border-slate-100 flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="text-[10px] sm:text-xs font-bold text-slate-500 mr-1 flex items-center gap-1">
+                        <CheckSquare size={13} className="text-indigo-600" />
+                        Validación de Censo:
+                      </span>
+                      
+                      <button
+                        type="button"
+                        onClick={() => setFilterCenso("todos")}
+                        className={`px-2.5 py-1 rounded-lg text-[10px] sm:text-xs font-bold transition cursor-pointer border ${
+                          filterCenso === "todos"
+                            ? "bg-indigo-600 text-white border-indigo-600 shadow-xs"
+                            : "bg-white text-slate-600 border-slate-200 hover:bg-slate-100"
+                        }`}
+                      >
+                        Todos ({habitantesActuales.length})
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setFilterCenso("incompletos")}
+                        className={`px-2.5 py-1 rounded-lg text-[10px] sm:text-xs font-bold transition cursor-pointer border flex items-center gap-1 ${
+                          filterCenso === "incompletos"
+                            ? "bg-amber-600 text-white border-amber-600 shadow-xs"
+                            : "bg-amber-50 text-amber-800 border-amber-200/80 hover:bg-amber-100"
+                        }`}
+                      >
+                        <span>⚠️ Datos Incompletos</span>
+                        <span className={`px-1.5 py-0.2 rounded-full text-[9px] ${filterCenso === "incompletos" ? "bg-white/20 text-white" : "bg-amber-200 text-amber-900"}`}>
+                          {censoStats.incompletos}
+                        </span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setFilterCenso("sin_telefono")}
+                        className={`px-2 py-1 rounded-lg text-[10px] sm:text-xs font-semibold transition cursor-pointer border ${
+                          filterCenso === "sin_telefono"
+                            ? "bg-slate-800 text-white border-slate-800 shadow-xs"
+                            : "bg-white text-slate-600 border-slate-200 hover:bg-slate-100"
+                        }`}
+                      >
+                        Sin Teléfono ({censoStats.sinTelefono})
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setFilterCenso("sin_cedula")}
+                        className={`px-2 py-1 rounded-lg text-[10px] sm:text-xs font-semibold transition cursor-pointer border ${
+                          filterCenso === "sin_cedula"
+                            ? "bg-slate-800 text-white border-slate-800 shadow-xs"
+                            : "bg-white text-slate-600 border-slate-200 hover:bg-slate-100"
+                        }`}
+                      >
+                        Sin Cédula ({censoStats.sinCedula})
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setFilterCenso("sin_edad")}
+                        className={`px-2 py-1 rounded-lg text-[10px] sm:text-xs font-semibold transition cursor-pointer border ${
+                          filterCenso === "sin_edad"
+                            ? "bg-slate-800 text-white border-slate-800 shadow-xs"
+                            : "bg-white text-slate-600 border-slate-200 hover:bg-slate-100"
+                        }`}
+                      >
+                        Sin Edad / Fecha ({censoStats.sinEdad})
+                      </button>
+                    </div>
+
+                    {filterCenso !== "todos" && (
+                      <button
+                        type="button"
+                        onClick={() => setFilterCenso("todos")}
+                        className="text-[10px] sm:text-xs text-indigo-600 font-bold hover:underline cursor-pointer ml-auto"
+                      >
+                        Mostrar todo
+                      </button>
+                    )}
+                  </div>
                   
                   <TablaHabitantes
-                    rows={habitantesActuales.filter(h => 
-                      !habitanteSearch || 
-                      `${h.nombre} ${h.apellido} ${h.cedula}`.toLowerCase().includes(habitanteSearch.toLowerCase())
-                    )}
+                    rows={habitantesActuales.filter(h => {
+                      const matchSearch = !habitanteSearch || `${h.nombre} ${h.apellido} ${h.cedula}`.toLowerCase().includes(habitanteSearch.toLowerCase());
+                      if (!matchSearch) return false;
+
+                      const faltaTel = !h.telefono || !String(h.telefono).trim();
+                      const faltaCed = !h.cedula || !String(h.cedula).trim();
+                      const faltaEdad = h.edad === "" || h.edad === null || h.edad === undefined;
+
+                      if (filterCenso === "incompletos") return faltaTel || faltaCed || faltaEdad;
+                      if (filterCenso === "sin_telefono") return faltaTel;
+                      if (filterCenso === "sin_cedula") return faltaCed;
+                      if (filterCenso === "sin_edad") return faltaEdad;
+
+                      return true;
+                    })}
                     onEdit={handleEditHabitante}
                     onDelete={handleDeleteHabitante}
                     onManageFamily={sessionUser?.isAdmin ? setFamilyManagerJefe : undefined}
                     onViewFicha={setSelectedHabitanteFicha}
-                    isSearching={!!habitanteSearch}
+                    isSearching={Boolean(habitanteSearch || filterCenso !== "todos")}
                     allRows={habitantesActuales}
                   />
                 </div>
@@ -1419,9 +1538,27 @@ function TablaHabitantes({ rows, onEdit, onDelete, onManageFamily, onViewFicha, 
                         </div>
                       </td>
                       <td className="px-4 py-3 font-semibold text-slate-700">{r.apellido}</td>
-                      <td className="px-4 py-3 text-slate-600 font-medium">{r.cedula}</td>
-                      <td className="px-4 py-3 text-slate-600 font-medium">{r.telefono}</td>
-                      <td className="px-4 py-3 text-slate-600 font-medium">{r.edad}</td>
+                      <td className="px-4 py-3 font-medium">
+                        {r.cedula ? (
+                          <span className="text-slate-600">{r.cedula}</span>
+                        ) : (
+                          <span className="text-amber-600 bg-amber-50 px-2 py-0.5 rounded text-[11px] font-semibold border border-amber-200">Sin cédula</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 font-medium">
+                        {r.telefono ? (
+                          <span className="text-slate-600">{r.telefono}</span>
+                        ) : (
+                          <span className="text-slate-400 italic text-[11px]">Sin teléfono</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 font-medium">
+                        {r.edad !== "" && r.edad !== null && r.edad !== undefined ? (
+                          <span className="text-slate-600">{r.edad}</span>
+                        ) : (
+                          <span className="text-amber-600 bg-amber-50 px-2 py-0.5 rounded text-[11px] font-semibold border border-amber-200">Sin edad</span>
+                        )}
+                      </td>
                       <td className="px-4 py-3 text-slate-600 font-medium">{r.sexo || "Masculino"}</td>
                       <td className="px-4 py-3 text-slate-600 font-medium">{r.calle}</td>
                       {(onViewFicha || onDelete || onManageFamily) && (
@@ -1514,6 +1651,11 @@ function TablaHabitantes({ rows, onEdit, onDelete, onManageFamily, onViewFicha, 
                         ↳ Familiar
                       </span>
                     )}
+                    {(!r.cedula || !String(r.cedula).trim() || !r.telefono || !String(r.telefono).trim() || r.edad === "" || r.edad === null || r.edad === undefined) && (
+                      <span className="inline-flex items-center gap-0.5 bg-amber-50 text-amber-700 border border-amber-200 text-[9px] px-1.5 py-0.2 rounded-full font-bold" title="Faltan datos por censar">
+                        ⚠️ Incompleto
+                      </span>
+                    )}
                   </div>
                 </div>
 
@@ -1525,15 +1667,23 @@ function TablaHabitantes({ rows, onEdit, onDelete, onManageFamily, onViewFicha, 
                   </div>
                 )}
 
-                {/* Cuadrícula de Detalles */}
+                {/* Cuadrícula de Detalles con alertas de campos faltantes */}
                 <div className="grid grid-cols-2 gap-2 mt-2.5 p-2 bg-slate-50/70 rounded-lg border border-slate-100 text-[10px]">
                   <div>
                     <span className="text-slate-400 font-semibold block">Cédula</span>
-                    <span className="text-slate-700 font-bold block">{r.cedula || "N/A"}</span>
+                    {r.cedula ? (
+                      <span className="text-slate-700 font-bold block">{r.cedula}</span>
+                    ) : (
+                      <span className="text-amber-600 font-bold block text-[9px] bg-amber-50 px-1 py-0.5 rounded border border-amber-100 w-fit">⚠️ Sin Cédula</span>
+                    )}
                   </div>
                   <div>
                     <span className="text-slate-400 font-semibold block">Edad</span>
-                    <span className="text-slate-700 font-bold block">{r.edad ? `${r.edad} años` : "N/A"}</span>
+                    {r.edad !== "" && r.edad !== null && r.edad !== undefined ? (
+                      <span className="text-slate-700 font-bold block">{r.edad} años</span>
+                    ) : (
+                      <span className="text-amber-600 font-bold block text-[9px] bg-amber-50 px-1 py-0.5 rounded border border-amber-100 w-fit">⚠️ Sin Edad</span>
+                    )}
                   </div>
                   <div>
                     <span className="text-slate-400 font-semibold block">Teléfono</span>
@@ -1542,7 +1692,7 @@ function TablaHabitantes({ rows, onEdit, onDelete, onManageFamily, onViewFicha, 
                         <Phone size={10} /> {r.telefono}
                       </a>
                     ) : (
-                      <span className="text-slate-400 font-medium italic">Sin teléfono</span>
+                      <span className="text-amber-600 font-bold block text-[9px] bg-amber-50 px-1 py-0.5 rounded border border-amber-100 w-fit">⚠️ Sin Teléfono</span>
                     )}
                   </div>
                   <div>
