@@ -249,6 +249,20 @@ export default function AuthCard({ onAuthSuccess }) {
   const loginPanelRef = useRef(null);
   const registerPanelRef = useRef(null);
   const recoveryPanelRef = useRef(null);
+  const videoRef = useRef(null);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const playVideo = () => {
+      video.play().catch(() => {
+        // Autoplay may be restricted until user interacts or loaded
+      });
+    };
+
+    playVideo();
+  }, []);
 
   /** Recuperación de contraseña (preguntas de seguridad) */
   const [recoverStep, setRecoverStep] = useState(1);
@@ -692,10 +706,18 @@ export default function AuthCard({ onAuthSuccess }) {
           className="w-full md:w-1/2 min-h-[240px] md:min-h-0 relative flex flex-col justify-between p-6 sm:p-10 overflow-hidden"
         >
           <video
+            ref={videoRef}
             autoPlay
             loop
             muted
             playsInline
+            preload="auto"
+            onEnded={() => {
+              if (videoRef.current) {
+                videoRef.current.currentTime = 0;
+                videoRef.current.play().catch(() => {});
+              }
+            }}
             className="absolute inset-0 w-full h-full object-cover z-0"
             src="/cielo.mov"
           />
