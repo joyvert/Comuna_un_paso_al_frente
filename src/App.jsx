@@ -1237,6 +1237,7 @@ function App() {
                     onViewFicha={setSelectedHabitanteFicha}
                     isSearching={Boolean(habitanteSearch || filterCenso !== "todos")}
                     allRows={habitantesActuales}
+                    activeConsejo={activeConsejo}
                   />
                 </div>
 
@@ -1364,6 +1365,7 @@ function App() {
                   rows={habitantesFiltrados}
                   isSearching={true}
                   allRows={habitantesActuales}
+                  activeConsejo={activeConsejo}
                 />
               </div>
             )}
@@ -1432,7 +1434,7 @@ function App() {
   );
 }
 
-function TablaHabitantes({ rows, onEdit, onDelete, onManageFamily, onViewFicha, isSearching, allRows }) {
+function TablaHabitantes({ rows, onEdit, onDelete, onManageFamily, onViewFicha, isSearching, allRows, activeConsejo }) {
   const [expanded, setExpanded] = useState({});
 
   const toggleExpand = (id) => {
