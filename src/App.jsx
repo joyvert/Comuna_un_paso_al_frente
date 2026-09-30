@@ -6,7 +6,7 @@ import AuthCard from "./AuthCard";
 import Jornadas from "./Jornadas";
 import Votaciones from "./Votaciones";
 import CuadernilloElectoral from "./CuadernilloElectoral";
-import CasosSociales from "./CasosSociales";
+import CasosSociales, { TIPOS_AYUDA } from "./CasosSociales";
 import FamiliaManagerModal from "./FamiliaManagerModal";
 import FichaHabitanteModal from "./FichaHabitanteModal";
 import PanelAuditoria from "./PanelAuditoria";
@@ -46,6 +46,7 @@ import {
   IdCard,
   MessageCircle,
   Database,
+  Package,
 } from "lucide-react";
 import { formatWhatsAppUrl } from "./whatsappHelper";
 
@@ -151,6 +152,8 @@ const initialForm = {
   condicion_especial: "Ninguna",
   condicion_especial_otro: "",
   prioridad_caso: "Media",
+  tipo_ayuda: "Medicamentos",
+  tipo_ayuda_detalle: "",
 };
 
 
@@ -452,6 +455,8 @@ function App() {
         condicion_especial: habitanteForm.requiere_ayuda ? (habitanteForm.condicion_especial || "Otro") : "Ninguna",
         condicion_especial_otro: habitanteForm.requiere_ayuda && habitanteForm.condicion_especial === "Otro" ? (habitanteForm.condicion_especial_otro || "") : "",
         prioridad_caso: habitanteForm.requiere_ayuda ? (habitanteForm.prioridad_caso || "Media") : "",
+        tipo_ayuda: habitanteForm.requiere_ayuda ? (habitanteForm.tipo_ayuda || "Medicamentos") : "",
+        tipo_ayuda_detalle: habitanteForm.requiere_ayuda ? (habitanteForm.tipo_ayuda_detalle || "") : "",
       };
 
       if (editingHabitanteId) {
@@ -507,6 +512,8 @@ function App() {
       condicion_especial: h.condicion_especial || "Ninguna",
       condicion_especial_otro: h.condicion_especial_otro || "",
       prioridad_caso: h.prioridad_caso || "Media",
+      tipo_ayuda: h.tipo_ayuda || "Medicamentos",
+      tipo_ayuda_detalle: h.tipo_ayuda_detalle || "",
     });
     setEditingHabitanteId(h.id);
     setHabitanteMsg({ type: "", text: "" });
@@ -1070,6 +1077,32 @@ function App() {
                                     />
                                   </div>
                                 )}
+
+                                {/* Tipo de Ayuda Requerida */}
+                                <div className="pt-2 border-t border-slate-200/60 mt-2">
+                                  <label className="block text-[10px] sm:text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5 flex items-center gap-1">
+                                    <Package size={13} className="text-indigo-600" />
+                                    Tipo de Ayuda Requerida
+                                  </label>
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
+                                    <select
+                                      className={inputClass}
+                                      value={habitanteForm.tipo_ayuda || "Medicamentos"}
+                                      onChange={(e) => setHabitanteForm((p) => ({ ...p, tipo_ayuda: e.target.value }))}
+                                    >
+                                      {TIPOS_AYUDA.map((t) => (
+                                        <option key={t} value={t}>{t}</option>
+                                      ))}
+                                    </select>
+                                    <input
+                                      type="text"
+                                      placeholder="Detalle del insumo o requerimiento..."
+                                      className={inputClass}
+                                      value={habitanteForm.tipo_ayuda_detalle || ""}
+                                      onChange={(e) => setHabitanteForm((p) => ({ ...p, tipo_ayuda_detalle: e.target.value }))}
+                                    />
+                                  </div>
+                                </div>
                               </div>
                             )}
                           </div>

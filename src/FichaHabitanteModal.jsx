@@ -14,7 +14,8 @@ import {
   IdCard, 
   CheckCircle2, 
   AlertCircle,
-  MessageCircle
+  MessageCircle,
+  Package
 } from "lucide-react";
 import { formatWhatsAppUrl } from "./whatsappHelper";
 
@@ -305,6 +306,14 @@ export default function FichaHabitanteModal({ habitante, allHabitantes, activeCo
                   <strong>Condición:</strong> {habitante.condicion_especial || "Condición médica"} 
                   {habitante.condicion_especial_otro ? ` (${habitante.condicion_especial_otro})` : ""}
                 </p>
+                <div className="pt-2 border-t border-rose-200/70 flex items-center justify-between flex-wrap gap-1 text-xs">
+                  <span className="font-semibold text-rose-900 flex items-center gap-1">
+                    <Package size={13} className="text-rose-600" /> Ayuda requerida:
+                  </span>
+                  <span className="bg-white/80 px-2 py-0.5 rounded-md font-bold text-rose-950 border border-rose-200 shadow-2xs">
+                    {habitante.tipo_ayuda || "Medicamentos"} {habitante.tipo_ayuda_detalle ? `(${habitante.tipo_ayuda_detalle})` : ""}
+                  </span>
+                </div>
               </div>
             ) : (
               <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-500 bg-slate-50 p-3 rounded-xl border border-slate-100">
