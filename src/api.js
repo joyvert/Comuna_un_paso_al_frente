@@ -550,13 +550,29 @@ export const api = {
 
   createJornada: async (payload) => {
     try {
+      const session = getSession();
+      const userName = [session.nombre, session.apellido].filter(Boolean).join(" ") || session.userId || "Vocero";
+      const calleVocero = payload.calle || session.calle || "General";
+      const consejoFinal = payload.consejoNombre || payload.consejo || session.vocero || "Todos";
+
       const docRef = await addDoc(collection(db, "jornadas"), {
         ...payload,
-        consejo: payload.consejoNombre || payload.consejo,
-        consejoNombre: payload.consejoNombre || payload.consejo,
+        calle: calleVocero,
+        creado_por_id: session.userId || "sistema",
+        creado_por_nombre: userName,
+        creado_por_rol: session.isAdmin ? "Administrador" : "Vocero",
+        consejo: consejoFinal,
+        consejoNombre: consejoFinal,
         estado: "Abierta",
         createdAt: serverTimestamp()
       });
+
+      await api.logAuditoria({
+        accion: "CREAR_JORNADA",
+        detalle: `Registró operativo de ${payload.servicio || "Servicio"} para ${calleVocero} en ${consejoFinal} (${payload.pagos?.length || 0} familias)`,
+        modulo: "Servicios"
+      });
+
       return okRes({ id: docRef.id });
     } catch (e) { errRes(e.message); }
   },

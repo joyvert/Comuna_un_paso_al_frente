@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { api } from "./api";
-import { Search, Save, Calendar, CheckSquare, Square, History, Trash2, Eye, Users, FileText, Printer, X } from "lucide-react";
+import { Search, Save, Calendar, CheckSquare, Square, History, Trash2, Eye, Users, FileText, Printer, X, MapPin, User, Layers, Filter, CheckCircle2 } from "lucide-react";
 
 export default function Jornadas({ sessionUser, activeConsejo, db, setDb, inputClass }) {
   const [tab, setTab] = useState("nueva"); // "nueva" | "historial"
@@ -14,7 +14,17 @@ export default function Jornadas({ sessionUser, activeConsejo, db, setDb, inputC
   const [form, setForm] = useState({ fecha: hoy, servicio: "Gas" });
   const [search, setSearch] = useState("");
   const [calleFilter, setCalleFilter] = useState("Todas");
+  const [historialCalleFilter, setHistorialCalleFilter] = useState("Todas");
+  const [historialServicioFilter, setHistorialServicioFilter] = useState("Todos");
   const [checks, setChecks] = useState({});
+
+  useEffect(() => {
+    // Si el usuario es vocero (no admin) y tiene calle asignada, preseleccionar su calle
+    if (!sessionUser?.isAdmin && sessionUser?.calle && sessionUser.calle !== "General") {
+      setCalleFilter(sessionUser.calle);
+      setHistorialCalleFilter(sessionUser.calle);
+    }
+  }, [sessionUser]);
 
   const formatATM = (valStr) => {
     if (valStr === undefined || valStr === null) return "";
@@ -100,8 +110,24 @@ export default function Jornadas({ sessionUser, activeConsejo, db, setDb, inputC
         const total_hab = Array.isArray(j.pagos) ? j.pagos.length : 0;
         const total_recaudado = Array.isArray(j.pagos) ? j.pagos.reduce((acc, p) => acc + (Number(p.monto) || 0), 0) : 0;
 
+        // Si la jornada no tenía calle explícita (guardada antes), inferirla de los pagos
+        let inferredCalle = j.calle;
+        if (!inferredCalle || inferredCalle === "General") {
+          const distinctCalles = Array.from(new Set((j.pagos || []).map(p => p.calle).filter(Boolean)));
+          if (distinctCalles.length === 1) {
+            inferredCalle = distinctCalles[0];
+          } else if (distinctCalles.length > 1) {
+            inferredCalle = "Múltiples Calles";
+          } else {
+            inferredCalle = "General";
+          }
+        }
+
         return {
            ...j,
+           calle: inferredCalle,
+           creado_por_nombre: j.creado_por_nombre || "Vocero",
+           creado_por_rol: j.creado_por_rol || "Vocero",
            created_at: dateObj.toISOString(),
            total_hab,
            total_recaudado
@@ -120,6 +146,60 @@ export default function Jornadas({ sessionUser, activeConsejo, db, setDb, inputC
       fetchHistory();
     }
   }, [tab, activeConsejo]);
+
+  const filteredHistory = useMemo(() => {
+    return jornadasHistory.filter(j => {
+      // Si el usuario no es admin y es vocero, restringir a su calle
+      if (!sessionUser?.isAdmin && sessionUser?.calle && sessionUser.calle !== "General") {
+        if (j.calle && j.calle !== "General" && j.calle !== sessionUser.calle && j.calle !== "Múltiples Calles") {
+          return false;
+        }
+      } else if (historialCalleFilter !== "Todas") {
+        if (j.calle !== historialCalleFilter) return false;
+      }
+
+      if (historialServicioFilter !== "Todos") {
+        if (j.servicio !== historialServicioFilter) return false;
+      }
+      return true;
+    });
+  }, [jornadasHistory, historialCalleFilter, historialServicioFilter, sessionUser]);
+
+  // Consolidado inteligente para administradores: Agrupa los operativos por fecha y servicio
+  const resumenConsolidado = useMemo(() => {
+    if (!sessionUser?.isAdmin) return null;
+    const grupos = {};
+    jornadasHistory.forEach(j => {
+      const fecha = (j.fecha_entrega || "").slice(0, 10) || "Sin fecha";
+      const serv = j.servicio || "General";
+      const key = `${fecha}_${serv}`;
+      if (!grupos[key]) {
+        grupos[key] = {
+          fecha,
+          servicio: serv,
+          callesRegistradas: new Set(),
+          totalHabitantes: 0,
+          totalRecaudado: 0,
+          totalJornadas: 0,
+          jornadas: []
+        };
+      }
+      if (j.calle && j.calle !== "General") {
+        grupos[key].callesRegistradas.add(j.calle);
+      }
+      grupos[key].totalHabitantes += Number(j.total_hab) || 0;
+      grupos[key].totalRecaudado += Number(j.total_recaudado) || 0;
+      grupos[key].totalJornadas += 1;
+      grupos[key].jornadas.push(j);
+    });
+
+    const lista = Object.values(grupos).map(g => ({
+      ...g,
+      callesArray: Array.from(g.callesRegistradas)
+    }));
+    // Devolver el más reciente o la lista
+    return lista.length > 0 ? lista[0] : null;
+  }, [jornadasHistory, sessionUser]);
 
   const setServerMsg = (type, text) => {
     setMsg({ type, text });
@@ -180,10 +260,22 @@ export default function Jornadas({ sessionUser, activeConsejo, db, setDb, inputC
 
     try {
       setLoading(true);
+      // Obtener la calle representativa (si el vocero tiene calle asignada o la calle de los habitantes guardados)
+      const callesInPagos = Array.from(new Set(pagosToSave.map(p => p.calle).filter(Boolean)));
+      const calleJornada = sessionUser?.calle && sessionUser.calle !== "General"
+        ? sessionUser.calle
+        : (callesInPagos.length === 1 ? callesInPagos[0] : (calleFilter !== "Todas" ? calleFilter : (callesInPagos[0] || "General")));
+
+      const nombreOperador = [sessionUser?.nombre, sessionUser?.apellido].filter(Boolean).join(" ") || sessionUser?.userId || "Vocero";
+
       await api.createJornada({
         consejoNombre: activeConsejo,
+        calle: calleJornada,
         servicio: form.servicio,
         fecha_entrega: form.fecha,
+        creado_por_nombre: nombreOperador,
+        creado_por_id: sessionUser?.userId || "sistema",
+        creado_por_rol: sessionUser?.isAdmin ? "Administrador" : "Vocero",
         pagos: pagosToSave
       });
       setServerMsg("success", "Jornada registrada correctamente.");
@@ -524,62 +616,172 @@ export default function Jornadas({ sessionUser, activeConsejo, db, setDb, inputC
       )}
 
       {tab === "historial" && (
-        <div className="grid gap-4">
-          {loading && jornadasHistory.length === 0 && <p className="text-slate-500">Cargando historial...</p>}
-          {!loading && jornadasHistory.length === 0 && (
-            <div className="py-10 text-center text-slate-500">
-              <History className="mx-auto mb-3 text-slate-300" size={40} />
-              Aún no hay operativos registrados.
+        <div className="space-y-5">
+          {/* Banner de Consolidación Inteligente para Administrador */}
+          {sessionUser?.isAdmin && resumenConsolidado && (
+            <div className="rounded-2xl border border-indigo-100 bg-gradient-to-br from-indigo-50/80 via-white to-sky-50/50 p-4 sm:p-5 shadow-xs">
+              <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-600 text-white shadow-xs">
+                      <Layers size={13} /> Consolidado de Comuna
+                    </span>
+                    <span className="text-xs font-semibold text-slate-500">
+                      Operativo más reciente ({resumenConsolidado.fecha})
+                    </span>
+                  </div>
+                  <h3 className="text-base sm:text-lg font-bold text-slate-800 font-heading">
+                    {resumenConsolidado.servicio} • {activeConsejo}
+                  </h3>
+                  <div className="flex flex-wrap items-center gap-2 pt-1 text-xs text-slate-600">
+                    <span className="inline-flex items-center gap-1 font-medium text-slate-700 bg-white/80 px-2 py-0.5 rounded-md border border-slate-200">
+                      <MapPin size={12} className="text-indigo-600" />
+                      {resumenConsolidado.callesArray.length} {resumenConsolidado.callesArray.length === 1 ? "calle entregada" : "calles entregadas"}:
+                    </span>
+                    {resumenConsolidado.callesArray.map((c, i) => (
+                      <span key={i} className="inline-flex items-center gap-0.5 bg-indigo-50 text-indigo-700 font-semibold px-2 py-0.5 rounded text-[11px] border border-indigo-100/80">
+                        <CheckCircle2 size={11} className="text-indigo-600" /> {c}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-4 bg-white px-4 py-3 rounded-xl border border-slate-200/80 shadow-xs self-stretch md:self-auto justify-around">
+                  <div className="text-center">
+                    <span className="text-xs text-slate-400 font-semibold block uppercase">Total Familias</span>
+                    <span className="text-xl sm:text-2xl font-black text-indigo-950 font-heading">{resumenConsolidado.totalHabitantes}</span>
+                  </div>
+                  <div className="w-[1px] h-8 bg-slate-200" />
+                  <div className="text-center">
+                    <span className="text-xs text-slate-400 font-semibold block uppercase">Total Global</span>
+                    <span className="text-lg sm:text-xl font-black text-emerald-600 font-heading">
+                      Bs. {Number(resumenConsolidado.totalRecaudado).toLocaleString("de-DE", { minimumFractionDigits: 2 })}
+                    </span>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
-          {jornadasHistory.map(j => (
-            <div key={j.id} className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm flex flex-col md:flex-row gap-4 items-start md:items-center justify-between hover:border-slate-300 transition">
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <span className={`px-2 py-1 rounded text-xs font-semibold ${j.servicio === 'Gas' ? 'bg-orange-100 text-orange-700' : 'bg-red-100 text-red-700'}`}>
-                    {j.servicio}
-                  </span>
-                  <span className="text-sm font-medium text-slate-500 flex items-center gap-1">
-                    <Calendar size={14} /> Fecha de Entrega: {j.fecha_entrega.slice(0,10)}
-                  </span>
-                </div>
-                <h4 className="font-semibold text-[#0f2847]">Jornada en {activeConsejo}</h4>
-                <p className="text-sm text-slate-600 mt-1">Registrada el: {new Date(j.created_at).toLocaleString()}</p>
-              </div>
-              <div className="flex flex-col gap-4 items-center bg-slate-50 rounded-lg p-3 w-full md:w-auto mt-4 md:mt-0">
-                <div className="flex gap-4 items-center">
-                  <div className="text-center">
-                    <span className="block text-2xl font-bold text-[#0f2847]">{j.total_hab}</span>
-                    <span className="text-xs text-slate-500">Habitantes</span>
-                  </div>
-                  <div className="w-[1px] h-10 bg-slate-200"></div>
-                  <div className="text-center">
-                    <span className="block text-xl font-bold text-emerald-600">Bs. {Number(j.total_recaudado).toLocaleString('de-DE', {minimumFractionDigits:2})}</span>
-                    <span className="text-xs text-slate-500">Recaudado</span>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 w-full">
-                  <button 
-                    type="button"
-                    onClick={() => setSelectedJornadaDetalle(j)}
-                    className="flex-1 text-center py-2 px-3 text-xs sm:text-sm text-cyan-800 bg-cyan-50 hover:bg-cyan-100 font-bold rounded-lg border border-cyan-200 flex items-center justify-center gap-1.5 transition cursor-pointer shadow-xs"
-                    title="Ver lista de habitantes atendidos"
-                  >
-                    <Eye size={15} className="text-cyan-600" /> Ver Beneficiarios
-                  </button>
-                  <button 
-                    type="button"
-                    onClick={() => setDeleteConfirm(j)}
-                    className="py-2 px-3 text-xs sm:text-sm text-red-600 hover:text-red-700 bg-red-50/60 hover:bg-red-50 font-medium rounded-lg border border-red-200/80 flex items-center justify-center gap-1.5 transition cursor-pointer shrink-0"
-                    title="Eliminar Jornada"
-                  >
-                    <Trash2 size={15} />
-                    <span className="hidden sm:inline">Eliminar</span>
-                  </button>
-                </div>
-              </div>
+
+          {/* Filtros del Historial (Calles y Servicio) */}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-slate-50/80 p-3 rounded-xl border border-slate-200/60">
+            <div className="flex items-center gap-2 text-xs font-bold text-slate-600 self-start sm:self-auto">
+              <Filter size={15} className="text-slate-400" />
+              <span>Filtrar Historial:</span>
             </div>
-          ))}
+
+            <div className="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
+              {/* Filtro de Servicio */}
+              <select
+                value={historialServicioFilter}
+                onChange={e => setHistorialServicioFilter(e.target.value)}
+                className="bg-white border border-slate-200 text-slate-700 text-xs font-semibold rounded-lg px-2.5 py-1.5 outline-none shadow-xs cursor-pointer flex-1 sm:flex-none"
+              >
+                <option value="Todos">Todos los Servicios</option>
+                <option value="Gas">Gas</option>
+                <option value="Proteínas">Proteínas</option>
+              </select>
+
+              {/* Filtro de Calle (para Administradores) */}
+              {sessionUser?.isAdmin ? (
+                <select
+                  value={historialCalleFilter}
+                  onChange={e => setHistorialCalleFilter(e.target.value)}
+                  className="bg-white border border-slate-200 text-slate-700 text-xs font-semibold rounded-lg px-2.5 py-1.5 outline-none shadow-xs cursor-pointer flex-1 sm:flex-none"
+                >
+                  <option value="Todas">Todas las Calles</option>
+                  {callesDisponibles.map(c => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
+              ) : (
+                sessionUser?.calle && sessionUser.calle !== "General" && (
+                  <span className="inline-flex items-center gap-1 text-xs font-bold bg-cyan-50 text-cyan-800 border border-cyan-200/70 px-2.5 py-1.5 rounded-lg">
+                    <MapPin size={13} className="text-cyan-600" /> Calle: {sessionUser.calle}
+                  </span>
+                )
+              )}
+            </div>
+          </div>
+
+          {/* Listado de Tarjetas de Jornadas */}
+          <div className="grid gap-3.5">
+            {loading && jornadasHistory.length === 0 && <p className="text-slate-500 text-sm">Cargando historial...</p>}
+            {!loading && filteredHistory.length === 0 && (
+              <div className="py-12 text-center text-slate-500 bg-white rounded-2xl border border-dashed border-slate-200">
+                <History className="mx-auto mb-3 text-slate-300" size={40} />
+                <p className="font-semibold text-slate-600 text-sm">No se encontraron operativos registrados.</p>
+                <p className="text-xs text-slate-400 mt-1">Prueba cambiando los filtros seleccionados o registra una nueva entrega.</p>
+              </div>
+            )}
+            {filteredHistory.map(j => (
+              <div key={j.id} className="rounded-2xl border border-slate-200/80 bg-white p-4 sm:p-5 shadow-xs flex flex-col md:flex-row gap-4 items-start md:items-center justify-between hover:border-slate-300 hover:shadow-sm transition-all duration-200">
+                <div className="space-y-1.5 min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className={`px-2.5 py-0.5 rounded-md text-xs font-bold ${j.servicio === 'Gas' ? 'bg-orange-100 text-orange-700 border border-orange-200/60' : 'bg-red-100 text-red-700 border border-red-200/60'}`}>
+                      {j.servicio}
+                    </span>
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-xs font-bold bg-cyan-50 text-cyan-800 border border-cyan-200/60">
+                      <MapPin size={12} className="text-cyan-600" />
+                      {j.calle || "General"}
+                    </span>
+                    <span className="text-xs font-medium text-slate-500 flex items-center gap-1">
+                      <Calendar size={13} /> Entrega: {j.fecha_entrega?.slice(0, 10)}
+                    </span>
+                  </div>
+
+                  <h4 className="font-bold text-slate-800 font-heading text-sm sm:text-base flex items-center gap-2">
+                    Jornada en {activeConsejo}
+                  </h4>
+
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500 pt-0.5">
+                    <span className="inline-flex items-center gap-1 font-medium text-slate-600">
+                      <User size={12} className="text-slate-400" />
+                      Cargado por: <strong className="text-slate-700">{j.creado_por_nombre || "Vocero"}</strong>
+                      {j.creado_por_rol && <span className="text-[10px] text-slate-400">({j.creado_por_rol})</span>}
+                    </span>
+                    <span>•</span>
+                    <span>Registrada: {new Date(j.created_at).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}</span>
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-3 items-center bg-slate-50/90 rounded-xl p-3 w-full md:w-auto mt-2 md:mt-0 border border-slate-100">
+                  <div className="flex gap-4 items-center justify-around w-full">
+                    <div className="text-center px-2">
+                      <span className="block text-xl sm:text-2xl font-black text-slate-800 font-heading">{j.total_hab}</span>
+                      <span className="text-[11px] font-medium text-slate-400">Habitantes</span>
+                    </div>
+                    <div className="w-[1px] h-8 bg-slate-200"></div>
+                    <div className="text-center px-2">
+                      <span className="block text-base sm:text-lg font-black text-emerald-600 font-heading">
+                        Bs. {Number(j.total_recaudado).toLocaleString('de-DE', { minimumFractionDigits: 2 })}
+                      </span>
+                      <span className="text-[11px] font-medium text-slate-400">Recaudado</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 w-full">
+                    <button 
+                      type="button"
+                      onClick={() => setSelectedJornadaDetalle(j)}
+                      className="flex-1 text-center py-2 px-3 text-xs sm:text-sm text-cyan-800 bg-cyan-50 hover:bg-cyan-100 font-bold rounded-lg border border-cyan-200 flex items-center justify-center gap-1.5 transition cursor-pointer shadow-xs"
+                      title="Ver lista de habitantes atendidos"
+                    >
+                      <Eye size={15} className="text-cyan-600" /> Ver Beneficiarios
+                    </button>
+                    <button 
+                      type="button"
+                      onClick={() => setDeleteConfirm(j)}
+                      className="py-2 px-3 text-xs sm:text-sm text-red-600 hover:text-red-700 bg-red-50/60 hover:bg-red-50 font-medium rounded-lg border border-red-200/80 flex items-center justify-center gap-1.5 transition cursor-pointer shrink-0"
+                      title="Eliminar Jornada"
+                    >
+                      <Trash2 size={15} />
+                      <span className="hidden sm:inline">Eliminar</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
@@ -627,6 +829,12 @@ export default function Jornadas({ sessionUser, activeConsejo, db, setDb, inputC
                   </h3>
                   <p className="text-[11px] sm:text-xs text-slate-300">
                     Fecha: {selectedJornadaDetalle.fecha_entrega?.slice(0, 10)} • {activeConsejo}
+                    {selectedJornadaDetalle.calle && (
+                      <span className="text-cyan-300 font-semibold"> • Calle: {selectedJornadaDetalle.calle}</span>
+                    )}
+                    {selectedJornadaDetalle.creado_por_nombre && (
+                      <span className="text-slate-400"> • Responsable: {selectedJornadaDetalle.creado_por_nombre}</span>
+                    )}
                   </p>
                 </div>
               </div>
