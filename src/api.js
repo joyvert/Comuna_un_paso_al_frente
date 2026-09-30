@@ -527,11 +527,23 @@ export const api = {
   getJornadas: async (consejoNombre) => {
     try {
       const session = getSession();
-      const q = session.isAdmin 
-        ? query(collection(db, "jornadas"))
-        : query(collection(db, "jornadas"), where("consejo", "==", consejoNombre));
-      const snap = await getDocs(q);
-      const jornadas = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      const snap = await getDocs(collection(db, "jornadas"));
+      let jornadas = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+      // Filtrar por consejo comunal si no es admin o si se especifica consejo
+      if (consejoNombre) {
+        jornadas = jornadas.filter(j => 
+          j.consejo === consejoNombre || j.consejoNombre === consejoNombre
+        );
+      }
+
+      // Ordenar por fecha más reciente
+      jornadas.sort((a, b) => {
+        const timeA = a.createdAt?.seconds ? a.createdAt.seconds * 1000 : (a.createdAt ? new Date(a.createdAt).getTime() : 0);
+        const timeB = b.createdAt?.seconds ? b.createdAt.seconds * 1000 : (b.createdAt ? new Date(b.createdAt).getTime() : 0);
+        return timeB - timeA;
+      });
+
       return okRes({ jornadas });
     } catch (e) { errRes(e.message); }
   },
@@ -540,6 +552,8 @@ export const api = {
     try {
       const docRef = await addDoc(collection(db, "jornadas"), {
         ...payload,
+        consejo: payload.consejoNombre || payload.consejo,
+        consejoNombre: payload.consejoNombre || payload.consejo,
         estado: "Abierta",
         createdAt: serverTimestamp()
       });

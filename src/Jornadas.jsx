@@ -194,6 +194,7 @@ export default function Jornadas({ sessionUser, activeConsejo, db, setDb, inputC
       });
       setChecks(next);
       setTab("historial");
+      await fetchHistory();
       // Recargar pagos del consejo para que se vean en el historial global
       const pag = await api.getPagos(activeConsejo);
       setDb(prev => ({
