@@ -165,42 +165,6 @@ export default function Jornadas({ sessionUser, activeConsejo, db, setDb, inputC
     });
   }, [jornadasHistory, historialCalleFilter, historialServicioFilter, sessionUser]);
 
-  // Consolidado inteligente para administradores: Agrupa los operativos por fecha y servicio
-  const resumenConsolidado = useMemo(() => {
-    if (!sessionUser?.isAdmin) return null;
-    const grupos = {};
-    jornadasHistory.forEach(j => {
-      const fecha = (j.fecha_entrega || "").slice(0, 10) || "Sin fecha";
-      const serv = j.servicio || "General";
-      const key = `${fecha}_${serv}`;
-      if (!grupos[key]) {
-        grupos[key] = {
-          fecha,
-          servicio: serv,
-          callesRegistradas: new Set(),
-          totalHabitantes: 0,
-          totalRecaudado: 0,
-          totalJornadas: 0,
-          jornadas: []
-        };
-      }
-      if (j.calle && j.calle !== "General") {
-        grupos[key].callesRegistradas.add(j.calle);
-      }
-      grupos[key].totalHabitantes += Number(j.total_hab) || 0;
-      grupos[key].totalRecaudado += Number(j.total_recaudado) || 0;
-      grupos[key].totalJornadas += 1;
-      grupos[key].jornadas.push(j);
-    });
-
-    const lista = Object.values(grupos).map(g => ({
-      ...g,
-      callesArray: Array.from(g.callesRegistradas)
-    }));
-    // Devolver el más reciente o la lista
-    return lista.length > 0 ? lista[0] : null;
-  }, [jornadasHistory, sessionUser]);
-
   const setServerMsg = (type, text) => {
     setMsg({ type, text });
     setTimeout(() => setMsg({ type: "", text: "" }), 3000);
@@ -616,53 +580,7 @@ export default function Jornadas({ sessionUser, activeConsejo, db, setDb, inputC
       )}
 
       {tab === "historial" && (
-        <div className="space-y-5">
-          {/* Banner de Consolidación Inteligente para Administrador */}
-          {sessionUser?.isAdmin && resumenConsolidado && (
-            <div className="rounded-2xl border border-indigo-100 bg-gradient-to-br from-indigo-50/80 via-white to-sky-50/50 p-4 sm:p-5 shadow-xs">
-              <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-600 text-white shadow-xs">
-                      <Layers size={13} /> Consolidado de Comuna
-                    </span>
-                    <span className="text-xs font-semibold text-slate-500">
-                      Operativo más reciente ({resumenConsolidado.fecha})
-                    </span>
-                  </div>
-                  <h3 className="text-base sm:text-lg font-bold text-slate-800 font-heading">
-                    {resumenConsolidado.servicio} • {activeConsejo}
-                  </h3>
-                  <div className="flex flex-wrap items-center gap-2 pt-1 text-xs text-slate-600">
-                    <span className="inline-flex items-center gap-1 font-medium text-slate-700 bg-white/80 px-2 py-0.5 rounded-md border border-slate-200">
-                      <MapPin size={12} className="text-indigo-600" />
-                      {resumenConsolidado.callesArray.length} {resumenConsolidado.callesArray.length === 1 ? "calle entregada" : "calles entregadas"}:
-                    </span>
-                    {resumenConsolidado.callesArray.map((c, i) => (
-                      <span key={i} className="inline-flex items-center gap-0.5 bg-indigo-50 text-indigo-700 font-semibold px-2 py-0.5 rounded text-[11px] border border-indigo-100/80">
-                        <CheckCircle2 size={11} className="text-indigo-600" /> {c}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-4 bg-white px-4 py-3 rounded-xl border border-slate-200/80 shadow-xs self-stretch md:self-auto justify-around">
-                  <div className="text-center">
-                    <span className="text-xs text-slate-400 font-semibold block uppercase">Total Familias</span>
-                    <span className="text-xl sm:text-2xl font-black text-indigo-950 font-heading">{resumenConsolidado.totalHabitantes}</span>
-                  </div>
-                  <div className="w-[1px] h-8 bg-slate-200" />
-                  <div className="text-center">
-                    <span className="text-xs text-slate-400 font-semibold block uppercase">Total Global</span>
-                    <span className="text-lg sm:text-xl font-black text-emerald-600 font-heading">
-                      Bs. {Number(resumenConsolidado.totalRecaudado).toLocaleString("de-DE", { minimumFractionDigits: 2 })}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
+        <div className="space-y-4">
           {/* Filtros del Historial (Calles y Servicio) */}
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-slate-50/80 p-3 rounded-xl border border-slate-200/60">
             <div className="flex items-center gap-2 text-xs font-bold text-slate-600 self-start sm:self-auto">
