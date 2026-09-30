@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { api } from "./api";
-import { Search, Save, Calendar, CheckSquare, Square, History, Trash2 } from "lucide-react";
+import { Search, Save, Calendar, CheckSquare, Square, History, Trash2, Eye, Users, FileText, Printer, X } from "lucide-react";
 
 export default function Jornadas({ sessionUser, activeConsejo, db, setDb, inputClass }) {
   const [tab, setTab] = useState("nueva"); // "nueva" | "historial"
@@ -8,6 +8,7 @@ export default function Jornadas({ sessionUser, activeConsejo, db, setDb, inputC
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState({ type: "", text: "" });
   const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [selectedJornadaDetalle, setSelectedJornadaDetalle] = useState(null);
 
   const hoy = new Date().toISOString().split("T")[0];
   const [form, setForm] = useState({ fecha: hoy, servicio: "Gas" });
@@ -163,6 +164,10 @@ export default function Jornadas({ sessionUser, activeConsejo, db, setDb, inputC
 
         return {
           habitanteId: h.id,
+          nombre: h.nombre,
+          apellido: h.apellido,
+          cedula: h.cedula,
+          calle: h.calle,
           monto: Number(String(c.monto || "0").replace(/\D/g, "")) / 100,
           detalle: det
         };
@@ -552,14 +557,26 @@ export default function Jornadas({ sessionUser, activeConsejo, db, setDb, inputC
                     <span className="text-xs text-slate-500">Recaudado</span>
                   </div>
                 </div>
-                {sessionUser?.isAdmin && (
+                <div className="flex items-center gap-2 w-full">
                   <button 
-                    onClick={() => setDeleteConfirm(j)}
-                    className="w-full text-center py-2 text-sm text-red-600 font-medium hover:bg-red-100 rounded-lg border border-red-200 flex items-center justify-center gap-2 transition"
+                    type="button"
+                    onClick={() => setSelectedJornadaDetalle(j)}
+                    className="flex-1 text-center py-2 px-3 text-xs sm:text-sm text-cyan-800 bg-cyan-50 hover:bg-cyan-100 font-bold rounded-lg border border-cyan-200 flex items-center justify-center gap-1.5 transition cursor-pointer shadow-xs"
+                    title="Ver lista de habitantes atendidos"
                   >
-                    <Trash2 size={16} /> Eliminar Jornada
+                    <Eye size={15} className="text-cyan-600" /> Ver Beneficiarios
                   </button>
-                )}
+                  {sessionUser?.isAdmin && (
+                    <button 
+                      type="button"
+                      onClick={() => setDeleteConfirm(j)}
+                      className="py-2 px-3 text-xs sm:text-sm text-red-600 hover:bg-red-50 font-medium rounded-lg border border-red-200 flex items-center justify-center gap-1.5 transition cursor-pointer shrink-0"
+                      title="Eliminar Jornada"
+                    >
+                      <Trash2 size={15} />
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           ))}
@@ -589,6 +606,110 @@ export default function Jornadas({ sessionUser, activeConsejo, db, setDb, inputC
                 className="px-6 py-2.5 bg-red-600 text-white font-medium hover:bg-red-700 rounded-xl transition shadow-sm"
               >
                 Sí, eliminar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Modal de Detalle de Beneficiarios */}
+      {selectedJornadaDetalle && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-3 sm:p-5 animate-fade-in">
+          <div className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden border border-slate-100">
+            {/* Header del Modal */}
+            <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 p-4 sm:p-5 text-white flex items-center justify-between shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 bg-white/10 rounded-xl text-cyan-400 border border-white/20">
+                  <FileText size={20} />
+                </div>
+                <div>
+                  <h3 className="text-sm sm:text-base font-bold font-heading">
+                    Relación de Entrega: {selectedJornadaDetalle.servicio}
+                  </h3>
+                  <p className="text-[11px] sm:text-xs text-slate-300">
+                    Fecha: {selectedJornadaDetalle.fecha_entrega?.slice(0, 10)} • {activeConsejo}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedJornadaDetalle(null)}
+                className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white transition cursor-pointer"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Resumen rápido */}
+            <div className="p-3 bg-slate-50 border-b border-slate-100 flex items-center justify-around text-center shrink-0">
+              <div>
+                <span className="text-[10px] sm:text-xs text-slate-400 font-semibold uppercase block">Total Beneficiarios</span>
+                <span className="text-sm sm:text-base font-bold text-slate-800">
+                  {Array.isArray(selectedJornadaDetalle.pagos) ? selectedJornadaDetalle.pagos.length : 0} personas
+                </span>
+              </div>
+              <div className="w-[1px] h-8 bg-slate-200" />
+              <div>
+                <span className="text-[10px] sm:text-xs text-slate-400 font-semibold uppercase block">Monto Total Recaudado</span>
+                <span className="text-sm sm:text-base font-bold text-emerald-600">
+                  Bs. {Number(selectedJornadaDetalle.total_recaudado || 0).toLocaleString("de-DE", { minimumFractionDigits: 2 })}
+                </span>
+              </div>
+            </div>
+
+            {/* Lista de Beneficiarios */}
+            <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-2">
+              {!Array.isArray(selectedJornadaDetalle.pagos) || selectedJornadaDetalle.pagos.length === 0 ? (
+                <p className="text-center text-xs text-slate-400 italic py-6">
+                  No hay registros de beneficiarios en esta jornada.
+                </p>
+              ) : (
+                <div className="divide-y divide-slate-100 border border-slate-100 rounded-xl overflow-hidden">
+                  {selectedJornadaDetalle.pagos.map((p, idx) => {
+                    const hab = habitantes.find(h => h.id === p.habitanteId) || {};
+                    const nombreCompleto = p.nombre ? `${p.nombre} ${p.apellido || ""}` : (hab.nombre ? `${hab.nombre} ${hab.apellido || ""}` : `Habitante #${idx + 1}`);
+                    const cedulaHab = p.cedula || hab.cedula || "S/C";
+                    const calleHab = p.calle || hab.calle || "";
+
+                    return (
+                      <div key={idx} className="p-3 bg-slate-50/40 hover:bg-slate-50 flex items-center justify-between gap-3 text-xs">
+                        <div className="min-w-0 flex-1">
+                          <p className="font-bold text-slate-800 text-xs sm:text-sm truncate">
+                            {idx + 1}. {nombreCompleto}
+                          </p>
+                          <p className="text-[11px] text-slate-500 mt-0.5">
+                            C.I: <span className="font-mono font-semibold text-slate-700">{cedulaHab}</span>
+                            {calleHab && <span> • Calle: {calleHab}</span>}
+                          </p>
+                          {p.detalle && (
+                            <span className="inline-block mt-1 text-[10px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100 px-1.5 py-0.2 rounded">
+                              {p.detalle}
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="text-right shrink-0">
+                          <span className="text-xs sm:text-sm font-bold text-emerald-700 block">
+                            Bs. {Number(p.monto || 0).toLocaleString("de-DE", { minimumFractionDigits: 2 })}
+                          </span>
+                          <span className="text-[9px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100">
+                            Pagado
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="p-3 sm:p-4 bg-slate-50 border-t border-slate-200 flex justify-end shrink-0">
+              <button
+                type="button"
+                onClick={() => setSelectedJornadaDetalle(null)}
+                className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs sm:text-sm font-bold transition cursor-pointer"
+              >
+                Cerrar
               </button>
             </div>
           </div>
