@@ -649,25 +649,37 @@ export const api = {
         habitantes = habitantes.filter(h => h.consejo === session.vocero && h.calle === session.calle);
       }
       
-      // Calculate Stats
+      // Calculate Stats with street normalization
+      const normalizeStreetName = (calleStr) => {
+        const raw = (calleStr || "").trim();
+        const lower = raw.toLowerCase();
+        if (lower.includes("esperaza") || lower.includes("esperanza")) return "Calle principal La Esperanza";
+        if (lower.includes("fe integral")) return "Calle la fe integral";
+        if (lower.includes("portugueses")) return "Los Portugueses";
+        if (lower.includes("peñas") || lower.includes("penas")) return "Los Peñas";
+        if (lower.includes("acequia")) return "La Acequia";
+        return raw || "General";
+      };
+
       const statsMap = {};
       habitantes.forEach(h => {
+        const normalizedStreet = normalizeStreetName(h.calle);
         if (!statsMap[h.consejo]) {
           statsMap[h.consejo] = { consejo: h.consejo, total: 0, callesMap: {} };
         }
-        if (!statsMap[h.consejo].callesMap[h.calle]) {
-          statsMap[h.consejo].callesMap[h.calle] = { nombre: h.calle, total: 0 };
+        if (!statsMap[h.consejo].callesMap[normalizedStreet]) {
+          statsMap[h.consejo].callesMap[normalizedStreet] = { nombre: normalizedStreet, total: 0 };
         }
         if (h.voto) {
           statsMap[h.consejo].total++;
-          statsMap[h.consejo].callesMap[h.calle].total++;
+          statsMap[h.consejo].callesMap[normalizedStreet].total++;
         }
       });
       
       const stats = Object.values(statsMap).map(s => ({
         consejo: s.consejo,
         total: s.total,
-        calles: Object.values(s.callesMap)
+        calles: Object.values(s.callesMap).sort((a, b) => a.nombre.localeCompare(b.nombre))
       }));
       
       return okRes({ stats, habitantes });
