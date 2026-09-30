@@ -183,7 +183,7 @@ function App() {
   const [showExcelUpload, setShowExcelUpload] = useState(false);
   const [habitanteMsg, setHabitanteMsg] = useState({ type: "", text: "" });
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [searchFilters, setSearchFilters] = useState({ min: "", max: "", calle: "Todas", sexo: "Todos", sinEdad: false });
+  const [searchFilters, setSearchFilters] = useState({ min: "", max: "", calle: "Todas", sexo: "Todos" });
 
   const [db, setDb] = useState(() =>
     consejos.reduce((acc, consejo) => {
@@ -385,17 +385,10 @@ function App() {
     return { sinTelefono, sinCedula, sinEdad, incompletos };
   }, [habitantesActuales]);
 
-  const sinEdadCount = censoStats.sinEdad;
-
   const habitantesFiltrados = useMemo(() => {
     return habitantesActuales.filter((h) => {
       const byStreet = searchFilters.calle === "Todas" || h.calle === searchFilters.calle;
       const bySexo = searchFilters.sexo === "Todos" || (h.sexo || "Masculino") === searchFilters.sexo;
-      
-      if (searchFilters.sinEdad) {
-        const isMissingAge = h.edad === "" || h.edad === null || h.edad === undefined;
-        return byStreet && bySexo && isMissingAge;
-      }
 
       const isMinActive = searchFilters.min !== "";
       const isMaxActive = searchFilters.max !== "";
@@ -1332,33 +1325,6 @@ function App() {
                       ))}
                     </select>
                   </div>
-                </div>
-
-                {/* Filtro rápido: Habitantes sin edad registrada */}
-                <div className="flex items-center justify-between flex-wrap gap-2 pt-1">
-                  <label className={`flex items-center gap-2.5 px-3.5 py-2 rounded-xl border text-xs md:text-sm font-semibold transition cursor-pointer select-none ${
-                    searchFilters.sinEdad 
-                      ? "bg-amber-500 text-white border-amber-600 shadow-md" 
-                      : "bg-amber-50 text-amber-900 border-amber-200/80 hover:bg-amber-100/80"
-                  }`}>
-                    <input
-                      type="checkbox"
-                      checked={Boolean(searchFilters.sinEdad)}
-                      onChange={(e) => setSearchFilters((p) => ({ ...p, sinEdad: e.target.checked }))}
-                      className="w-4 h-4 text-amber-600 border-amber-300 rounded focus:ring-amber-500 cursor-pointer"
-                    />
-                    <span>⚠️ Mostrar solo habitantes sin edad registrada ({sinEdadCount} pendientes)</span>
-                  </label>
-                  
-                  {searchFilters.sinEdad && (
-                    <button
-                      type="button"
-                      onClick={() => setSearchFilters((p) => ({ ...p, sinEdad: false }))}
-                      className="text-xs text-slate-500 underline hover:text-slate-700 cursor-pointer"
-                    >
-                      Limpiar filtro y mostrar todos
-                    </button>
-                  )}
                 </div>
                 
                 <TablaHabitantes
