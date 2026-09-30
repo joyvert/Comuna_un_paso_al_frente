@@ -567,16 +567,15 @@ export default function Jornadas({ sessionUser, activeConsejo, db, setDb, inputC
                   >
                     <Eye size={15} className="text-cyan-600" /> Ver Beneficiarios
                   </button>
-                  {sessionUser?.isAdmin && (
-                    <button 
-                      type="button"
-                      onClick={() => setDeleteConfirm(j)}
-                      className="py-2 px-3 text-xs sm:text-sm text-red-600 hover:bg-red-50 font-medium rounded-lg border border-red-200 flex items-center justify-center gap-1.5 transition cursor-pointer shrink-0"
-                      title="Eliminar Jornada"
-                    >
-                      <Trash2 size={15} />
-                    </button>
-                  )}
+                  <button 
+                    type="button"
+                    onClick={() => setDeleteConfirm(j)}
+                    className="py-2 px-3 text-xs sm:text-sm text-red-600 hover:text-red-700 bg-red-50/60 hover:bg-red-50 font-medium rounded-lg border border-red-200/80 flex items-center justify-center gap-1.5 transition cursor-pointer shrink-0"
+                    title="Eliminar Jornada"
+                  >
+                    <Trash2 size={15} />
+                    <span className="hidden sm:inline">Eliminar</span>
+                  </button>
                 </div>
               </div>
             </div>

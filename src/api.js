@@ -563,7 +563,17 @@ export const api = {
 
   deleteJornada: async (id) => {
     try {
-      await deleteDoc(doc(db, "jornadas", id));
+      const docRef = doc(db, "jornadas", id);
+      const snap = await getDoc(docRef);
+      const data = snap.exists() ? snap.data() : null;
+      await deleteDoc(docRef);
+      if (data) {
+        await api.logAuditoria({
+          accion: "ELIMINAR_JORNADA",
+          detalle: `Eliminó la jornada de ${data.servicio || "Servicio"} (${data.fecha_entrega || "Sin fecha"}) en ${data.consejo || data.consejoNombre || "Consejo"}`,
+          modulo: "Servicios"
+        });
+      }
       return okRes();
     } catch (e) { errRes(e.message); }
   },
